@@ -3,8 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Types shared by apps/web (frontend) and apps/api (backend). This is the API contract.",
+  "description": "Shared by apps/web (frontend) and apps/api (backend): the API contract types (src/) and game content both sides need (content/).",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./content/*": "./content/*"
   }
 }
