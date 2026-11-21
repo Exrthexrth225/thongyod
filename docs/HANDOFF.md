@@ -698,8 +698,7 @@ Many phones in one game. Only the server knows everyone's role; each phone gets 
 - เซียมซี "เขย่าใหม่ (ปุ่มทดสอบ)" button under the fortune card (`FortunePage.tsx`, `forgetTodayForTesting` in `features/fortune/storage.ts`, i18n `fortune.testRedraw`). Earth asked for it on 2026-11-22 for testing; the real rule stays one stick per Bangkok day.
 
 ## Waiting for Earth's art (2026-11-22)
-- Sticker sheet 1 (4×4): 16 game stickers → replace lucide icons on GameTile / featured game. Cut by grid.
-- Sticker sheet 2 (4×2): 8 running animals → `RACER_ART` in `features/race/RaceRunner.tsx`.
+- Game stickers (image/17) and racers (image/18): DONE, cut with `tools/pet-art/grid.py` into assets/games, assets/racers.
 - Pet sheets A–D: dragon baby + teen DONE (image/15, 16 → assets/pets/v2/dragon-baby, dragon-teen). Fish baby + teen still waiting (fish uses the adult art, drawn smaller).
 - Pet sheets E–F (adult eating, 4 frames) → flipbook for the `eat` action.
 - Sheet G (16 souvenirs, 4×4, order = `SOUVENIRS` in features/pet/away.ts) → `SOUVENIR_ART` in config/souvenirs.ts.

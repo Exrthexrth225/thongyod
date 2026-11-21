@@ -1,11 +1,19 @@
+import catArt from '@/assets/racers/cat.webp'
+import shibaArt from '@/assets/racers/shiba.webp'
+import bunnyArt from '@/assets/racers/bunny.webp'
+import duckArt from '@/assets/racers/duck.webp'
+import frogArt from '@/assets/racers/frog.webp'
+import penguinArt from '@/assets/racers/penguin.webp'
+import pandaArt from '@/assets/racers/panda.webp'
+import koalaArt from '@/assets/racers/koala.webp'
 import type { RacerId } from './logic'
 import { cn } from '@/lib/utils'
 
 /** Tint (lib/tones, via CSS var) of each racer, used until Earth's art arrives and as the lane colour after. */
 const RACER_TINT: Record<RacerId, number> = { cat: 1, shiba: 3, bunny: 5, duck: 7, frog: 2, penguin: 6, panda: 4, koala: 8 }
 
-/** Art per racer (Earth's sticker sheet, #103). Empty until the pictures arrive: the round placeholder is drawn. */
-const RACER_ART: Partial<Record<RacerId, string>> = {}
+/** Art per racer (Earth's sheet image/18-racers.png, cut by tools/pet-art/grid.py, #103). */
+const RACER_ART: Partial<Record<RacerId, string>> = { cat: catArt, shiba: shibaArt, bunny: bunnyArt, duck: duckArt, frog: frogArt, penguin: penguinArt, panda: pandaArt, koala: koalaArt }
 
 // One racer: Earth's animal picture when there is one, otherwise a round body in the racer's colour with the player's
 // number and two little legs. `running` makes it bob and kick.

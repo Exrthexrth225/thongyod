@@ -59,7 +59,7 @@ export function ExplorePage() {
               {t('explore.playNow')}
             </span>
           </span>
-          <top.icon className="size-20 shrink-0 -rotate-12" strokeWidth={1.6} aria-hidden="true" />
+          <img src={top.art} alt="" draggable={false} className="-mr-2 size-28 shrink-0 -rotate-6" />
         </Link>
         <div className="stagger grid grid-cols-2 gap-2.5">
           {GRID_GAMES.map((id) => (

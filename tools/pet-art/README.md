@@ -35,3 +35,10 @@ python3 tools/pet-art/stage.py image/16-dragon-teen.png apps/web/src/assets/pets
 ```
 
 Placed on the adult canvas (720×581) with one scale, same baseline, body centred; no tracing. Other poses reuse one of the six (`fill()` in species.ts).
+
+## Sticker sheets (game stickers, racers, souvenirs)
+
+```bash
+python3 tools/pet-art/grid.py image/17-game-stickers.png apps/web/src/assets/games 4 4 headsUp,spy,insider,spectrum,codewords,taboo,draw,bomb,mostLikely,neverHave,dice,cups,wheel,fortune,finger,race
+python3 tools/pet-art/grid.py image/18-racers.png apps/web/src/assets/racers 4 2 cat,shiba,bunny,duck,frog,penguin,panda,koala --baseline --min 0.06
+```
