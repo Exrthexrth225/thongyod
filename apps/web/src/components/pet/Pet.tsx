@@ -15,7 +15,7 @@ import {
   type PetAction,
   type PoseId,
 } from '@/features/pet/behavior'
-import { CELEBRATE_EVENT, celebrationDue, markCelebrated } from '@/features/pet/celebrate'
+import { CELEBRATE_EVENT, CHEER_EVENT, celebrationDue, markCelebrated } from '@/features/pet/celebrate'
 import { MOTIONS } from '@/features/pet/motions'
 import { cn } from '@/lib/utils'
 import { PET_SPECIES, type PetSpeciesId } from './species'
@@ -169,9 +169,15 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
       window.setTimeout(() => runRef.current('celebrate'), 500)
     }
     celebrate()
+    const cheer = () => {
+      lastTouch.current = Date.now()
+      runRef.current('happy')
+    }
     window.addEventListener(CELEBRATE_EVENT, celebrate)
+    window.addEventListener(CHEER_EVENT, cheer)
     return () => {
       window.removeEventListener(CELEBRATE_EVENT, celebrate)
+      window.removeEventListener(CHEER_EVENT, cheer)
       window.clearTimeout(idleTimer.current)
       clearTimers()
     }

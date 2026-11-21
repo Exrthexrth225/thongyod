@@ -10,7 +10,7 @@ type WeekStripProps = {
   markedDays: Date[]
 }
 
-// Mon-Sun of the current week. Today is filled; the selected day has a ring.
+// Mon-Sun of the current week. Today is filled yolk; the selected day has a ring. Made for the dark week block (#97).
 export function WeekStrip({ today, selected, onSelect, markedDays }: WeekStripProps) {
   const { t } = useTranslation()
   return (
@@ -27,13 +27,13 @@ export function WeekStrip({ today, selected, onSelect, markedDays }: WeekStripPr
             aria-pressed={isSelected}
             aria-label={`${formatFullDay(day)}${isToday ? t('time.todaySuffix') : ''}${hasMark ? t('home.hasMeetup') : ''}`}
             className={cn(
-              'flex min-h-16 flex-col items-center justify-start rounded-lg pt-1.5 text-xs transition-colors',
+              'pressable flex min-h-16 flex-col items-center justify-start rounded-2xl pt-1.5 text-xs',
               isToday ? 'bg-primary text-primary-foreground' : 'text-muted-foreground active:bg-muted',
-              isSelected && !isToday && 'ring-2 ring-brand ring-inset',
+              isSelected && !isToday && 'bg-muted ring-2 ring-foreground/50 ring-inset',
             )}
           >
             <span>{weekdayShort(day)}</span>
-            <span className={cn('text-base font-medium', !isToday && 'text-foreground')}>
+            <span className={cn('font-heading text-lg leading-tight font-medium', !isToday && 'text-foreground')}>
               {day.getDate()}
             </span>
             <span

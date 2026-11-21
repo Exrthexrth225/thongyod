@@ -1,5 +1,6 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
+import { confettiFrom } from '@/lib/confetti'
 import { cn } from '@/lib/utils'
 
 export type SwipeDir = 'right' | 'left' | 'up'
@@ -28,6 +29,10 @@ type SwipeDeckProps<T> = {
   tall?: boolean
   /** renderCard draws its own card surface (e.g. a 3D flip card); the deck adds no border/background. */
   bare?: boolean
+  /** Card surface classes. Default a soft `bg-card` block; e.g. `bg-tangerine on-slab` for invites (#97). */
+  surface?: string
+  /** Confetti from the card when it leaves this way (invite: right = ไป). */
+  celebrate?: SwipeDir
 }
 
 /** Commit when dragged past this share of the card, or flung faster than this (px/ms). */
@@ -37,7 +42,9 @@ const COMMIT_VELOCITY = 0.6
 const FREE_SHARE = 0.45
 const RUBBER = 0.25
 const MAX_ROTATE = 12
-const FLY_MS = 220
+const FLY_MS = 280
+/** Letting go short of a swipe: the card springs back with a small overshoot. */
+const SPRING_MS = 420
 /** A press shorter/smaller than this is a tap, not a drag. */
 const TAP_MS = 300
 const TAP_PX = 6
@@ -54,7 +61,8 @@ function rubber(d: number, limit: number): number {
 
 // A stack of cards answered by swiping or with the buttons below (UX_GUIDELINES §3, DECISIONS #57).
 // No library: pointer events + CSS transforms (transform/opacity only).
-export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOpen, label, tall, bare }: SwipeDeckProps<T>) {
+export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOpen, label, tall, bare, surface = 'bg-card', celebrate }: SwipeDeckProps<T>) {
+  const topCard = useRef<HTMLDivElement>(null)
   const [drag, setDrag] = useState({ x: 0, y: 0, active: false, w: 300, h: 300 })
   const [flying, setFlying] = useState<SwipeDir | null>(null)
   const start = useRef({ x: 0, y: 0, t: 0, moved: 0 })
@@ -64,6 +72,7 @@ export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOp
   function commit(dir: SwipeDir) {
     if (!top || flying) return
     navigator.vibrate?.(15)
+    if (dir === celebrate) confettiFrom(topCard.current)
     if (reducedMotion()) {
       onSwipe(top, dir)
       setDrag((d) => ({ ...d, x: 0, y: 0, active: false }))
@@ -132,7 +141,8 @@ export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOp
   const hint: SwipeDir | null = flying ?? (upward && drag.y < -20 ? 'up' : drag.x > 20 ? 'right' : drag.x < -20 ? 'left' : null)
   const strength = flying ? 1 : Math.min(1, Math.max(Math.abs(drag.x), Math.abs(drag.y)) / (drag.w * COMMIT_SHARE))
 
-  const fly = { right: 'translate(130%, 0) rotate(18deg)', left: 'translate(-130%, 0) rotate(-18deg)', up: 'translate(0, -130%)' }
+  // ไป flies off to the right, ไม่ไป drops away, อาจจะ floats up with a little tilt (motion plan #3).
+  const fly = { right: 'translate(130%, -8%) rotate(18deg)', left: 'translate(-45%, 115%) rotate(-24deg)', up: 'translate(0, -130%) rotate(-6deg)' }
   const transform = flying
     ? fly[flying]
     : `translate(${drag.x}px, ${drag.y}px) rotate(${Math.max(-MAX_ROTATE, Math.min(MAX_ROTATE, drag.x / 18))}deg)`
@@ -158,7 +168,7 @@ export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOp
                 key={getKey(item)}
                 aria-hidden="true"
                 inert
-                className={cn('absolute inset-x-0 flex flex-col overflow-hidden rounded-2xl', !bare && 'border bg-card shadow-sm')}
+                className={cn('absolute inset-x-0 flex flex-col overflow-hidden rounded-3xl', !bare && surface)}
                 style={{
                   top: 0,
                   bottom: BEHIND * 10,
@@ -176,15 +186,16 @@ export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOp
           .reverse()}
         <div
           key={getKey(top)}
+          ref={topCard}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
-          className={cn('relative z-10 flex touch-none flex-col rounded-2xl select-none', !bare && 'border bg-card shadow-sm', onOpen && 'cursor-pointer', tall && 'min-h-[58dvh]')}
+          className={cn('relative z-10 flex touch-none flex-col rounded-3xl select-none', !bare && surface, onOpen && 'cursor-pointer', tall && 'min-h-[58dvh]')}
           style={{
             transform,
             opacity: flying ? 0 : 1,
-            transition: animate ? `transform ${FLY_MS}ms ease-out, opacity ${FLY_MS}ms ease-out` : 'none',
+            transition: animate ? `transform ${flying ? FLY_MS : SPRING_MS}ms ${flying ? 'cubic-bezier(0.4, 0, 0.9, 0.6)' : 'cubic-bezier(0.34, 1.56, 0.64, 1)'}, opacity ${FLY_MS}ms ease-in` : 'none',
           }}
         >
           {renderCard(top)}
@@ -207,23 +218,23 @@ export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOp
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-5">
+      {/* Answer buttons: labelled pills, the "yes" one dark and widest (#97). */}
+      <div className="mx-4 grid grid-cols-[1fr_1fr_1.35fr] gap-2" style={{ gridTemplateColumns: actions.length === 2 ? '1fr 1.35fr' : undefined }}>
         {actions
           .slice()
           .sort((a, b) => ({ left: 0, up: 1, right: 2 })[a.dir] - ({ left: 0, up: 1, right: 2 })[b.dir])
-          .map(({ dir, label: text, icon: Icon, tone }) => (
+          .map(({ dir, label: text, icon: Icon }) => (
             <button
               key={dir}
               type="button"
               onClick={() => commit(dir)}
-              aria-label={text}
               className={cn(
-                'flex size-14 items-center justify-center rounded-full border-2 bg-card shadow-sm transition-transform active:scale-90',
-                dir === 'up' && 'size-12',
-                tone,
+                'pressable flex h-13 items-center justify-center gap-1.5 rounded-2xl text-[15px] font-semibold',
+                dir === 'right' ? 'bg-ink text-ink-foreground' : 'bg-card text-foreground',
               )}
             >
-              <Icon className="size-6" aria-hidden="true" />
+              <Icon className="size-5" strokeWidth={2.4} aria-hidden="true" />
+              {text}
             </button>
           ))}
       </div>

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useHome } from '@/api/home'
@@ -13,7 +13,7 @@ import { LoadingState } from '@/components/common/LoadingState'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { SwipeDeck } from '@/components/common/SwipeDeck'
 import { SeeAllLink } from '@/components/common/SeeAllLink'
-import { PENDING_ICONS } from '@/config/pending'
+import { PENDING_ICONS, PENDING_TINTS } from '@/config/pending'
 import { DailyMissions } from '@/components/home/DailyMissions'
 import { FeedRow } from '@/components/home/FeedRow'
 import { HomeZone } from '@/components/home/HomeZone'
@@ -30,6 +30,8 @@ import { SWIPE_TO_RESPONSE, useInviteActions } from '@/features/meetups/useInvit
 import { useMeetupActions } from '@/features/meetups/useMeetupActions'
 import { homeRange } from '@/features/meetups/useWaiting'
 import { markDone, streakOf, useDaily } from '@/features/daily/daily'
+import { cheerPet } from '@/features/pet/celebrate'
+import { takeHomeIntro } from '@/features/home/intro'
 import { getMyPet } from '@/features/onboarding/storage'
 import { useHomeLayout } from '@/features/settings/homeLayout'
 import { addDays, formatDayLabel, isSameDay, startOfWeek } from '@/lib/date'
@@ -53,6 +55,7 @@ export function HomePage() {
     document.title = t('app.title')
   }, [t])
   const [myPet] = useState(getMyPet)
+  const [intro] = useState(() => takeHomeIntro(now))
 
   // One request covers this week (week strip + agenda) and the next 2 weeks ("รอคุณตอบ").
   const range = useMemo(() => homeRange(now), [now])
@@ -81,16 +84,21 @@ export function HomePage() {
   // swipe deck), at most ROW_PREVIEW rows with "ดูทั้งหมด".
   const sections: Record<HomeSectionId, ReactNode> = {
     today: (
-      <HomeZone title={t('home.zones.today')} action={<SeeAllLink to="/calendar" label={t('calendar.open')} />}>
+      <HomeZone>
         {waiting.length > 0 && (
           <div className="flex flex-col gap-1">
-            <SectionHeader muted title={t('home.waitingTitle', { count: waiting.length })} action={<SeeAllLink to="/invites" />} />
+            <SectionHeader title={t('home.waitingHeading')} count={waiting.length} action={<SeeAllLink to="/invites" />} />
             <SwipeDeck<MeetupListItem>
               items={waiting}
               getKey={(m) => m.id}
               label={t('home.deckLabel')}
               actions={swipeActions}
-              onSwipe={(m, dir) => actions.answer(m, SWIPE_TO_RESPONSE[dir])}
+              surface="bg-tangerine on-slab"
+              celebrate="right"
+              onSwipe={(m, dir) => {
+                if (dir === 'right') cheerPet()
+                actions.answer(m, SWIPE_TO_RESPONSE[dir])
+              }}
               onOpen={(m) => openInvite(m.id)}
               renderCard={(m) => (
                 <InviteCard
@@ -105,15 +113,18 @@ export function HomePage() {
           </div>
         )}
 
-        <div className="flex flex-col gap-1">
-          <SectionHeader muted title={t('home.subtitle', { count: weekMeetups.length })} />
-          <WeekStrip today={now} selected={selectedDay} onSelect={setSelectedDay} markedDays={weekMeetups.map((m) => new Date(m.startsAt))} />
+        {/* This week: one dark block (#97) with the days and the chosen day's meetups. */}
+        <div className="on-ink mx-4 mt-3 flex flex-col gap-2 rounded-[28px] bg-ink pt-2 pb-3">
+          <SectionHeader title={t('home.thisWeek')} count={t('home.weekCount', { count: weekMeetups.length })} action={<SeeAllLink to="/calendar" label={t('calendar.open')} />} />
+          <div className="-mx-1">
+            <WeekStrip today={now} selected={selectedDay} onSelect={setSelectedDay} markedDays={weekMeetups.map((m) => new Date(m.startsAt))} />
+          </div>
           {meetupsQuery.isPending ? (
             <LoadingState rows={2} />
           ) : meetupsQuery.isError ? (
             <ErrorState onRetry={() => void meetupsQuery.refetch()} />
           ) : (
-            <Card className="mx-4 mt-1 px-4 py-1">
+            <Card className="mx-3 rounded-[20px] px-3 py-1">
               {agenda.length > 0 ? (
                 agenda.map((m) => <MeetupRow key={m.id} meetup={m} />)
               ) : (
@@ -128,11 +139,11 @@ export function HomePage() {
         </div>
 
         {pending.length > 0 && (
-          <div className="flex flex-col gap-1">
-            <SectionHeader muted title={t('home.pendingTitle', { count: pending.length })} action={pending.length > ROW_PREVIEW && <SeeAllLink to="/pending" />} />
+          <div className="mt-3 flex flex-col gap-1">
+            <SectionHeader title={t('home.pendingHeading')} count={pending.length} action={pending.length > ROW_PREVIEW && <SeeAllLink to="/pending" />} />
             <Card className="mx-4 px-4 py-1">
               {pending.slice(0, ROW_PREVIEW).map((item) => (
-                <ListRow key={item.id} leading={<IconTile icon={PENDING_ICONS[item.kind]} />} title={pendingTitle(item)} subtitle={pendingSubtitle(item, now)} />
+                <ListRow key={item.id} leading={<IconTile icon={PENDING_ICONS[item.kind]} tint={PENDING_TINTS[item.kind]} />} title={pendingTitle(item)} subtitle={pendingSubtitle(item, now)} />
               ))}
             </Card>
           </div>
@@ -155,8 +166,8 @@ export function HomePage() {
     ),
 
     pet: (
-      <HomeZone title={t('home.zones.pet', { name: petName })} action={<SeeAllLink to="/pet" label={t('home.zones.petOpen')} />}>
-        <DailyMissions petName={petName} />
+      <HomeZone>
+        <DailyMissions petName={petName} species={myPet?.species ?? null} />
       </HomeZone>
     ),
 
@@ -168,8 +179,8 @@ export function HomePage() {
   }
 
   return (
-    <div className="flex flex-col gap-5 pb-8">
-      <HomeGreeting name={me.data?.displayName ?? null} species={myPet?.species ?? null} streak={streakOf(daily, now)} onPetTap={() => markDone('pet')} now={now} />
+    <div className="flex flex-col gap-6 pb-8">
+      <HomeGreeting intro={intro} name={me.data?.displayName ?? null} species={myPet?.species ?? null} streak={streakOf(daily, now)} onPetTap={() => markDone('pet')} now={now} />
 
       {/* New users only; hides itself when done (#96). */}
       <FirstRunCard />
@@ -177,9 +188,15 @@ export function HomePage() {
       {/* Order and visibility come from Settings → หน้าหลัก. */}
       {layout.order
         .filter((id) => !layout.hidden.includes(id))
-        .map((id) => (
-          <Fragment key={id}>{sections[id]}</Fragment>
-        ))}
+        .map((id, i) =>
+          intro ? (
+            <div key={id} className="intro-rise" style={{ '--i': i + 1 } as CSSProperties}>
+              {sections[id]}
+            </div>
+          ) : (
+            <Fragment key={id}>{sections[id]}</Fragment>
+          ),
+        )}
 
       {homeQuery.isError && <ErrorState onRetry={() => void homeQuery.refetch()} />}
     </div>

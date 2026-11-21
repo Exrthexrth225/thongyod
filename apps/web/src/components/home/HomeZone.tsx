@@ -1,21 +1,20 @@
 import type { ReactNode } from 'react'
+import { SectionHeader } from '@/components/common/SectionHeader'
 
 type HomeZoneProps = {
-  title: string
+  /** Zone heading. Leave out when the zone's own blocks carry headings (วันนี้, น้อง). */
+  title?: string
   /** Optional link on the right, e.g. <SeeAllLink />. */
   action?: ReactNode
   children: ReactNode
 }
 
-// One zone of Home (decision #83): a big title, then its content. Zones are split by a line and space,
-// so Home reads as วันนี้ / เพื่อน / น้อง / ทางลัด instead of one long run of same-looking cards.
+// One zone of Home (decision #83). Zones are told apart by their colour blocks and bold headings (#97),
+// so there are no lines between them any more.
 export function HomeZone({ title, action, children }: HomeZoneProps) {
   return (
-    <section className="flex flex-col gap-2 border-t pt-5 first:border-t-0 first:pt-1">
-      <div className="flex items-center justify-between px-4">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        {action}
-      </div>
+    <section className="flex flex-col gap-2">
+      {title && <SectionHeader title={title} action={action} />}
       {children}
     </section>
   )

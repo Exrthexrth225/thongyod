@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { tintClass, tintOfName } from '@/lib/tones'
 import { cn } from '@/lib/utils'
 
 // Thai names can start with a leading vowel (เ แ โ ใ ไ), e.g. "เบียร์".
@@ -15,7 +16,7 @@ type AvatarProps = {
   className?: string
 }
 
-// Round avatar: the person's photo, or the first letter of their name.
+// Round avatar: the person's photo, or the first letter of their name on their own colour (#97).
 export function Avatar({ name, src, className }: AvatarProps) {
   const [broken, setBroken] = useState<string | null>(null)
   const showPhoto = src && broken !== src
@@ -23,7 +24,8 @@ export function Avatar({ name, src, className }: AvatarProps) {
     <span
       aria-hidden="true"
       className={cn(
-        'flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-sm font-medium text-muted-foreground',
+        'flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-semibold',
+        tintClass(tintOfName(name)),
         className,
       )}
     >

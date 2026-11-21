@@ -1,41 +1,55 @@
+import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Circle, CircleCheck, PartyPopper } from 'lucide-react'
-import { ListRow } from '@/components/common/ListRow'
-import { Card } from '@/components/ui/card'
+import { Check } from 'lucide-react'
+import { PET_SPECIES, type PetSpeciesId } from '@/components/pet/species'
 import { doneToday, MISSIONS, useDaily, type MissionId } from '@/features/daily/daily'
 import { SHOW_BACK } from '@/lib/nav'
 import { cn } from '@/lib/utils'
 
 const MISSION_TO: Record<MissionId, string> = { fortune: '/fortune', pet: '/pet', tool: '/explore' }
 
-// "ภารกิจวันนี้": 3 small things, each a row linking to where you do it. No penalty for skipping (DECISIONS #54).
-// Lives in the pet zone of Home (#83), which gives it its title.
-export function DailyMissions({ petName }: { petName: string }) {
+// "ภารกิจกับน้อง" (#54): a mint block with the pet, a done/total counter that pops when it changes,
+// and the 3 missions as chips that link to where you do them. Done chips turn dark and draw their tick (#98).
+export function DailyMissions({ petName, species }: { petName: string; species: PetSpeciesId | null }) {
   const { t } = useTranslation()
   const log = useDaily()
   const done = doneToday(log)
   const all = done.length === MISSIONS.length
   return (
-    <div className="flex flex-col gap-1.5">
-      <Card className="mx-4 px-4 py-1">
+    <div className="on-slab mx-4 rounded-[28px] bg-mint p-4">
+      <Link to="/pet" state={SHOW_BACK} className="pressable flex items-center gap-3">
+        {species && <img src={PET_SPECIES[species].poses[all ? 'celebrate' : 'eat']} alt="" className="-my-2 -ml-1 w-16 shrink-0" />}
+        <span className="min-w-0 flex-1">
+          <span className="block font-heading text-[17px] leading-snug font-medium text-balance">{t('home.missionsHeading', { name: petName })}</span>
+          <span className="block text-[13px] text-pretty text-muted-foreground">
+            {all ? t('home.missionsDone', { name: petName }) : t('home.missionsHint', { name: petName })}
+          </span>
+        </span>
+        <span key={done.length} className="num-pop font-heading text-2xl font-bold tabular-nums">
+          {done.length}/{MISSIONS.length}
+        </span>
+      </Link>
+      <ul className="mt-3 flex flex-wrap gap-2">
         {MISSIONS.map((id) => {
           const ok = done.includes(id)
           return (
-            <ListRow
-              key={id}
-              to={MISSION_TO[id]}
-              linkState={SHOW_BACK}
-              leading={ok ? <CircleCheck className="size-5 shrink-0 text-brand" aria-hidden="true" /> : <Circle className="size-5 shrink-0 text-muted-foreground/50" aria-hidden="true" />}
-              title={t(`home.missions.${id}`, { name: petName })}
-              subtitle={ok ? t('home.missionDone') : undefined}
-            />
+            <li key={id}>
+              <Link
+                to={MISSION_TO[id]}
+                state={SHOW_BACK}
+                className={cn(
+                  'pressable inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold',
+                  ok ? 'bg-ink text-ink-foreground' : 'bg-card',
+                )}
+              >
+                {ok && <Check className="check-draw size-4" strokeWidth={3} aria-hidden="true" />}
+                {t(`home.missions.${id}`, { name: petName })}
+                {ok && <span className="sr-only">{t('home.missionDone')}</span>}
+              </Link>
+            </li>
           )
         })}
-      </Card>
-      <p className={cn('mx-4 flex items-center gap-1 text-xs', all ? 'font-medium text-brand' : 'text-muted-foreground')}>
-        {all && <PartyPopper className="size-3.5" aria-hidden="true" />}
-        {all ? t('home.missionsDone', { name: petName }) : t('home.missionsHint', { name: petName })}
-      </p>
+      </ul>
     </div>
   )
 }

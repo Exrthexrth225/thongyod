@@ -41,3 +41,10 @@ const TINTS = [
 export function tintClass(n: number): string {
   return TINTS[(((n - 1) % TINTS.length) + TINTS.length) % TINTS.length]
 }
+
+/** Same name → same colour, every time (a small string hash over the 8 tints). */
+export function tintOfName(name: string): number {
+  let h = 0
+  for (const ch of name) h = (h * 31 + ch.codePointAt(0)!) >>> 0
+  return (h % 8) + 1
+}

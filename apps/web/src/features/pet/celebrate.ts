@@ -3,6 +3,12 @@
 import { bangkokDayKey } from '@/features/fortune/logic'
 
 export const CELEBRATE_EVENT = 'thongyod:pet-celebrate'
+/** A quick happy hop right now (e.g. you said ไป to an invite). No storage: only a pet on screen reacts. */
+export const CHEER_EVENT = 'thongyod:pet-cheer'
+
+export function cheerPet(): void {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(CHEER_EVENT))
+}
 const DUE = 'thongyod-pet-celebrate'
 const SHOWN = 'thongyod-pet-celebrated'
 

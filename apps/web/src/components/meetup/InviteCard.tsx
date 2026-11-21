@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next'
-import { Clock, Info, UserRound, Users } from 'lucide-react'
+import { Clock, Info, UserRound } from 'lucide-react'
 import type { MeetupListItem } from '@/api/types'
 import { AvatarStack } from '@/components/common/AvatarStack'
 import { formatDayLabel, formatTime, formatTimeUntil } from '@/lib/date'
+import { cn } from '@/lib/utils'
 import { HideMeetupButton } from './HideMeetupButton'
 
 type InviteCardProps = {
@@ -16,35 +17,38 @@ type InviteCardProps = {
   tall?: boolean
 }
 
-// Face of an invite in the swipe deck: what, which gang, when, who is going.
+// Face of an invite in the swipe deck: which gang, what, when, who is going.
+// Sits on the tangerine `on-slab` surface the deck gives it (#97), so every colour here comes from tokens.
 export function InviteCard({ meetup, now, onHide, onOpen, tall }: InviteCardProps) {
   const { t } = useTranslation()
   const startsAt = new Date(meetup.startsAt)
   const countdown = formatTimeUntil(startsAt, now)
+  const chip = 'inline-flex items-center gap-1.5 rounded-full bg-card px-2.5 py-0.5 text-sm font-semibold'
   return (
-    <div className="flex flex-1 flex-col gap-3 p-5 pt-14">
-      {onOpen && (
-        <button
-          type="button"
-          onClick={onOpen}
-          aria-label={t('meetup.openDetails', { title: meetup.title })}
-          className="absolute top-3 right-3 grid size-9 place-items-center rounded-full text-muted-foreground active:bg-muted"
-        >
-          <Info className="size-5" />
-        </button>
-      )}
-      <div>
-        <p className="text-xs text-muted-foreground">{meetup.gangName}</p>
-        <h3 className={tall ? 'text-2xl font-medium' : 'text-xl font-medium'}>{meetup.title}</h3>
+    <div className="flex flex-1 flex-col gap-3 p-5">
+      <div className="flex items-start justify-between gap-2">
+        <span className="truncate rounded-full bg-card px-2.5 text-[13px] leading-6 font-semibold">{meetup.gangName}</span>
+        {onOpen && (
+          <button
+            type="button"
+            onClick={onOpen}
+            aria-label={t('meetup.openDetails', { title: meetup.title })}
+            className="pressable -mt-1.5 -mr-1.5 grid size-9 shrink-0 place-items-center rounded-full"
+          >
+            <Info className="size-5" />
+          </button>
+        )}
       </div>
-      <p className="flex items-center gap-2 text-sm">
-        <Clock className="size-4 text-muted-foreground" aria-hidden="true" />
-        {formatDayLabel(startsAt, now)} {formatTime(startsAt)}
-        {countdown && <span className="text-muted-foreground">· {countdown}</span>}
+      <h3 className={cn('leading-tight font-bold text-balance', tall ? 'text-[32px]' : 'text-[28px]')}>{meetup.title}</h3>
+      <p className="flex flex-wrap items-center gap-2">
+        <span className={chip}>
+          <Clock className="size-4" aria-hidden="true" />
+          {formatDayLabel(startsAt, now)} {formatTime(startsAt)}
+        </span>
+        {countdown && <span className={chip}>{countdown}</span>}
       </p>
-      <p className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Users className="size-4" aria-hidden="true" />
-        <AvatarStack names={meetup.goingAvatars.map((p) => p.displayName)} total={meetup.counts.going} />
+      <p className="flex items-center gap-2.5 text-sm">
+        <AvatarStack names={meetup.goingAvatars.map((p) => p.displayName)} total={meetup.counts.going} ringClass="ring-tangerine" avatarClass="bg-ink text-ink-foreground" />
         {t('meetup.countsShort', { going: meetup.counts.going, maybe: meetup.counts.maybe })}
       </p>
       {tall && (
