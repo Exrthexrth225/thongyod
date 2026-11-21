@@ -24,6 +24,7 @@ import { BombPage } from '@/pages/BombPage'
 import { DrawPage } from '@/pages/DrawPage'
 import { CupsPage } from '@/pages/CupsPage'
 import { DicePage } from '@/pages/DicePage'
+import { FingerPage } from '@/pages/FingerPage'
 import { GamesPage } from '@/pages/GamesPage'
 import { RoomNewPage } from '@/pages/RoomNewPage'
 import { RoomPage } from '@/pages/RoomPage'
@@ -109,6 +110,7 @@ export const router = createRouter([
       { path: 'games/taboo', element: <TabooPage /> },
       { path: 'games/draw', element: <DrawPage /> },
       { path: 'games/dice', element: <DicePage /> },
+      { path: 'games/finger', element: <FingerPage /> },
       { path: 'games/cups', element: <CupsPage /> },
       { path: 'games/rooms', element: <RoomsPage /> },
       { path: 'games/rooms/new', element: <RoomNewPage /> },

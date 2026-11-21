@@ -1,0 +1,33 @@
+/* วางนิ้วสุ่ม (#102). Transform/opacity only. */
+.finger-stage { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+.finger-ring {
+  translate: -50% -50%;
+  background: color-mix(in oklab, var(--ring) 30%, transparent);
+  box-shadow: 0 0 0 6px var(--ring);
+  animation: finger-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), finger-breathe 1.6s ease-in-out 0.35s infinite;
+  transition: opacity 0.3s ease-out;
+}
+/* Holding still: an outer ring fills up over the settle time. */
+.finger-ring.is-settling::after {
+  content: '';
+  position: absolute;
+  inset: -16px;
+  border-radius: 9999px;
+  background: conic-gradient(var(--ring) var(--p), transparent 0);
+  -webkit-mask: radial-gradient(circle, transparent 60%, #000 61%);
+  mask: radial-gradient(circle, transparent 60%, #000 61%);
+  animation: finger-settle var(--settle) linear both;
+}
+@property --p { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
+@keyframes finger-settle { from { --p: 0%; } to { --p: 100%; } }
+.finger-ring.is-lit { background: var(--ring); scale: 1.22; animation: none; transition: scale 0.08s ease-out; }
+.finger-ring.is-shown { background: var(--ring); animation: finger-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.finger-ring.is-won { background: var(--ring); scale: 1.35; box-shadow: 0 0 0 6px var(--ink-foreground); animation: none; }
+.finger-flood { translate: -50% -50%; animation: finger-flood 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes finger-in { from { scale: 0.3; opacity: 0; } }
+@keyframes finger-breathe { 50% { scale: 1.08; } }
+@keyframes finger-flood { from { scale: 1; } to { scale: 30; } }
+@media (prefers-reduced-motion: reduce) {
+  .finger-ring, .finger-ring.is-settling::after, .finger-flood { animation: none; }
+  .finger-flood { scale: 30; }
+}

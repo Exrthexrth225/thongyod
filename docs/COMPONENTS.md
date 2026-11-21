@@ -144,3 +144,4 @@
 
 | useFirstTimesHint | `src/lib/hints.ts` | ours | Show a tip only the first N times (default 3), counted per browser | id, times? | Swipe hint under invite decks (#94). Use for any "how to" line that becomes noise once learned. |
 | FirstRunCard | `src/components/home/FirstRunCard.tsx` | ours | "เริ่มต้นใช้ทองหยอด" zone for new users: 3 steps with ticks, hide button; logic in `features/firstRun/firstRun.ts` | — | Home only (#96). |
+| FingerChooser | `src/features/finger/FingerChooser.tsx` | ours (pointer events) | วางนิ้วสุ่ม game: multi-touch stage, settle ring, hopping highlight, flood | — | Logic: decide(), hops() in features/finger/logic.ts |

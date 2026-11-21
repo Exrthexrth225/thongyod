@@ -1,8 +1,8 @@
 // Every game, shown in the "เกม" section on Explore and on /games (DECISIONS #73).
 // To add a game: one entry here + `games.list.<id>.title/.desc` in th.ts and en.ts.
-import { Bomb, Brush, CupSoda, Dices, Eye, Gauge, Grid3x3, Hand, LoaderPinwheel, MessageSquareOff, Pointer, Smartphone, Sparkles, VenetianMask, type LucideIcon } from 'lucide-react'
+import { Bomb, Brush, Fingerprint, CupSoda, Dices, Eye, Gauge, Grid3x3, Hand, LoaderPinwheel, MessageSquareOff, Pointer, Smartphone, Sparkles, VenetianMask, type LucideIcon } from 'lucide-react'
 
-export type GameId = 'headsUp' | 'spy' | 'insider' | 'spectrum' | 'codewords' | 'taboo' | 'draw' | 'bomb' | 'mostLikely' | 'neverHave' | 'dice' | 'cups' | 'wheel' | 'fortune'
+export type GameId = 'headsUp' | 'spy' | 'insider' | 'spectrum' | 'codewords' | 'taboo' | 'draw' | 'bomb' | 'mostLikely' | 'neverHave' | 'dice' | 'cups' | 'wheel' | 'fortune' | 'finger'
 
 /** How it is played: one phone passed around the group, alone, or each friend on their own phone (rooms). */
 export type GameMode = 'onePhone' | 'solo' | 'rooms'
@@ -37,6 +37,7 @@ export const GAMES: Game[] = [
   { id: 'neverHave', kind: 'party', icon: Hand, tint: 7, mode: 'onePhone', rooms: true, players: [2, 20], status: 'ready', to: '/games/never' },
   { id: 'dice', kind: 'toy', icon: Dices, tint: 4, mode: 'onePhone', players: [1, 20], status: 'ready', to: '/games/dice' },
   { id: 'cups', kind: 'toy', icon: CupSoda, tint: 6, mode: 'solo', players: [1, 1], status: 'ready', to: '/games/cups' },
+  { id: 'finger', kind: 'toy', icon: Fingerprint, tint: 5, mode: 'onePhone', players: [2, 10], status: 'ready', to: '/games/finger' },
   { id: 'wheel', kind: 'toy', icon: LoaderPinwheel, tint: 3, mode: 'solo', players: [1, 20], status: 'ready', to: '/wheel' },
   { id: 'fortune', kind: 'toy', icon: Sparkles, tint: 4, mode: 'solo', players: [1, 1], status: 'ready', to: '/fortune' },
 ]
