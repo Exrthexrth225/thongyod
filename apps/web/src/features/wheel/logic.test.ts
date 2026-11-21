@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { tickTimes, MAX_OPTIONS, canSpin, indexAtPointer, normalizeOptions, spin, spinTarget, SPIN_TURNS } from './logic'
+import { tickTimes, MAX_OPTIONS, canSpin, indexAtPointer, normalizeOptions, spin, spinTarget, SPIN_TURNS, NEAR_MISS_CHANCE } from './logic'
 
 describe('normalizeOptions', () => {
   it('trims, drops empty, cuts long text and caps the count', () => {
@@ -70,5 +70,34 @@ describe('spin feel (#101)', () => {
     const late = times.filter((ms) => ms > 3000).length
     expect(late).toBeGreaterThan(0)
     expect(late / times.length).toBeLessThan(0.08)
+  })
+})
+
+describe('near miss', () => {
+  const pick = (seq: number[]) => {
+    let k = 0
+    return () => seq[k++]
+  }
+  it('back: rests in the next slice, ends on the winner', () => {
+    for (const count of [2, 5, 12]) {
+      const r = spin(37, count, pick([1, 0, 0]))
+      expect(r.nearMiss?.kind).toBe('back')
+      expect(indexAtPointer(r.rotation, count)).toBe(1)
+      expect(indexAtPointer(r.nearMiss!.first, count)).toBe((1 - 1 + count) % count)
+      expect(r.nearMiss!.first).toBeGreaterThan(r.rotation)
+    }
+  })
+  it('creep: rests one slice short, ends on the winner', () => {
+    for (const count of [2, 5, 12]) {
+      const r = spin(37, count, pick([1, 0, 1]))
+      expect(r.nearMiss?.kind).toBe('creep')
+      expect(indexAtPointer(r.rotation, count)).toBe(1)
+      expect(indexAtPointer(r.nearMiss!.first, count)).toBe((1 + 1) % count)
+      expect(r.nearMiss!.first).toBeLessThan(r.rotation)
+      expect(r.nearMiss!.first - 37).toBeGreaterThan(SPIN_TURNS * 360 - 360)
+    }
+  })
+  it('no near miss at or above the chance', () => {
+    expect(spin(0, 6, pick([3, NEAR_MISS_CHANCE, 500])).nearMiss).toBeUndefined()
   })
 })

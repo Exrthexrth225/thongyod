@@ -24,10 +24,12 @@ type SpinWheelProps = {
   flapAt?: number[]
   /** After the spin: this slice stays bright, the others dim, and the wheel gives a little pop. */
   winner?: number | null
+  /** CSS easing of the move to `rotation`. Default: the long spin curve. A near miss uses a short ease for its last nudge. */
+  easing?: string
 }
 
 /** Wheel of names. It only draws; who wins is decided outside (features/wheel/logic). */
-export function SpinWheel({ options, rotation, durationMs, onSpinEnd, onTap, label, className, flapAt, winner = null }: SpinWheelProps) {
+export function SpinWheel({ options, rotation, durationMs, onSpinEnd, onTap, label, className, flapAt, winner = null, easing }: SpinWheelProps) {
   const pointer = useRef<SVGSVGElement>(null)
   // The pointer flaps every time it passes a border; the flaps follow the wheel's slowing down.
   useEffect(() => {
@@ -72,7 +74,7 @@ export function SpinWheel({ options, rotation, durationMs, onSpinEnd, onTap, lab
         className="size-full"
         style={{
           transform: `rotate(${rotation}deg)`,
-          transition: durationMs > 0 ? `transform ${durationMs}ms cubic-bezier(${SPIN_CURVE.join(', ')})` : 'none',
+          transition: durationMs > 0 ? `transform ${durationMs}ms ${easing ?? `cubic-bezier(${SPIN_CURVE.join(', ')})`}` : 'none',
         }}
         onTransitionEnd={(e) => {
           if (e.target === e.currentTarget) onSpinEnd?.()

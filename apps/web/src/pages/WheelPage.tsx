@@ -18,6 +18,11 @@ import { loadOptions, saveOptions } from '@/features/wheel/storage'
 
 /** Long enough to feel the crawl at the end (Earth, #101); always skippable by tap. */
 const SPIN_MS = 4500
+/** Near miss (#110): how long the wheel rests on the wrong slice, then how long its last nudge takes. */
+const NEAR = {
+  back: { rest: 450, move: 700, easing: 'cubic-bezier(0.45, 0, 0.3, 1.25)', knock: 0.4 },
+  creep: { rest: 650, move: 950, easing: 'cubic-bezier(0.5, 0, 0.25, 1)', knock: 0.35 },
+} as const
 const PRESETS = ['food', 'whoPays', 'yesNo'] as const
 const PRESET_ICONS = [Utensils, HandCoins, Vote]
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -40,6 +45,11 @@ export function WheelPage() {
   const [phase, setPhase] = useState<Phase>('idle')
   const [winner, setWinner] = useState<number | null>(null)
   const [flapAt, setFlapAt] = useState<number[]>([])
+  const [easing, setEasing] = useState<string | undefined>(undefined)
+  /** A near miss still to play after the main spin stops. */
+  const nudge = useRef<{ kind: 'back' | 'creep'; final: number } | null>(null)
+  /** Where this spin really ends (skip and the safety net jump there). */
+  const target = useRef(0)
   /** The result card waits a beat so you see where the wheel landed first. */
   const [showCard, setShowCard] = useState(false)
   const wheelBox = useRef<HTMLDivElement>(null)
@@ -64,6 +74,8 @@ export function WheelPage() {
     if (phase === 'spinning') {
       // Tap while spinning = skip to the result.
       setDuration(0)
+      setRotation(target.current)
+      nudge.current = null
       showResult()
       return
     }
@@ -77,11 +89,16 @@ export function WheelPage() {
     setPhase('spinning')
     setShowCard(false)
     const instant = reducedMotion()
+    // A near miss first stops on the wrong slice; the nudge onto the winner plays when that stop ends.
+    const first = !instant && next.nearMiss ? next.nearMiss.first : next.rotation
+    nudge.current = !instant && next.nearMiss ? { kind: next.nearMiss.kind, final: next.rotation } : null
+    target.current = next.rotation
+    setEasing(undefined)
     setDuration(instant ? 0 : SPIN_MS)
-    setRotation(next.rotation)
+    setRotation(first)
     clearTicks()
     // The pointer knocks each slice border: it flaps (always) and ticks (sound on), slowing down with the wheel.
-    const borders = Math.round(Math.abs(next.rotation - rotation) / (360 / count))
+    const borders = Math.round(Math.abs(first - rotation) / (360 / count))
     const knocks = instant ? [] : tickTimes(borders, SPIN_MS, SPIN_CURVE, 70)
     setFlapAt(knocks)
     if (sound && !instant) {
@@ -92,7 +109,34 @@ export function WheelPage() {
     pending.current = id
     if (instant) showResult()
     // Safety net: the animation-end event can be skipped when the app goes to the background mid-spin.
-    else window.setTimeout(() => pending.current === id && showResult(), SPIN_MS + 400)
+    else {
+      const extra = nudge.current ? NEAR[nudge.current.kind].rest + NEAR[nudge.current.kind].move : 0
+      window.setTimeout(() => {
+        if (pending.current !== id) return
+        setDuration(0)
+        setRotation(target.current)
+        nudge.current = null
+        showResult()
+      }, SPIN_MS + extra + 400)
+    }
+  }
+
+  /** The wheel stopped: either play the near-miss nudge, or show the result. */
+  function onWheelStop() {
+    const n = nudge.current
+    if (!n) return showResult()
+    nudge.current = null
+    const plan = NEAR[n.kind]
+    ticks.current.push(
+      window.setTimeout(() => {
+        setEasing(plan.easing)
+        setDuration(plan.move)
+        setRotation(n.final)
+        const knock = Math.round(plan.move * plan.knock)
+        setFlapAt([knock])
+        if (sound) ticks.current.push(window.setTimeout(() => playSound('tick', 0.9), knock))
+      }, plan.rest),
+    )
   }
 
   function showResult() {
@@ -147,7 +191,8 @@ export function WheelPage() {
             options={options}
             rotation={rotation}
             durationMs={duration}
-            onSpinEnd={showResult}
+            easing={easing}
+            onSpinEnd={onWheelStop}
             onTap={startSpin}
             label={locked ? t('wheel.skip') : t('wheel.spin')}
           />

@@ -48,11 +48,31 @@ export function indexAtPointer(rotation: number, count: number): number {
   return Math.min(count - 1, Math.floor(angle / sliceSize(count)))
 }
 
-export type Spin = { index: number; rotation: number }
+/**
+ * A near miss (#110), only for show; the winner is already decided.
+ * back: the wheel rolls just past the winner into the next slice, rests, then rocks back.
+ * creep: it almost stops one slice short, rests, then creeps over the line onto the winner.
+ */
+export type NearMiss = { kind: 'back' | 'creep'; first: number }
+export type Spin = { index: number; rotation: number; nearMiss?: NearMiss }
 
-/** Picks a winner fairly and returns where the wheel should stop. */
+/** About one spin in three gets a near miss. */
+export const NEAR_MISS_CHANCE = 35
+
+/** Picks a winner fairly and returns where the wheel should stop (and maybe where it pauses first). */
 export function spin(current: number, count: number, random: (max: number) => number = secureRandomInt): Spin {
   const index = random(count)
+  if (count >= 2 && random(100) < NEAR_MISS_CHANCE) {
+    const size = sliceSize(count)
+    if (random(2) === 0) {
+      // Rest 0.18 slice inside the next slice, end 0.12 slice inside the winner (near the line it rolled back over).
+      const rotation = spinTarget(current, index, count, -0.38)
+      return { index, rotation, nearMiss: { kind: 'back', first: rotation + 0.3 * size } }
+    }
+    // Rest 0.08 slice before the winner's line, end 0.2 slice past it.
+    const rotation = spinTarget(current, index, count, 0.3)
+    return { index, rotation, nearMiss: { kind: 'creep', first: rotation - 0.28 * size } }
+  }
   // Stop somewhere inside the slice, never right on an edge (keeps it readable).
   const offset = (random(1000) / 1000 - 0.5) * 0.7
   return { index, rotation: spinTarget(current, index, count, offset) }
