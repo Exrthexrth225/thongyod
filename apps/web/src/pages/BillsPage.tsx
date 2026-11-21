@@ -57,7 +57,7 @@ function BillRow({ bill }: { bill: Bill }) {
   const Icon = STATUS_ICON[status]
   return (
     <li>
-      <Link to={`/bills/${bill.id}`} className="flex flex-col gap-2 rounded-xl border bg-card p-3 active:bg-muted/50">
+      <Link to={`/bills/${bill.id}`} className="flex flex-col gap-2 rounded-3xl bg-card p-3 active:bg-muted/50">
         <span className="flex items-baseline gap-2">
           <span className="min-w-0 flex-1 truncate font-medium">{bill.title}</span>
           <span className="shrink-0 text-xs text-muted-foreground">{formatDayLabel(new Date(bill.createdAt))}</span>

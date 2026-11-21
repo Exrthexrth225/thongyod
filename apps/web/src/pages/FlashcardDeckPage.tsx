@@ -131,7 +131,7 @@ function DeckEditor({ deck }: { deck: Deck }) {
         </Card>
       </section>
 
-      <form onSubmit={onAdd} className="mx-4 flex flex-col gap-2 rounded-xl border bg-card p-3">
+      <form onSubmit={onAdd} className="mx-4 flex flex-col gap-2 rounded-3xl bg-card p-3">
         {full ? (
           <p className="text-sm text-muted-foreground">{t('flashcards.full', { max: CARDS_MAX })}</p>
         ) : (

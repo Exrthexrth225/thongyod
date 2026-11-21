@@ -198,7 +198,7 @@ export function MeetupDetailPage() {
                   actions.answer(meetup, SWIPE_TO_RESPONSE[dir])
                   void navigate(-1)
                 }}
-                className={cn('flex size-14 items-center justify-center rounded-full border-2 bg-card shadow-sm transition-transform active:scale-90', dir === 'up' && 'size-12', tone)}
+                className={cn('flex size-14 items-center justify-center rounded-full border-2 bg-card transition-transform active:scale-90', dir === 'up' && 'size-12', tone)}
               >
                 <Icon className="size-6" aria-hidden="true" />
               </button>

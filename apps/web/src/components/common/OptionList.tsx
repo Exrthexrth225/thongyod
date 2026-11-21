@@ -15,7 +15,7 @@ type OptionListProps<T extends string> = {
 // For 2-4 short options in a row, use SegmentedChoice instead.
 export function OptionList<T extends string>({ options, value, onChange, label }: OptionListProps<T>) {
   return (
-    <div role="radiogroup" aria-label={label} className="rounded-xl border bg-card px-4 py-1">
+    <div role="radiogroup" aria-label={label} className="rounded-3xl bg-card px-4 py-1">
       {options.map((option) => {
         const selected = option.value === value
         return (

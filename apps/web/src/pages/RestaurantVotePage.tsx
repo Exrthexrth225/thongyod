@@ -176,7 +176,7 @@ export function RestaurantVotePage() {
         {typed.length > 0 && (
           <div className="flex flex-wrap gap-2 px-4 pt-2">
             {typed.map((n) => (
-              <span key={n} className="flex min-h-9 items-center gap-1 rounded-full border bg-card pr-1 pl-3 text-sm">
+              <span key={n} className="flex min-h-9 items-center gap-1 rounded-full bg-card pr-1 pl-3 text-sm">
                 {n}
                 <Button variant="ghost" size="icon-xs" aria-label={`${t('restaurantVote.remove')} ${n}`} onClick={() => setTyped((list) => list.filter((x) => x !== n))}>
                   <X />

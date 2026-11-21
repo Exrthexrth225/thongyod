@@ -106,7 +106,7 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
           />
           <div className="flex flex-wrap gap-2 px-4">
             {profile.sharedGangs.slice(0, CHIP_PREVIEW).map((g) => (
-              <Link key={g.id} to={`/gangs/${g.id}`} className="flex min-h-9 items-center gap-1.5 rounded-lg border bg-card px-3 py-1.5 text-sm active:opacity-70">
+              <Link key={g.id} to={`/gangs/${g.id}`} className="flex min-h-9 items-center gap-1.5 rounded-3xl bg-card px-3 py-1.5 text-sm active:opacity-70">
                 <Users className="size-4 text-muted-foreground" aria-hidden="true" />
                 {g.name}
                 <ChevronRight className="-mr-1 size-3.5 text-muted-foreground" aria-hidden="true" />
@@ -122,7 +122,7 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
             title={t('profile.mutualTitle', { count: profile.mutualFriends })}
             action={<SeeAllLink to={`/u/${profile.userId}/mutual`} />}
           />
-          <Link to={`/u/${profile.userId}/mutual`} className="mx-4 flex items-center gap-3 rounded-xl border bg-card p-3 active:opacity-80">
+          <Link to={`/u/${profile.userId}/mutual`} className="mx-4 flex items-center gap-3 rounded-3xl bg-card p-3 active:opacity-80">
             <AvatarStack names={profile.mutualPreview.map((p) => p.displayName)} total={profile.mutualFriends} />
             <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
               {profile.mutualPreview.map((p) => p.displayName).join(', ')}
@@ -139,7 +139,7 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
           />
           <div className="flex flex-wrap gap-2 px-4">
             {profile.titles.slice(0, CHIP_PREVIEW).map((title) => (
-              <span key={title.id} className="flex items-center gap-1.5 rounded-lg border bg-card px-3 py-1.5 text-sm">
+              <span key={title.id} className="flex items-center gap-1.5 rounded-3xl bg-card px-3 py-1.5 text-sm">
                 <Award className="size-4 text-brand" aria-hidden="true" />
                 {title.name}
                 {title.gangName && <span className="text-xs text-muted-foreground">· {title.gangName}</span>}

@@ -171,7 +171,7 @@ export function WheelPage() {
 
           <ul className="flex flex-wrap gap-2">
             {options.map((option, i) => (
-              <li key={`${option}-${i}`} className="flex h-9 items-center gap-1 rounded-full border bg-card pr-1 pl-3 text-sm">
+              <li key={`${option}-${i}`} className="flex h-9 items-center gap-1 rounded-full bg-card pr-1 pl-3 text-sm">
                 <span className="max-w-[10rem] truncate">{option}</span>
                 <button
                   type="button"

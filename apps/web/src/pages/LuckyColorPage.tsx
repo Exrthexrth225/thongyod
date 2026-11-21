@@ -113,7 +113,7 @@ function ColorCard({ topic, color }: { topic: Topic; color: LuckyColorKey }) {
   const Icon = TOPIC_ICON[topic]
   const avoid = topic === 'avoid'
   return (
-    <div className={cn('flex items-center gap-3 rounded-2xl border bg-card p-3', avoid && TONE_CLASS.neutral)}>
+    <div className={cn('flex items-center gap-3 rounded-3xl bg-card p-3', avoid && TONE_CLASS.neutral)}>
       <span className="relative size-12 shrink-0 rounded-xl border shadow-inner" style={{ backgroundColor: LUCKY_HEX[color] }} aria-hidden="true">
         {avoid && <Ban className="absolute inset-0 m-auto size-7 text-white mix-blend-difference" />}
       </span>

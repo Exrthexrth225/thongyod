@@ -117,7 +117,7 @@ function EntryRow({ bill, entry, onEdit, onPlusOne }: { bill: Bill; entry: Entry
   const price = priceOf(bill, entry)
   const sharers = entry.eaters.length > 0 ? entry.eaters.length : bill.people.length
   return (
-    <li className="flex items-center gap-2 rounded-xl border bg-card p-2 pl-3">
+    <li className="flex items-center gap-2 rounded-3xl bg-card p-2 pl-3">
       <button type="button" onClick={onEdit} className="flex min-w-0 flex-1 flex-col items-start gap-1 text-left" aria-label={t('billSplit.editEntryNamed', { name: entry.name })}>
         <span className="flex w-full items-baseline gap-1.5">
           <span className="truncate text-sm font-medium">{entry.name}</span>

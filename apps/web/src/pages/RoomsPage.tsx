@@ -30,7 +30,7 @@ export function RoomsPage() {
       <PageHeader title={t('rooms.zoneTitle')} subtitle={t('rooms.zoneSubtitle')} backTo="/games" />
 
       <section className="px-4">
-        <div className="flex items-center gap-3 rounded-2xl border bg-card p-4">
+        <div className="flex items-center gap-3 rounded-3xl bg-card p-4">
           <span className={cn('grid size-12 shrink-0 place-items-center rounded-2xl', tintClass(5))}>
             <Wifi className="size-6" aria-hidden="true" />
           </span>
@@ -39,7 +39,7 @@ export function RoomsPage() {
       </section>
 
       <SectionHeader title={t('rooms.joinTitle')} />
-      <form onSubmit={join} className="mx-4 flex flex-col gap-2 rounded-3xl border bg-card p-4">
+      <form onSubmit={join} className="mx-4 flex flex-col gap-2 rounded-3xl bg-card p-4">
         <label htmlFor="room-code" className="text-sm font-medium">
           {t('rooms.codeLabel')}
         </label>
@@ -74,7 +74,7 @@ export function RoomsPage() {
             <button
               type="button"
               onClick={() => void navigate(`/games/rooms/new?game=${g.id}`)}
-              className="flex w-full items-center gap-3 rounded-2xl border bg-card p-4 text-left active:scale-[0.99]"
+              className="flex w-full items-center gap-3 rounded-3xl bg-card p-4 text-left active:scale-[0.99]"
             >
               <span className={cn('grid size-12 shrink-0 place-items-center rounded-2xl', tintClass(g.tint))}>
                 <g.icon className="size-6" aria-hidden="true" />

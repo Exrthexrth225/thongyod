@@ -35,7 +35,7 @@ export function SetupScreen({ saved, onChange, tilt, onStart }: Props) {
           { icon: ArrowDown, text: t('headsUp.how.down'), tone: 'success' as const },
           { icon: ArrowUp, text: t('headsUp.how.up'), tone: 'warning' as const },
         ].map(({ icon: Icon, text, tone }) => (
-          <div key={text} className="flex flex-col items-center gap-1.5 rounded-2xl border bg-card p-3 text-center">
+          <div key={text} className="flex flex-col items-center gap-1.5 rounded-3xl bg-card p-3 text-center">
             <Badge tone={tone} className="size-10 justify-center rounded-full p-0">
               <Icon className="size-5" aria-hidden="true" />
             </Badge>
@@ -61,7 +61,7 @@ export function SetupScreen({ saved, onChange, tilt, onStart }: Props) {
                 aria-checked={selected}
                 onClick={() => set({ pack: pack.id })}
                 className={cn(
-                  'flex min-h-28 flex-col items-start gap-1 rounded-2xl p-3 text-left transition-transform active:scale-[0.98]',
+                  'flex min-h-28 flex-col items-start gap-1 rounded-2xl p-3 text-left pressable',
                   tintClass(pack.tint),
                   selected ? 'ring-3 ring-brand' : 'ring-0',
                 )}

@@ -39,7 +39,7 @@ export function RoomShare({ code, exclude }: { code: string; exclude: string[] }
   }
 
   return (
-    <section className="flex flex-col gap-3 rounded-3xl border bg-card p-4" aria-label={t('rooms.inviteTitle')}>
+    <section className="flex flex-col gap-3 rounded-3xl bg-card p-4" aria-label={t('rooms.inviteTitle')}>
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">{t('rooms.codeLabel')}</span>
         <Button variant="ghost" size="sm" onClick={() => void copyCode()}>

@@ -80,7 +80,7 @@ export function SplitTab({ bill, onChange }: Props) {
                 .map((p) => p.name)
                 .join(', ')
               return (
-                <li key={tr.key} className={cn('flex items-stretch overflow-hidden rounded-xl border bg-card', done && 'opacity-60')}>
+                <li key={tr.key} className={cn('flex items-stretch overflow-hidden rounded-3xl bg-card', done && 'opacity-60')}>
                   <button
                     type="button"
                     aria-pressed={done}
@@ -131,7 +131,7 @@ export function SplitTab({ bill, onChange }: Props) {
             amountSatang={qrTransfer.amount}
           />
         )}
-        <details className="rounded-xl border bg-card px-3 py-2 text-sm [&_summary]:cursor-pointer">
+        <details className="rounded-3xl bg-card px-3 py-2 text-sm [&_summary]:cursor-pointer">
           <summary className="text-sm">{t('billSplit.details')}</summary>
           <ul className="mt-2 flex flex-col gap-2">
             {bill.people.map((p) => {
@@ -182,7 +182,7 @@ function PriceRow({ group, onSave }: { group: PriceGroup; onSave: (price: number
   const [text, setText] = useState(group.price !== null ? formatBahtPlain(group.price) : '')
   const invalid = text.trim() !== '' && parseBaht(text) === null
   return (
-    <li className={cn('flex items-center gap-2 rounded-xl border bg-card p-2 pl-3', group.price === null && 'border-tone-warning-foreground/40')}>
+    <li className={cn('flex items-center gap-2 rounded-3xl bg-card p-2 pl-3', group.price === null && 'border-tone-warning-foreground/40')}>
       <span className="min-w-0 flex-1 truncate text-sm">
         {group.name} <span className="text-muted-foreground">×{group.qty}</span>
       </span>

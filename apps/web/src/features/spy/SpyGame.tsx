@@ -83,7 +83,7 @@ export function SpyGame() {
     const placesMode = settings.mode === 'places'
     return (
       <div className="flex flex-col gap-3 pb-28">
-        <ol className="mx-4 grid gap-2 rounded-2xl border bg-card p-4 text-sm">
+        <ol className="mx-4 grid gap-2 rounded-3xl bg-card p-4 text-sm">
           {(['deal', 'ask', 'vote'] as const).map((step, i) => (
             <li key={step} className="flex gap-3">
               <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-medium text-primary-foreground">{i + 1}</span>
@@ -106,11 +106,11 @@ export function SpyGame() {
         </div>
 
         <div className="mx-4 grid grid-cols-2 gap-2">
-          <div className="flex flex-col items-start gap-2 rounded-2xl border bg-card p-3">
+          <div className="flex flex-col items-start gap-2 rounded-3xl bg-card p-3">
             <span className="text-sm font-medium">{t('games.spy.players')}</span>
             <NumberStepper label={t('games.spy.players')} value={settings.players} min={3} max={12} onChange={(players) => set({ players })} />
           </div>
-          <div className="flex flex-col items-start gap-2 rounded-2xl border bg-card p-3">
+          <div className="flex flex-col items-start gap-2 rounded-3xl bg-card p-3">
             <span className="text-sm font-medium">{t('games.spy.spies')}</span>
             <NumberStepper label={t('games.spy.spies')} value={settings.spies} min={1} max={maxSpies(settings.players)} onChange={(spies) => set({ spies })} />
           </div>
@@ -209,7 +209,7 @@ export function SpyGame() {
           </span>
         </div>
         <TimerBar left={timer.left} total={settings.minutes * 60} />
-        <ul className="grid gap-1.5 rounded-2xl border bg-card p-4 text-sm">
+        <ul className="grid gap-1.5 rounded-3xl bg-card p-4 text-sm">
           {(['q1', 'q2', 'q3'] as const).map((k) => (
             <li key={k}>• {t(`games.spy.tips.${settings.mode}.${k}`)}</li>
           ))}

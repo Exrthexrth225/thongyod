@@ -30,7 +30,7 @@ const TEAM_TINT: Record<Team, number> = { a: 1, b: 5 }
 const deck = gameDeck('codewords')
 
 function cardClass(card: CodeCard, show: boolean) {
-  if (!card.revealed && !show) return 'border bg-card text-card-foreground'
+  if (!card.revealed && !show) return 'bg-card text-card-foreground'
   // While peeking / at the end, opened cards fade so the leader sees what is still to find (the bomb never fades).
   const faded = show && card.revealed ? 'opacity-40' : ''
   if (card.owner === 'bomb') return 'bg-foreground text-background'
@@ -99,7 +99,7 @@ export function CodewordsGame() {
   if (!game) {
     return (
       <div className="flex flex-col gap-3 pb-28">
-        <ol className="mx-4 grid gap-2 rounded-2xl border bg-card p-4 text-sm">
+        <ol className="mx-4 grid gap-2 rounded-3xl bg-card p-4 text-sm">
           {(['teams', 'clue', 'open'] as const).map((step, i) => (
             <li key={step} className="flex gap-3">
               <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-medium text-primary-foreground">{i + 1}</span>

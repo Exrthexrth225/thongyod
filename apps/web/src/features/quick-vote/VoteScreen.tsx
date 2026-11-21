@@ -47,7 +47,7 @@ export function VoteScreen({ session, onVote }: VoteScreenProps) {
               aria-pressed={multiple ? selected : undefined}
               onClick={() => tap(index)}
               className={cn(
-                'flex min-h-14 items-center justify-between gap-3 rounded-xl border bg-card px-4 text-left text-base font-medium',
+                'flex min-h-14 items-center justify-between gap-3 rounded-3xl bg-card px-4 text-left text-base font-medium',
                 'transition-[transform,background-color] active:scale-[0.98]',
                 selected && 'border-brand bg-accent text-accent-foreground',
               )}

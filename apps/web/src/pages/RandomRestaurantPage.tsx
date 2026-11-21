@@ -210,7 +210,7 @@ export function RandomRestaurantPage() {
           <SpinWheel options={left.map((r) => r.name)} rotation={rotation} durationMs={spinning ? SPIN_MS : 0} onSpinEnd={() => undefined} onTap={pick} label={t('restaurants.spin')} />
         </div>
       )}
-      <details className="mx-4 rounded-xl border bg-card [&_summary]:cursor-pointer" open={filtersOpen} onToggle={(e) => setFiltersOpen(e.currentTarget.open)}>
+      <details className="mx-4 rounded-3xl bg-card [&_summary]:cursor-pointer" open={filtersOpen} onToggle={(e) => setFiltersOpen(e.currentTarget.open)}>
         <summary className="flex min-h-12 items-center gap-2 px-4 text-sm font-medium">
           <SlidersHorizontal className="size-4" aria-hidden="true" />
           {t('restaurants.filters', { count: activeFilters })}

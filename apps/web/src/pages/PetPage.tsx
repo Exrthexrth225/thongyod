@@ -27,7 +27,7 @@ export function PetPage() {
       <div className="flex flex-col items-center gap-6 px-4 pt-4">
         {!myPet && (
           // Skipped the egg on first launch: invite them to hatch one.
-          <div className="flex w-full items-center gap-3 rounded-2xl border bg-card p-3">
+          <div className="flex w-full items-center gap-3 rounded-3xl bg-card p-3">
             <Egg style="mystery" className="h-14 shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium">{t('pet.noPetTitle')}</p>
@@ -63,7 +63,7 @@ export function PetPage() {
         </Button>
         <p className="-mt-3 text-center text-xs text-muted-foreground">{t('pet.howToTouch')}</p>
         {showDemo && (
-          <details className="w-full rounded-2xl border bg-card p-3">
+          <details className="w-full rounded-3xl bg-card p-3">
             <summary className="cursor-pointer text-sm font-medium">{t('pet.demo.title')}</summary>
             <div className="mt-3 grid grid-cols-3 gap-2">
               {demo.map((act) => (

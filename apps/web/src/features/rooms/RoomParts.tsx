@@ -14,7 +14,7 @@ export function PlayerList({ room, highlight, extra }: { room: Room; highlight?:
   return (
     <ul className="grid grid-cols-2 gap-2" aria-label={t('rooms.players', { count: room.players.length })}>
       {room.players.map((p) => (
-        <li key={p.userId} className={cn('game-card-in flex items-center gap-2 rounded-2xl border bg-card px-3 py-2', highlight?.includes(p.userId) && 'border-foreground bg-foreground text-background')}>
+        <li key={p.userId} className={cn('game-card-in flex items-center gap-2 rounded-3xl bg-card px-3 py-2', highlight?.includes(p.userId) && 'border-foreground bg-foreground text-background')}>
           <Avatar name={p.displayName} src={p.avatarUrl} className="size-8" />
           <span className="min-w-0 flex-1 truncate text-sm font-medium">{p.displayName}</span>
           {p.isHost && <Crown className="size-4 shrink-0 text-tone-warning-foreground" aria-label={t('rooms.host')} />}
@@ -52,7 +52,7 @@ export function RoomLobby({ room, isHost, minPlayers, starting, onStart, onLeave
         <PlayerList room={room} />
       </section>
       {isHost ? (
-        children && <section className="flex flex-col gap-3 rounded-3xl border bg-card p-4">{children}</section>
+        children && <section className="flex flex-col gap-3 rounded-3xl bg-card p-4">{children}</section>
       ) : (
         <p className="flex items-center justify-center gap-2 rounded-2xl bg-muted p-4 text-sm">
           <Hourglass className="game-breathe size-4" aria-hidden="true" />

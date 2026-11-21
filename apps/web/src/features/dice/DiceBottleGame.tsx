@@ -126,7 +126,7 @@ export function DiceBottleGame() {
               )}
             </span>
           </button>
-          <div className="flex items-center justify-between rounded-2xl border bg-card p-3">
+          <div className="flex items-center justify-between rounded-3xl bg-card p-3">
             <span className="text-sm font-medium">{t('games.dice.howMany')}</span>
             <NumberStepper
               label={t('games.dice.howMany')}
@@ -175,7 +175,7 @@ export function DiceBottleGame() {
           <p className="min-h-8 text-center text-xl font-medium" role="status" aria-live="polite">
             {shown && seat !== null && <span className="game-pop inline-block">{t('games.dice.pointsAt', { n: seat + 1 })}</span>}
           </p>
-          <div className="flex items-center justify-between rounded-2xl border bg-card p-3">
+          <div className="flex items-center justify-between rounded-3xl bg-card p-3">
             <span className="min-w-0 text-sm">
               <span className="block font-medium">{t('games.dice.seats')}</span>
               <span className="block text-xs text-muted-foreground">{t('games.dice.seatsHint')}</span>

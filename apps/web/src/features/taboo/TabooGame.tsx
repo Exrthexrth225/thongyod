@@ -120,7 +120,7 @@ export function TabooGame() {
   if (stage === 'setup') {
     return (
       <div className="flex flex-col gap-3 pb-28">
-        <ol className="mx-4 grid gap-2 rounded-2xl border bg-card p-4 text-sm">
+        <ol className="mx-4 grid gap-2 rounded-3xl bg-card p-4 text-sm">
           {(['teams', 'clue', 'watch'] as const).map((step, i) => (
             <li key={step} className="flex gap-3">
               <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-medium text-primary-foreground">{i + 1}</span>
@@ -274,7 +274,7 @@ export function TabooGame() {
               <button
                 type="button"
                 onClick={() => setAnswers((list) => list.map((x, j) => (j === i ? { ...x, verdict: cycleVerdict(x.verdict) } : x)))}
-                className="flex w-full items-center justify-between rounded-xl border bg-card px-4 py-2.5 text-left"
+                className="flex w-full items-center justify-between rounded-3xl bg-card px-4 py-2.5 text-left"
               >
                 <span className="font-medium">{a.word}</span>
                 <span className={cn('rounded-full px-2.5 py-0.5 text-xs', a.verdict === 'correct' ? TONE_CLASS.success : a.verdict === 'taboo' ? TONE_CLASS.danger : TONE_CLASS.neutral)}>

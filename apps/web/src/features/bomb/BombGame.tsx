@@ -103,7 +103,7 @@ export function BombGame() {
   if (stage === 'setup') {
     return (
       <div className="flex flex-col gap-3 pb-28">
-        <ol className="mx-4 grid gap-2 rounded-2xl border bg-card p-4 text-sm">
+        <ol className="mx-4 grid gap-2 rounded-3xl bg-card p-4 text-sm">
           {(['topic', 'pass', 'boom'] as const).map((step, i) => (
             <li key={step} className="flex gap-3">
               <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-medium text-primary-foreground">{i + 1}</span>

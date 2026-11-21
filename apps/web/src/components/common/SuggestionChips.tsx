@@ -19,7 +19,7 @@ export function SuggestionChips({ items, onPick, label, icons }: SuggestionChips
             key={item}
             type="button"
             onClick={() => onPick(item)}
-            className="flex h-9 items-center gap-1.5 rounded-full border bg-card px-3 text-sm active:bg-muted"
+            className="flex h-9 items-center gap-1.5 rounded-full bg-card px-3 text-sm active:bg-muted"
           >
             {Icon && <Icon className="size-4 text-muted-foreground" aria-hidden="true" />}
             {item}

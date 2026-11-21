@@ -105,7 +105,7 @@ export function SetupForm({ initial = EMPTY, onStart }: SetupFormProps) {
         />
       </div>
 
-      <details className="rounded-xl border bg-card px-4 py-3 [&_summary]:cursor-pointer">
+      <details className="rounded-3xl bg-card px-4 py-3 [&_summary]:cursor-pointer">
         <summary className="text-sm font-medium">{t('quickVote.advanced')}</summary>
         <label className="mt-3 flex items-start gap-3">
           <input
