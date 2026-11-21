@@ -72,7 +72,7 @@ export function DrawGame() {
     read()
     // Theme or dark mode can change while playing.
     const observer = new MutationObserver(read)
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme', 'data-mode', 'style'] })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-mode', 'style'] })
     return () => observer.disconnect()
   }, [])
 
@@ -271,7 +271,7 @@ export function DrawGame() {
                 setPen(i)
                 setErase(false)
               }}
-              className={cn('size-8 shrink-0 rounded-full border-2 transition-transform', !erase && pen === i ? 'scale-115 border-primary' : 'border-background')}
+              className={cn('size-8 shrink-0 rounded-full border-2 transition-transform', !erase && pen === i ? 'scale-115 border-brand' : 'border-background')}
               style={{ backgroundColor: c }}
             />
           ))}

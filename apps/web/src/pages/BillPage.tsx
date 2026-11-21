@@ -67,7 +67,7 @@ export function BillPage() {
         <button type="button" onClick={() => setPeople(true)} className="flex items-center gap-2 rounded-xl border bg-card p-2 pl-3 text-left active:bg-muted/50">
           <Faces bill={bill} ids={bill.people.map((p) => p.id)} />
           <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">{t('billSplit.peopleCount', { count: bill.people.length })}</span>
-          <span className="flex items-center gap-1 text-sm text-primary">
+          <span className="flex items-center gap-1 text-sm text-brand">
             <UserPlus className="size-4" aria-hidden="true" />
             {t('billSplit.managePeople')}
           </span>

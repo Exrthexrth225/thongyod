@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="th" data-theme="default" data-mode="light">
+<html lang="th" data-mode="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -9,8 +9,8 @@
     <!-- SEO + link previews (LINE / Facebook read these from the HTML; they do not run JavaScript).
          Per-page <title> is set by PageHeader. At deploy: add canonical, og:url, og:image (see docs/HANDOFF.md "Deploy checklist"). -->
     <meta name="description" content="ทองหยอด แอปกล่องเครื่องมือของเด็กมหาลัย: ชวนเพื่อนนัด หารบิลแบบจดระหว่างกิน วงล้อสุ่ม เซียมซี และสัตว์เลี้ยงตัวน้อย ใช้คนเดียวก็ได้ ชวนเพื่อนก็แค่แตะเดียว" />
-    <meta name="theme-color" content="#f7f6f3" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#1a1917" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1c1642" media="(prefers-color-scheme: dark)" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="ทองหยอด" />
     <meta property="og:title" content="ทองหยอด – กล่องเครื่องมือของเด็กมหาลัย" />
@@ -20,7 +20,6 @@
     <script>
       // Runs before the page draws, so there is no flash of the wrong theme.
       // data-mode: the user's saved choice "light" / "dark", or "system" (default) = follow the device, live.
-      // data-theme: the user's saved choice ("default" or "cute").
       // Keep the storage keys in sync with src/lib/theme.ts.
       ;(function () {
         var root = document.documentElement
@@ -38,7 +37,6 @@
         }
         applyMode()
         media.addEventListener('change', applyMode)
-        root.dataset.theme = saved('thongyod-theme') === 'cute' ? 'cute' : 'default'
       })()
     </script>
   </head>

@@ -37,7 +37,7 @@ export function PackPicker({ packs, value, onChange, multiple, label }: PackPick
             className={cn(
               'flex min-h-24 flex-col items-start gap-1 rounded-2xl p-3 text-left transition-[transform,box-shadow] active:scale-[0.98]',
               tintClass(pack.tint),
-              selected ? 'ring-3 ring-primary' : 'opacity-75 ring-0',
+              selected ? 'ring-3 ring-brand' : 'opacity-75 ring-0',
             )}
           >
             <Icon className="size-6" aria-hidden="true" />

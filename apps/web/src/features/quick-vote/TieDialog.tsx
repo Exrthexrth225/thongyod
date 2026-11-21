@@ -56,7 +56,7 @@ export function TieDialog({ session, onRandom, onRunoff, onManual }: TieDialogPr
                 key={index}
                 className={cn(
                   'rounded-lg border px-3 py-2 text-base transition-colors',
-                  i === highlight && 'border-primary bg-accent text-accent-foreground',
+                  i === highlight && 'border-brand bg-accent text-accent-foreground',
                 )}
               >
                 {session.options[index]}

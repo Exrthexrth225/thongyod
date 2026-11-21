@@ -77,7 +77,7 @@ export function MonthGrid({ month, today, selected, onSelect, marks, onSwipeMont
                 'mx-auto flex h-12 w-11 flex-col items-center justify-center gap-0.5 rounded-lg text-sm transition-colors',
                 isToday ? 'bg-primary font-medium text-primary-foreground' : 'active:bg-muted',
                 !isToday && !inMonth && 'text-muted-foreground/60',
-                isSelected && !isToday && 'ring-2 ring-primary ring-inset',
+                isSelected && !isToday && 'ring-2 ring-brand ring-inset',
               )}
             >
               <span className="leading-none tabular-nums">{day.getDate()}</span>
@@ -89,7 +89,7 @@ export function MonthGrid({ month, today, selected, onSelect, marks, onSwipeMont
                       'size-1.5 rounded-full',
                       // Hollow = still waiting for my answer; filled = answered (works in every theme and mode).
                       i === 0 && mark?.needsAnswer
-                        ? cn('border', isToday ? 'border-primary-foreground' : 'border-primary')
+                        ? cn('border', isToday ? 'border-primary-foreground' : 'border-brand')
                         : isToday
                           ? 'bg-primary-foreground'
                           : 'bg-primary',
@@ -108,7 +108,7 @@ export function MonthGrid({ month, today, selected, onSelect, marks, onSwipeMont
           {t('calendar.legendMeetup')}
         </span>
         <span className="flex items-center gap-1">
-          <span className="size-1.5 rounded-full border border-primary" />
+          <span className="size-1.5 rounded-full border border-brand" />
           {t('calendar.legendWaiting')}
         </span>
       </p>

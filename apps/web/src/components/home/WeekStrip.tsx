@@ -29,7 +29,7 @@ export function WeekStrip({ today, selected, onSelect, markedDays }: WeekStripPr
             className={cn(
               'flex min-h-16 flex-col items-center justify-start rounded-lg pt-1.5 text-xs transition-colors',
               isToday ? 'bg-primary text-primary-foreground' : 'text-muted-foreground active:bg-muted',
-              isSelected && !isToday && 'ring-2 ring-primary ring-inset',
+              isSelected && !isToday && 'ring-2 ring-brand ring-inset',
             )}
           >
             <span>{weekdayShort(day)}</span>

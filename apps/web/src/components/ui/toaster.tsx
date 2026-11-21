@@ -28,7 +28,7 @@ function ToastList() {
           <Toast.Title className="truncate text-sm font-medium" />
           <Toast.Description className="truncate text-xs opacity-80" />
         </div>
-        <Toast.Action className="h-10 shrink-0 rounded-lg px-3 text-sm font-medium text-primary active:bg-background/10" />
+        <Toast.Action className="h-10 shrink-0 rounded-lg px-3 text-sm font-medium text-brand active:bg-background/10" />
       </Toast.Content>
     </Toast.Root>
   ))

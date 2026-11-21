@@ -35,7 +35,7 @@ export function OptionList<T extends string>({ options, value, onChange, label }
               aria-hidden="true"
               className={cn(
                 'flex size-6 shrink-0 items-center justify-center rounded-full border-2',
-                selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border',
+                selected ? 'border-brand bg-primary text-primary-foreground' : 'border-border',
               )}
             >
               {selected && <Check className="size-4" />}

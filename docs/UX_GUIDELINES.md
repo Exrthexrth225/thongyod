@@ -209,14 +209,15 @@ Taken from the prompt Earth uses for client design work (CDG). Only the parts th
 **How we work**
 - **[agreed]** Discuss before building: 2–3 concrete options, a one-line trade-off each, say which one we recommend; build after Earth agrees.
 - **[agreed]** Research first (guidelines, real apps). Learn patterns, never copy a design.
-- **[agreed]** After every UI change: screenshot and check it ourselves before reporting: alignment, overlaps, cut-off text, **Thai line breaks**, both themes, small and large phones.
+- **[agreed]** After every UI change: screenshot and check it ourselves before reporting: alignment, overlaps, cut-off text, **Thai line breaks**, light and dark mode, small and large phones.
 - **[agreed]** Report briefly: what changed + what Earth must decide. Design rationale only when asked or when the design is final.
 - **[agreed]** If Earth says something looks wrong, ask what exactly (image, colour, place) instead of guessing again.
 - **[agreed]** Never invent facts (prices, rules, numbers): use "[รอยืนยัน]" and list it as a question.
 - **[agreed]** When art is needed, give Earth a detailed image prompt in English (subject, composition, empty space, light, palette, what to avoid); Earth generates it.
 
 **Colour**
-- Earth (2026-11-22): the prompt's colour rules are **not** used here. Colours are chosen for what suits Thongyod (playful, two themes, tints per category); see `lib/tones.ts` and DECISIONS #86.
+- Earth (2026-11-22): the prompt's colour rules are **not** used here. Colours are chosen for what suits Thongyod; see `lib/tones.ts` and DECISIONS #97.
+- **[agreed]** One look, two modes (#97): white / night indigo pages, colour slabs (yolk, tangerine, mint, sky, lilac), navy ink on every light slab. No pink in the UI (the pet owns pink). Yolk is a surface colour only; text and links use `text-brand`.
 - Text and UI still meet WCAG AA contrast in every theme.
 
 **Layout and components**

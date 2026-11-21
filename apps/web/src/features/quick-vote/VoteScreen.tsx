@@ -49,7 +49,7 @@ export function VoteScreen({ session, onVote }: VoteScreenProps) {
               className={cn(
                 'flex min-h-14 items-center justify-between gap-3 rounded-xl border bg-card px-4 text-left text-base font-medium',
                 'transition-[transform,background-color] active:scale-[0.98]',
-                selected && 'border-primary bg-accent text-accent-foreground',
+                selected && 'border-brand bg-accent text-accent-foreground',
               )}
             >
               <span className="min-w-0 break-words">{session.options[index]}</span>
@@ -58,7 +58,7 @@ export function VoteScreen({ session, onVote }: VoteScreenProps) {
                   aria-hidden="true"
                   className={cn(
                     'flex size-6 shrink-0 items-center justify-center rounded-md border',
-                    selected && 'border-primary bg-primary text-primary-foreground',
+                    selected && 'border-brand bg-primary text-primary-foreground',
                   )}
                 >
                   {selected && <Check className="size-4" />}

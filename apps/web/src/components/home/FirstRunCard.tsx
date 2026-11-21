@@ -40,7 +40,7 @@ export function FirstRunCard() {
             key={step}
             to={FIRST_RUN_TO[step]}
             linkState={SHOW_BACK}
-            leading={ok ? <CircleCheck className="size-5 shrink-0 text-primary" aria-hidden="true" /> : <Circle className="size-5 shrink-0 text-muted-foreground/50" aria-hidden="true" />}
+            leading={ok ? <CircleCheck className="size-5 shrink-0 text-brand" aria-hidden="true" /> : <Circle className="size-5 shrink-0 text-muted-foreground/50" aria-hidden="true" />}
             title={t(`home.firstRun.steps.${step}.title`)}
             subtitle={ok ? t('home.missionDone') : t(`home.firstRun.steps.${step}.text`)}
           />

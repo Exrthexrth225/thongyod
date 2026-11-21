@@ -63,7 +63,7 @@ export function EntryDialog({ bill, entryId, onClose, onChange }: Props) {
               type="button"
               aria-pressed={payerId === null}
               onClick={() => setPayerId(null)}
-              className={payerId === null ? 'h-10 rounded-full border-2 border-primary bg-primary/10 px-3 text-sm font-medium' : 'h-10 rounded-full border-2 border-transparent bg-muted/60 px-3 text-sm'}
+              className={payerId === null ? 'h-10 rounded-full border-2 border-brand bg-brand/10 px-3 text-sm font-medium' : 'h-10 rounded-full border-2 border-transparent bg-muted/60 px-3 text-sm'}
             >
               {t('billSplit.paidByShop', { name: nameOf(bill.payerId) })}
             </button>

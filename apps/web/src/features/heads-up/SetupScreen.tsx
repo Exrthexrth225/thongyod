@@ -63,7 +63,7 @@ export function SetupScreen({ saved, onChange, tilt, onStart }: Props) {
                 className={cn(
                   'flex min-h-28 flex-col items-start gap-1 rounded-2xl p-3 text-left transition-transform active:scale-[0.98]',
                   tintClass(pack.tint),
-                  selected ? 'ring-3 ring-primary' : 'ring-0',
+                  selected ? 'ring-3 ring-brand' : 'ring-0',
                 )}
               >
                 <span className="flex w-full items-center justify-between">

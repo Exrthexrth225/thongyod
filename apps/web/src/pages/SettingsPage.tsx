@@ -13,7 +13,7 @@ import { Switch } from '@/components/ui/switch'
 import type { HomeSectionId } from '@/config/home'
 import { moveSection, setHomeLayout, toggleSection, useHomeLayout } from '@/features/settings/homeLayout'
 import { getLanguage, setLanguage, type Language } from '@/i18n'
-import { getMode, getTheme, setMode, setTheme, type Mode, type Theme } from '@/lib/theme'
+import { getMode, setMode, type Mode } from '@/lib/theme'
 
 const SECTION_LABEL = {
   today: 'settings.home.today',
@@ -25,7 +25,6 @@ const SECTION_LABEL = {
 // /settings — opened from the gear on "ฉัน" (decision #36).
 export function SettingsPage() {
   const { t } = useTranslation()
-  const [theme, setThemeState] = useState<Theme>(getTheme)
   const [mode, setModeState] = useState<Mode>(getMode)
   const language = getLanguage()
   const layout = useHomeLayout()
@@ -81,27 +80,13 @@ export function SettingsPage() {
       <section>
         <SectionHeader title={t('pages.me.theme')} />
         <div className="px-4">
-          <SegmentedChoice<Theme>
-            label={t('pages.me.chooseTheme')}
-            value={theme}
+          <ModeChoice
+            value={mode}
             onChange={(next) => {
-              setTheme(next)
-              setThemeState(next)
+              setMode(next)
+              setModeState(next)
             }}
-            options={[
-              { value: 'default', label: t('pages.me.themeDefault') },
-              { value: 'cute', label: t('pages.me.themeCute') },
-            ]}
           />
-          <div className="mt-3">
-            <ModeChoice
-              value={mode}
-              onChange={(next) => {
-                setMode(next)
-                setModeState(next)
-              }}
-            />
-          </div>
           <p className="mt-2 text-xs text-muted-foreground">{t('pages.me.themeHint')}</p>
         </div>
       </section>

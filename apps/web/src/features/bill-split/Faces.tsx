@@ -36,7 +36,7 @@ export function FacePicker({ bill, value, onChange, label }: { bill: Bill; value
             aria-pressed={on}
             aria-label={nameOf(p.id)}
             onClick={() => onChange(on ? value.filter((x) => x !== p.id) : [...value, p.id])}
-            className={cn('rounded-full transition-[opacity,transform] active:scale-90', on ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : 'opacity-40')}
+            className={cn('rounded-full transition-[opacity,transform] active:scale-90', on ? 'ring-2 ring-brand ring-offset-2 ring-offset-background' : 'opacity-40')}
           >
             <Face bill={bill} id={p.id} className="size-9 text-sm" />
           </button>

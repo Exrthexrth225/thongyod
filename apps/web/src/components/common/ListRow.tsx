@@ -23,16 +23,16 @@ export function ListRow({ leading, title, subtitle, to, trailing, linkState }: L
     <>
       {leading}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium">{title}</span>
-        {subtitle && <span className="block truncate text-xs text-muted-foreground">{subtitle}</span>}
+        <span className="block truncate text-[15px] font-semibold">{title}</span>
+        {subtitle && <span className="block truncate text-[13px] text-muted-foreground">{subtitle}</span>}
       </span>
     </>
   )
-  const row = 'flex min-h-14 items-center gap-3 py-2 [&+&]:border-t'
+  const row = 'flex min-h-16 items-center gap-3 py-2.5 [&+&]:border-t [&+&]:border-background'
 
   if (to && !trailing) {
     return (
-      <Link to={to} state={linkState} className={cn(row, 'active:opacity-70')}>
+      <Link to={to} state={linkState} className={cn(row, 'pressable')}>
         {main}
         <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
       </Link>
@@ -41,7 +41,7 @@ export function ListRow({ leading, title, subtitle, to, trailing, linkState }: L
   return (
     <div className={row}>
       {to ? (
-        <Link to={to} state={linkState} className="flex min-w-0 flex-1 items-center gap-3 active:opacity-70">
+        <Link to={to} state={linkState} className="pressable flex min-w-0 flex-1 items-center gap-3">
           {main}
         </Link>
       ) : (

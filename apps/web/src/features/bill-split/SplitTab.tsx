@@ -95,14 +95,14 @@ export function SplitTab({ bill, onChange }: Props) {
                       {what && <span className="block truncate text-xs text-muted-foreground">{what}</span>}
                     </span>
                     <span className={cn('text-base font-medium tabular-nums', done && 'line-through')}>{formatBaht(tr.amount)}</span>
-                    {done ? <CircleCheck className="size-6 shrink-0 text-primary" aria-hidden="true" /> : <Circle className="size-6 shrink-0 text-muted-foreground/50" aria-hidden="true" />}
+                    {done ? <CircleCheck className="size-6 shrink-0 text-brand" aria-hidden="true" /> : <Circle className="size-6 shrink-0 text-muted-foreground/50" aria-hidden="true" />}
                   </button>
                   {!done && (
                     <button
                       type="button"
                       onClick={() => setQrFor(tr.key)}
                       aria-label={`${t('billSplit.promptPay.open')} ${t('billSplit.transfer', { from: nameOf(tr.from), to: nameOf(tr.to) })}`}
-                      className="flex w-12 shrink-0 items-center justify-center border-l text-primary active:bg-muted/50"
+                      className="flex w-12 shrink-0 items-center justify-center border-l text-brand active:bg-muted/50"
                     >
                       <QrCode className="size-5" aria-hidden="true" />
                     </button>
@@ -117,7 +117,7 @@ export function SplitTab({ bill, onChange }: Props) {
           {s.extra > 0 && <span className="text-xs text-muted-foreground">{t('billSplit.extra', { amount: formatBaht(s.extra) })}</span>}
         </div>
         {billStatus(bill, s).status === 'cleared' && (
-          <p className="text-center text-sm font-medium text-primary" role="status">
+          <p className="text-center text-sm font-medium text-brand" role="status">
             {t('billSplit.allDone')}
           </p>
         )}

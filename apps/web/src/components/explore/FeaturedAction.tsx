@@ -12,7 +12,7 @@ export function FeaturedAction({ tool }: { tool: Tool }) {
     <Link
       to={tool.to}
       state={SHOW_BACK}
-      className="flex items-center gap-3 rounded-xl border border-primary bg-accent p-3 text-accent-foreground transition-transform active:scale-[0.98]"
+      className="flex items-center gap-3 rounded-xl border border-brand bg-accent p-3 text-accent-foreground transition-transform active:scale-[0.98]"
     >
       <span
         aria-hidden="true"

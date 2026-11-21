@@ -70,7 +70,7 @@ export function LuckyColorPage() {
                     setBirth(day)
                     saveBirthDay(day)
                   }}
-                  className={cn('flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-sm', birth === day ? 'border-primary bg-primary text-primary-foreground' : 'bg-card')}
+                  className={cn('flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-sm', birth === day ? 'border-brand bg-primary text-primary-foreground' : 'bg-card')}
                 >
                   <span className="size-3 rounded-full border" style={{ backgroundColor: LUCKY_HEX[colorsFor(day).friends] }} aria-hidden="true" />
                   {t(`luckyColor.days.${day}`)}

@@ -185,7 +185,7 @@ export function TabooGame() {
   const scoreboard = (
     <div className="grid grid-cols-2 gap-2">
       {scores.map((s, i) => (
-        <div key={i} className={cn('flex items-center justify-between rounded-2xl px-4 py-3', tintClass(TEAM_TINTS[i]), i === info.team && stage === 'ready' && 'ring-3 ring-primary')}>
+        <div key={i} className={cn('flex items-center justify-between rounded-2xl px-4 py-3', tintClass(TEAM_TINTS[i]), i === info.team && stage === 'ready' && 'ring-3 ring-brand')}>
           <span className="text-sm font-medium">{team(i)}</span>
           <span className="text-2xl font-medium tabular-nums">{s}</span>
         </div>

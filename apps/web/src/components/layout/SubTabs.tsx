@@ -19,7 +19,7 @@ export function SubTabs({ tabs, label }: { tabs: SubTab[]; label: string }) {
           className={({ isActive }) =>
             cn(
               '-mb-px flex h-11 flex-1 items-center justify-center border-b-2 text-sm transition-colors',
-              isActive ? 'border-primary font-medium text-foreground' : 'border-transparent text-muted-foreground',
+              isActive ? 'border-brand font-medium text-foreground' : 'border-transparent text-muted-foreground',
             )
           }
         >

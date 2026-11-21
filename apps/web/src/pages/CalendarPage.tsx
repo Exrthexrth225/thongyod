@@ -93,7 +93,7 @@ export function CalendarPage() {
             title={t('home.agendaTitle', { day: formatDayLabel(selected, today) })}
             action={
               canInvite && (
-                <Link to={`/meetups/new?date=${dayKey(selected)}`} className="flex items-center gap-1 text-xs font-medium text-primary">
+                <Link to={`/meetups/new?date=${dayKey(selected)}`} className="flex items-center gap-1 text-xs font-medium text-brand">
                   <CalendarPlus className="size-3.5" aria-hidden="true" />
                   {t('calendar.inviteOnDay', { day: formatDayLabel(selected, today) })}
                 </Link>

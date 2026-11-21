@@ -23,7 +23,7 @@ export function ResultView({ session, onNewVote, onDone }: ResultViewProps) {
       {session.question && <h2 className="text-xl font-medium">{session.question}</h2>}
 
       {winner !== null && (
-        <Card className="flex items-center gap-3 border-primary bg-accent p-4 text-accent-foreground">
+        <Card className="flex items-center gap-3 border-brand bg-accent p-4 text-accent-foreground">
           <Trophy className="size-8 shrink-0" aria-hidden="true" />
           <div className="min-w-0">
             <p className="text-xs">{t('quickVote.winner')}</p>

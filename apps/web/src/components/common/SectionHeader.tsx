@@ -6,14 +6,23 @@ type SectionHeaderProps = {
   action?: ReactNode
   /** Quieter text: a sub-heading (h3) inside a bigger zone (Home). */
   muted?: boolean
+  /** Small number pill next to the title (e.g. how many invites wait). Hidden at 0. */
+  count?: number | string
 }
 
-// Small heading above a group of cards on a page.
-export function SectionHeader({ title, action, muted = false }: SectionHeaderProps) {
+// Heading above a group of cards on a page. Big and bold (Kanit): the page's structure reads from these.
+export function SectionHeader({ title, action, muted = false, count }: SectionHeaderProps) {
   return (
-    <div className="flex items-center justify-between px-4 pt-2 pb-1.5">
-      {muted ? <h3 className="text-sm text-muted-foreground">{title}</h3> : <h2 className="text-sm font-medium">{title}</h2>}
-      {action}
+    <div className="flex items-center gap-2 px-4 pt-3 pb-2">
+      {muted ? (
+        <h3 className="text-base font-medium text-pretty">{title}</h3>
+      ) : (
+        <h2 className="text-[22px] leading-tight font-bold text-balance">{title}</h2>
+      )}
+      {count !== undefined && count !== 0 && (
+        <span className="rounded-full bg-tangerine px-2.5 text-[13px] leading-6 font-semibold text-on-slab tabular-nums">{count}</span>
+      )}
+      {action && <span className="ml-auto shrink-0">{action}</span>}
     </div>
   )
 }

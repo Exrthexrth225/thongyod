@@ -12,6 +12,6 @@ export function useInviteActions(): SwipeAction[] {
   return [
     { dir: 'left', label: t('meetup.notGoing'), icon: X, tone: 'border-muted-foreground/40 text-muted-foreground' },
     { dir: 'up', label: t('meetup.maybe'), icon: HelpCircle, tone: 'border-tone-warning-foreground text-tone-warning-foreground' },
-    { dir: 'right', label: t('meetup.going'), icon: Check, tone: 'border-primary text-primary' },
+    { dir: 'right', label: t('meetup.going'), icon: Check, tone: 'border-brand text-brand' },
   ]
 }

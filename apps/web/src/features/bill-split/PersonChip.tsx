@@ -23,12 +23,12 @@ export function PersonChip({ index, name, pressed, onClick, icon: Icon, disabled
       onClick={onClick}
       className={cn(
         'flex h-10 max-w-full items-center gap-2 rounded-full border-2 py-0.5 pr-3 pl-0.5 text-sm transition-colors active:scale-95 disabled:opacity-40',
-        pressed ? 'border-primary bg-primary/10 font-medium' : 'border-transparent bg-muted/60',
+        pressed ? 'border-brand bg-brand/10 font-medium' : 'border-transparent bg-muted/60',
       )}
     >
       <Avatar name={name} className={cn('size-8 text-xs', personColor(index))} />
       <span className="truncate">{name}</span>
-      {pressed && <Icon className="size-4 shrink-0 text-primary" aria-hidden="true" />}
+      {pressed && <Icon className="size-4 shrink-0 text-brand" aria-hidden="true" />}
     </button>
   )
 }

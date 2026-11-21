@@ -2,13 +2,17 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/anuphan";
-@import "@fontsource/mali/500.css";
+@import "@fontsource/kanit/thai-500.css";
+@import "@fontsource/kanit/thai-700.css";
+@import "@fontsource/kanit/latin-500.css";
+@import "@fontsource/kanit/latin-700.css";
+@import "@fontsource/kanit/thai-800.css";
+@import "@fontsource/kanit/latin-800.css";
 
 /*
- * THEMES
- * Two attributes on <html> (set by the script in index.html):
- *   data-theme = "default" | "cute"   (user choice, saved in localStorage)
- *   data-mode  = "light" | "dark"     (follows the phone/computer setting)
+ * THEME
+ * One look (DECISIONS #97). One attribute on <html> (set by the script in index.html):
+ *   data-mode  = "light" | "dark"     (follows the phone, or the user's saved choice)
  * Components only use the shadcn variables below (--primary, --card, ...).
  * Never hard-code colors in components.
  */
@@ -17,6 +21,17 @@
 @custom-variant dark (&:where([data-mode="dark"], [data-mode="dark"] *));
 
 @theme inline {
+    --color-brand: var(--brand);
+    --color-ink: var(--ink);
+    --color-ink-foreground: var(--ink-foreground);
+    --color-ink-muted: var(--ink-muted);
+    --color-yolk: var(--yolk);
+    --color-tangerine: var(--tangerine);
+    --color-mint: var(--mint);
+    --color-sky: var(--sky);
+    --color-lilac: var(--lilac);
+    --color-on-slab: var(--on-slab);
+    --color-on-lilac: var(--on-lilac);
     --color-tone-warning: var(--tone-warning);
     --color-tone-warning-foreground: var(--tone-warning-foreground);
     --color-tone-success: var(--tone-success);
@@ -95,241 +110,178 @@
     --text-2xl--line-height: 1.4;
 }
 
-/* ---------- Theme "ค่าเริ่มต้น" (default): light ---------- */
-:root,
-[data-theme="default"] {
+/* ---------- One look (DECISIONS #97): "pop blocks" ----------
+ * Light: white page, lavender-grey surfaces, yolk + tangerine + mint + sky + lilac colour slabs,
+ * navy ink text (never brown on orange/yellow: it blurs). Dark: the same shapes on night indigo.
+ * The pet is the only pink thing in the app. */
+:root {
     --app-font-sans: "Anuphan Variable", "Noto Sans Thai", system-ui, sans-serif;
-    --app-font-heading: var(--app-font-sans);
-    --radius: 0.5rem; /* buttons 8px, cards ~12px */
+    --app-font-heading: "Kanit", var(--app-font-sans);
+    --radius: 1rem; /* buttons 16px, cards ~22px */
 
-    --background: #f7f6f3;
-    --foreground: #2c2c2a;
-    --card: #ffffff;
-    --card-foreground: #2c2c2a;
+    /* Brand slabs (used through lib/tones.ts SLAB classes) */
+    --ink: #17142b;
+    --yolk: #ffc21a;
+    --tangerine: #ff8a3d;
+    --mint: #19c39c;
+    --sky: #3d8bff;
+    --lilac: #7c4dff;
+    --on-slab: #17142b;     /* text on yolk / tangerine / mint / sky */
+    --on-lilac: #ffffff;
+    --ink-foreground: #ffffff;
+    --brand: #6b3df0;       /* text, links, selected outlines: yolk is for surfaces only */
+    --ink-muted: #b9b6cc;
+
+    --background: #ffffff;
+    --foreground: #17142b;
+    --card: #f3f1fa;
+    --card-foreground: #17142b;
     --popover: #ffffff;
-    --popover-foreground: #2c2c2a;
-    --primary: #ef9f27;            /* gold */
-    --primary-foreground: #412402;
-    --secondary: #f1efe8;
-    --secondary-foreground: #2c2c2a;
-    --muted: #f1efe8;
-    --muted-foreground: #5f5e5a;
-    --accent: #faeeda;
-    --accent-foreground: #854f0b;
-    --destructive: #c93a39;
-    --border: #e4e2da;
-    --input: #e4e2da;
-    --ring: #ef9f27;
-    --chart-1: #ef9f27;
-    --chart-2: #1d9e75;
-    --chart-3: #7f77dd;
-    --chart-4: #d4537e;
-    --chart-5: #888780;
+    --popover-foreground: #17142b;
+    --primary: #ffc21a;
+    --primary-foreground: #17142b;
+    --secondary: #f3f1fa;
+    --secondary-foreground: #17142b;
+    --muted: #f3f1fa;
+    --muted-foreground: #5b5870;
+    --accent: #fff0bf;
+    --accent-foreground: #17142b;
+    --destructive: #d93636;
+    --border: #e4e1ef;
+    --input: #dcd8ea;
+    --ring: #7c4dff;
+    --chart-1: #ffc21a;
+    --chart-2: #19c39c;
+    --chart-3: #7c4dff;
+    --chart-4: #ff8a3d;
+    --chart-5: #3d8bff;
     --sidebar: #ffffff;
-    --sidebar-foreground: #2c2c2a;
-    --sidebar-primary: #ef9f27;
-    --sidebar-primary-foreground: #412402;
-    --sidebar-accent: #faeeda;
-    --sidebar-accent-foreground: #854f0b;
-    --sidebar-border: #e4e2da;
-    --sidebar-ring: #ef9f27;
+    --sidebar-foreground: #17142b;
+    --sidebar-primary: #ffc21a;
+    --sidebar-primary-foreground: #17142b;
+    --sidebar-accent: #fff0bf;
+    --sidebar-accent-foreground: #17142b;
+    --sidebar-border: #e4e1ef;
+    --sidebar-ring: #7c4dff;
     color-scheme: light;
     /* Tones (status) and tints (categories): see lib/tones.ts. Never hard-code Tailwind palette colors. */
-    --tone-warning: #faeeda;
-    --tone-warning-foreground: #854f0b;
-    --tone-success: #e1f5ee;
-    --tone-success-foreground: #0f6e56;
-    --tone-info: #e6f1fb;
-    --tone-info-foreground: #185fa5;
-    --tone-danger: #fcebeb;
-    --tone-danger-foreground: #a32d2d;
-    --tone-accent: #faeeda;
-    --tone-accent-foreground: #854f0b;
-    --tint-1: #ffe4e6;
-    --tint-1-foreground: #9f1239;
-    --tint-2: #d1fae5;
-    --tint-2-foreground: #065f46;
-    --tint-3: #fef3c7;
-    --tint-3-foreground: #92400e;
-    --tint-4: #ede9fe;
-    --tint-4-foreground: #5b21b6;
-    --tint-5: #e0f2fe;
-    --tint-5-foreground: #075985;
-    --tint-6: #fce7f3;
-    --tint-6-foreground: #9d174d;
-    --tint-7: #ecfccb;
-    --tint-7-foreground: #3f6212;
-    --tint-8: #ccfbf1;
-    --tint-8-foreground: #115e59;
+    --tone-warning: #fff0bf;
+    --tone-warning-foreground: #6b4b00;
+    --tone-success: #d6f5ec;
+    --tone-success-foreground: #0b5e4a;
+    --tone-info: #e0ecff;
+    --tone-info-foreground: #1d4fa8;
+    --tone-danger: #fde4e4;
+    --tone-danger-foreground: #a32020;
+    --tone-accent: #ffe6d4;
+    --tone-accent-foreground: #8a3a06;
+    /* Tints: full-strength colour blocks with ink (or white) on top. */
+    --tint-1: #ff8a3d;
+    --tint-1-foreground: #17142b;
+    --tint-2: #19c39c;
+    --tint-2-foreground: #17142b;
+    --tint-3: #ffc21a;
+    --tint-3-foreground: #17142b;
+    --tint-4: #7c4dff;
+    --tint-4-foreground: #ffffff;
+    --tint-5: #3d8bff;
+    --tint-5-foreground: #17142b;
+    --tint-6: #ff6b6b;
+    --tint-6-foreground: #17142b;
+    --tint-7: #9ad43a;
+    --tint-7-foreground: #17142b;
+    --tint-8: #14b8c8;
+    --tint-8-foreground: #17142b;
 }
 
-/* ---------- Theme "ค่าเริ่มต้น" (default): dark ---------- */
 [data-mode="dark"] {
-    --background: #1a1917;
-    --foreground: #edebe4;
-    --card: #24231f;
-    --card-foreground: #edebe4;
-    --popover: #2b2a26;
-    --popover-foreground: #edebe4;
-    --primary: #ef9f27;
-    --primary-foreground: #412402;
-    --secondary: #2f2e2a;
-    --secondary-foreground: #edebe4;
-    --muted: #2f2e2a;
-    --muted-foreground: #a8a69e;
-    --accent: #3a2a10;
-    --accent-foreground: #fac775;
-    --destructive: #f09595;
-    --border: #34332e;
-    --input: #3a3934;
-    --ring: #ef9f27;
-    --sidebar: #24231f;
-    --sidebar-foreground: #edebe4;
-    --sidebar-accent: #3a2a10;
-    --sidebar-accent-foreground: #fac775;
-    --sidebar-border: #34332e;
+    --ink: #120d30;
+    --yolk: #ffc83d;
+    --tangerine: #ffa05c;
+    --mint: #4fe0b4;
+    --sky: #7db6ff;
+    --lilac: #b79cff;
+    --on-slab: #1c1642;
+    --on-lilac: #1c1642;
+    --ink-foreground: #f7f3ff;
+    --brand: #c2abff;
+    --ink-muted: #b8b0dc;
+
+    --background: #1c1642;
+    --foreground: #f7f3ff;
+    --card: #2b2366;
+    --card-foreground: #f7f3ff;
+    --popover: #2b2366;
+    --popover-foreground: #f7f3ff;
+    --primary: #ffc83d;
+    --primary-foreground: #1c1642;
+    --secondary: #352c7a;
+    --secondary-foreground: #f7f3ff;
+    --muted: #2b2366;
+    --muted-foreground: #b8b0dc;
+    --accent: #3d3480;
+    --accent-foreground: #ffd76e;
+    --destructive: #ff8a8a;
+    --border: #3a3185;
+    --input: #453b94;
+    --ring: #b79cff;
+    --chart-1: #ffc83d;
+    --chart-2: #4fe0b4;
+    --chart-3: #b79cff;
+    --chart-4: #ffa05c;
+    --chart-5: #7db6ff;
+    --sidebar: #2b2366;
+    --sidebar-foreground: #f7f3ff;
+    --sidebar-primary: #ffc83d;
+    --sidebar-primary-foreground: #1c1642;
+    --sidebar-accent: #3d3480;
+    --sidebar-accent-foreground: #ffd76e;
+    --sidebar-border: #3a3185;
+    --sidebar-ring: #b79cff;
     color-scheme: dark;
-    /* Tones (status) and tints (categories): see lib/tones.ts. Never hard-code Tailwind palette colors. */
-    --tone-warning: #3f2c12;
-    --tone-warning-foreground: #fac775;
-    --tone-success: #0d3a2e;
-    --tone-success-foreground: #9fe1cb;
-    --tone-info: #10304f;
-    --tone-info-foreground: #b5d4f4;
-    --tone-danger: #4a1b1b;
-    --tone-danger-foreground: #f7c1c1;
-    --tone-accent: #3f2c12;
-    --tone-accent-foreground: #fac775;
-    --tint-1: #4c0519;
-    --tint-1-foreground: #fecdd3;
-    --tint-2: #064e3b;
-    --tint-2-foreground: #a7f3d0;
-    --tint-3: #451a03;
-    --tint-3-foreground: #fde68a;
-    --tint-4: #2e1065;
-    --tint-4-foreground: #ddd6fe;
-    --tint-5: #082f49;
-    --tint-5-foreground: #bae6fd;
-    --tint-6: #500724;
-    --tint-6-foreground: #fbcfe8;
-    --tint-7: #1a2e05;
-    --tint-7-foreground: #d9f99d;
-    --tint-8: #042f2e;
-    --tint-8-foreground: #99f6e4;
+    --tone-warning: #4a3d16;
+    --tone-warning-foreground: #ffd76e;
+    --tone-success: #17463d;
+    --tone-success-foreground: #8ff0d0;
+    --tone-info: #1f3466;
+    --tone-info-foreground: #b6d4ff;
+    --tone-danger: #4f1f35;
+    --tone-danger-foreground: #ffb3b3;
+    --tone-accent: #4d2f2a;
+    --tone-accent-foreground: #ffc49a;
+    --tint-1: #ffa05c;
+    --tint-1-foreground: #1c1642;
+    --tint-2: #4fe0b4;
+    --tint-2-foreground: #1c1642;
+    --tint-3: #ffc83d;
+    --tint-3-foreground: #1c1642;
+    --tint-4: #b79cff;
+    --tint-4-foreground: #1c1642;
+    --tint-5: #7db6ff;
+    --tint-5-foreground: #1c1642;
+    --tint-6: #ff9b9b;
+    --tint-6-foreground: #1c1642;
+    --tint-7: #b5e86a;
+    --tint-7-foreground: #1c1642;
+    --tint-8: #5ed6e6;
+    --tint-8-foreground: #1c1642;
 }
 
-/* ---------- Theme "น่ารัก" (cute): light ---------- */
-[data-theme="cute"] {
-    --app-font-heading: "Mali", var(--app-font-sans); /* rounded Thai font for headings */
-    --radius: 1rem; /* rounder: buttons 16px, cards ~22px */
-
-    --background: #faf8f7;         /* warm off-white (60%) */
-    --foreground: #3a2c33;         /* dark mauve-grey */
-    --card: #ffffff;
-    --card-foreground: #3a2c33;
-    --popover: #ffffff;
-    --popover-foreground: #3a2c33;
-    --primary: #e8879f;            /* pink accent (10%) */
-    --primary-foreground: #3d0f1f;
-    --secondary: #f3eff1;
-    --secondary-foreground: #3a2c33;
-    --muted: #f3eff1;
-    --muted-foreground: #6e6168;
-    --accent: #efeafb;             /* lavender (no gold/orange in this theme) */
-    --accent-foreground: #5b4a9b;
-    --destructive: #c93a39;
-    --border: #ece5e8;
-    --input: #e4dce0;
-    --ring: #e8879f;
-    --sidebar: #ffffff;
-    --sidebar-foreground: #3a2c33;
-    --sidebar-primary: #e8879f;
-    --sidebar-primary-foreground: #3d0f1f;
-    --sidebar-accent: #f3eff1;
-    --sidebar-accent-foreground: #3a2c33;
-    --sidebar-border: #ece5e8;
-    --sidebar-ring: #e8879f;
-    /* Tones (status) and tints (categories): see lib/tones.ts. Never hard-code Tailwind palette colors. */
-    --tone-warning: #fff4d6;
-    --tone-warning-foreground: #6b5000;
-    --tone-success: #e3f5ec;
-    --tone-success-foreground: #1f6b4a;
-    --tone-info: #e8f1fb;
-    --tone-info-foreground: #24558f;
-    --tone-danger: #fdecef;
-    --tone-danger-foreground: #a3324d;
-    --tone-accent: #efeafb;
-    --tone-accent-foreground: #5b4a9b;
-    --tint-1: #fbe4ea;
-    --tint-1-foreground: #8c2f4a;
-    --tint-2: #dff3ea;
-    --tint-2-foreground: #2b6650;
-    --tint-3: #fbf1d0;
-    --tint-3-foreground: #6b5617;
-    --tint-4: #ece6fa;
-    --tint-4-foreground: #4f3f8f;
-    --tint-5: #e2eefb;
-    --tint-5-foreground: #2c5482;
-    --tint-6: #f9e3f0;
-    --tint-6-foreground: #8a2e66;
-    --tint-7: #e6efdc;
-    --tint-7-foreground: #46603a;
-    --tint-8: #dcf1f1;
-    --tint-8-foreground: #2a6363;
-}
-
-/* ---------- Theme "น่ารัก" (cute): dark ---------- */
-[data-theme="cute"][data-mode="dark"] {
-    --background: #1c1719;
-    --foreground: #f3ecef;
-    --card: #262022;
-    --card-foreground: #f3ecef;
-    --popover: #2d2629;
-    --popover-foreground: #f3ecef;
-    --primary: #f09ab1;
-    --primary-foreground: #3d0f1f;
-    --secondary: #2f282b;
-    --secondary-foreground: #f3ecef;
-    --muted: #2f282b;
-    --muted-foreground: #b8a9b0;
-    --accent: #2e2840;
-    --accent-foreground: #c9bdf5;
-    --destructive: #f09595;
-    --border: #3a3236;
-    --input: #42393d;
-    --ring: #ed93b1;
-    --sidebar: #262022;
-    --sidebar-foreground: #f3ecef;
-    --sidebar-accent: #2f282b;
-    --sidebar-accent-foreground: #f3ecef;
-    --sidebar-border: #3a3236;
-    /* Tones (status) and tints (categories): see lib/tones.ts. Never hard-code Tailwind palette colors. */
-    --tone-warning: #3a3016;
-    --tone-warning-foreground: #f3dc9a;
-    --tone-success: #163a2c;
-    --tone-success-foreground: #a8e3c7;
-    --tone-info: #172c42;
-    --tone-info-foreground: #b9d6f2;
-    --tone-danger: #45202a;
-    --tone-danger-foreground: #f4b5c4;
-    --tone-accent: #2e2840;
-    --tone-accent-foreground: #c9bdf5;
-    --tint-1: #3d1d27;
-    --tint-1-foreground: #f5c1cf;
-    --tint-2: #173a2e;
-    --tint-2-foreground: #b6e6d0;
-    --tint-3: #3a3218;
-    --tint-3-foreground: #efdc9e;
-    --tint-4: #2c2545;
-    --tint-4-foreground: #d4c8f5;
-    --tint-5: #1a2c42;
-    --tint-5-foreground: #bcd5f1;
-    --tint-6: #3d1a33;
-    --tint-6-foreground: #f0bfdc;
-    --tint-7: #24301c;
-    --tint-7-foreground: #c8dcb5;
-    --tint-8: #173636;
-    --tint-8-foreground: #b2e1e1;
+/* Every tappable thing squishes a little and springs back (DECISIONS #97). */
+@utility pressable {
+    transition-property: transform, background-color, color, opacity, box-shadow;
+    transition-duration: 0.22s;
+    transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+    &:active:not(:disabled) {
+        transform: scale(0.96);
+        transition-duration: 0.08s;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        &:active:not(:disabled) {
+            transform: none;
+            opacity: 0.8;
+        }
+    }
 }
 
 @layer base {
@@ -398,6 +350,30 @@
 @media (prefers-reduced-motion: reduce) {
     .page-enter,
     .stagger > * {
+        animation: none;
+    }
+}
+
+/* Bottom tab bar (motion plan #5): the tab you land on hops, the center sparkle turns once. */
+.tab-hop {
+    animation: tab-hop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes tab-hop {
+    30% {
+        transform: translateY(-5px) scale(1.08);
+    }
+}
+.tab-spin {
+    animation: tab-spin 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes tab-spin {
+    from {
+        transform: rotate(-90deg) scale(0.7);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .tab-hop,
+    .tab-spin {
         animation: none;
     }
 }

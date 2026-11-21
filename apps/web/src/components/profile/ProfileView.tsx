@@ -140,7 +140,7 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
           <div className="flex flex-wrap gap-2 px-4">
             {profile.titles.slice(0, CHIP_PREVIEW).map((title) => (
               <span key={title.id} className="flex items-center gap-1.5 rounded-lg border bg-card px-3 py-1.5 text-sm">
-                <Award className="size-4 text-primary" aria-hidden="true" />
+                <Award className="size-4 text-brand" aria-hidden="true" />
                 {title.name}
                 {title.gangName && <span className="text-xs text-muted-foreground">· {title.gangName}</span>}
               </span>

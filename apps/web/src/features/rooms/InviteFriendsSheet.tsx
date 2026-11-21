@@ -73,7 +73,7 @@ export function InviteFriendsSheet({ code, open, onOpenChange, exclude }: Props)
                     <span className="block truncate text-sm font-medium">{f.displayName}</span>
                     <span className="block truncate text-xs text-muted-foreground">@{f.handle}</span>
                   </span>
-                  <span className={cn('grid size-6 place-items-center rounded-full border-2', on ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/40')}>
+                  <span className={cn('grid size-6 place-items-center rounded-full border-2', on ? 'border-brand bg-primary text-primary-foreground' : 'border-muted-foreground/40')}>
                     {on && <Check className="size-4" />}
                   </span>
                 </button>

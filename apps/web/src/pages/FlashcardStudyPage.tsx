@@ -64,7 +64,7 @@ function Round({ deckId, title, cards, onAgain }: { deckId: string; title: strin
 
   const actions: SwipeAction[] = [
     { dir: 'left', label: t('flashcards.unknown'), icon: X, tone: 'border-muted-foreground/40 text-muted-foreground' },
-    { dir: 'right', label: t('flashcards.known'), icon: Check, tone: 'border-primary text-primary' },
+    { dir: 'right', label: t('flashcards.known'), icon: Check, tone: 'border-brand text-brand' },
   ]
 
   function answer(card: Card, isKnown: boolean) {

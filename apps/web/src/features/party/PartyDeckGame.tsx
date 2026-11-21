@@ -159,7 +159,7 @@ export function PartyDeckGame({ game, packs }: Props) {
         </GameCard>
         {count !== null && (
           <div className="pointer-events-none absolute inset-0 grid place-items-center rounded-3xl bg-background/70 backdrop-blur-sm" aria-live="assertive">
-            <span key={count} className={count === 0 ? 'game-pop text-6xl font-medium text-primary' : 'game-count text-8xl font-medium tabular-nums'}>
+            <span key={count} className={count === 0 ? 'game-pop text-6xl font-medium text-brand' : 'game-count text-8xl font-medium tabular-nums'}>
               {count === 0 ? t('games.party.mostLikely.point') : count}
             </span>
           </div>

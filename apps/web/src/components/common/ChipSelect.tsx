@@ -29,7 +29,7 @@ export function ChipSelect<T extends string>({ options, value, onChange, label, 
             onClick={() => onChange(single ? [v] : on ? value.filter((x) => x !== v) : [...value, v])}
             className={cn(
               'flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors',
-              on ? 'border-primary bg-primary text-primary-foreground' : 'bg-card active:bg-muted',
+              on ? 'border-brand bg-primary text-primary-foreground' : 'bg-card active:bg-muted',
             )}
           >
             {Icon && <Icon className="size-4" aria-hidden="true" />}

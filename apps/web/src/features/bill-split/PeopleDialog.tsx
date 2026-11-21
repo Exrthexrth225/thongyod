@@ -56,7 +56,7 @@ export function PeopleDialog({ bill, open, onOpenChange, onChange }: Props) {
                   onClick={() => onChange((b) => toggleTreated(b, p.id))}
                   className={cn(
                     'grid size-9 shrink-0 place-items-center rounded-full border-2 transition-colors disabled:opacity-30',
-                    p.treated ? 'border-primary bg-primary/10 text-primary' : 'border-transparent bg-muted/60 text-muted-foreground',
+                    p.treated ? 'border-brand bg-brand/10 text-brand' : 'border-transparent bg-muted/60 text-muted-foreground',
                   )}
                 >
                   <Cake className="size-4" />

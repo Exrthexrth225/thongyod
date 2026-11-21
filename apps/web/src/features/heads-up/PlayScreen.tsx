@@ -155,7 +155,7 @@ export function PlayScreen({ words, seconds, useTilt, inverted, sound, onFinish 
     <div className="fixed inset-0 z-50 flex flex-col bg-background text-foreground select-none" role="application" aria-label={t('headsUp.title')}>
       {phase === 'rotate' && (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
-          <Smartphone className="size-16 motion-safe:animate-[spin_2.4s_ease-in-out_infinite] text-primary" aria-hidden="true" />
+          <Smartphone className="size-16 motion-safe:animate-[spin_2.4s_ease-in-out_infinite] text-brand" aria-hidden="true" />
           <p className="text-2xl font-medium">{t('headsUp.rotate')}</p>
           <p className="text-sm text-muted-foreground">{t('headsUp.rotateHint')}</p>
           <Button variant="outline" onClick={() => setPhase('countdown')}>
@@ -166,7 +166,7 @@ export function PlayScreen({ words, seconds, useTilt, inverted, sound, onFinish 
 
       {phase === 'countdown' && (
         <div className="flex flex-1 flex-col items-center justify-center gap-2" aria-live="assertive">
-          <span key={count} className="font-heading text-[clamp(5rem,30vmin,12rem)] leading-none font-medium text-primary motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:fade-in-0 motion-safe:duration-300">
+          <span key={count} className="font-heading text-[clamp(5rem,30vmin,12rem)] leading-none font-medium text-brand motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:fade-in-0 motion-safe:duration-300">
             {count > 0 ? count : '!'}
           </span>
           <span className="text-lg text-muted-foreground">{t('headsUp.getReady')}</span>

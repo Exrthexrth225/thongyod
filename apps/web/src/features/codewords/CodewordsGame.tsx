@@ -172,7 +172,7 @@ export function CodewordsGame() {
             className={cn(
               'flex h-16 items-center justify-center rounded-xl px-1 text-center text-[13px] leading-tight font-medium break-words transition-colors',
               cardClass(card, show),
-              selected === i && !show && 'ring-2 ring-primary ring-offset-2 ring-offset-background',
+              selected === i && !show && 'ring-2 ring-brand ring-offset-2 ring-offset-background',
               card.revealed && !show && 'game-pop',
             )}
           >

@@ -36,14 +36,14 @@ export function PageHeader({ title, subtitle, action, backTo }: PageHeaderProps)
   }
 
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between gap-2 bg-background/90 px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-2 backdrop-blur">
+    <header className="sticky top-0 z-20 flex items-center justify-between gap-2 bg-background/90 px-4 backdrop-saturate-150 pt-[calc(env(safe-area-inset-top)+1rem)] pb-2 backdrop-blur">
       {showBack && (
         <Button variant="ghost" size="icon" className="-ml-3" aria-label={t('common.back')} onClick={goBack}>
           <ChevronLeft className="size-6" />
         </Button>
       )}
       <div className="min-w-0 flex-1">
-        <h1 className="truncate text-xl font-medium">{title}</h1>
+        <h1 className={showBack ? 'truncate text-xl font-semibold' : 'truncate text-[30px] leading-tight font-bold'}>{title}</h1>
         {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
       </div>
       {action}

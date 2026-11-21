@@ -105,7 +105,7 @@ export function PartyRoom({ room, meId, onLeave }: Props) {
                   role="radio"
                   aria-checked={on}
                   onClick={() => answer(p.userId)}
-                  className={cn('flex flex-col items-center gap-1 rounded-2xl border p-2 transition-transform active:scale-95', on ? 'border-primary bg-primary text-primary-foreground' : 'bg-card')}
+                  className={cn('flex flex-col items-center gap-1 rounded-2xl border p-2 transition-transform active:scale-95', on ? 'border-brand bg-primary text-primary-foreground' : 'bg-card')}
                 >
                   <Avatar name={p.displayName} src={p.avatarUrl} className="size-11" />
                   <span className="w-full truncate text-center text-xs font-medium">{p.userId === meId ? t('rooms.party.me') : p.displayName}</span>
@@ -126,7 +126,7 @@ export function PartyRoom({ room, meId, onLeave }: Props) {
                   onClick={() => answer(choice)}
                   className={cn(
                     'flex h-24 flex-col items-center justify-center gap-1 rounded-2xl border text-lg font-medium transition-transform active:scale-95',
-                    on ? (choice === 'have' ? TONE_CLASS.warning : TONE_CLASS.success) + ' border-transparent ring-3 ring-primary' : 'bg-card',
+                    on ? (choice === 'have' ? TONE_CLASS.warning : TONE_CLASS.success) + ' border-transparent ring-3 ring-brand' : 'bg-card',
                   )}
                 >
                   {choice === 'have' ? <Hand className="size-7" aria-hidden="true" /> : <Check className="size-7" aria-hidden="true" />}
