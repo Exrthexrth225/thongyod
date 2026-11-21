@@ -112,7 +112,7 @@ Reference: Motion's official MIT "card stack" example (drag + stack) on 21st.dev
 
 NN/g found front-loaded tutorials did **not** improve success on simple apps and made tasks *feel* harder; interactive, just-in-time help works better. So:
 
-1. **≤ 4 screens, ≤ 30 s, "ข้าม" on every screen, progress dots on every screen** (Finch critique).
+1. **Now 2 screens (#95): what you can do here → pick an egg.** Swipe is taught on the first real deck, theme lives in Settings. Original plan below for reference. **≤ 4 screens, ≤ 30 s, "ข้าม" on every screen, progress dots on every screen** (Finch critique).
    1. What Thongyod does (one picture, one line).
    2. **Practice swipe** on a demo invite card (learning by doing).
    3. Choose theme.

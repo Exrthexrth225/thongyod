@@ -1,20 +1,20 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { ModeChoice } from '@/components/common/ModeChoice'
-import { SwipeDeck, type SwipeDir } from '@/components/common/SwipeDeck'
+import { CalendarHeart, Gamepad2, PawPrint } from 'lucide-react'
 import { Egg, type EggStyle } from '@/components/pet/Egg'
 import { Pet } from '@/components/pet/Pet'
 import type { PetSpeciesId } from '@/components/pet/species'
 import { Button } from '@/components/ui/button'
-import { useInviteActions } from '@/features/meetups/useInviteActions'
+import { GAMES } from '@/config/games'
 import { finishOnboarding, getMyPet, saveMyPet } from '@/features/onboarding/storage'
 import { secureRandomInt } from '@/lib/random'
-import { getMode, getTheme, setMode, setTheme, type Mode, type Theme } from '@/lib/theme'
+import { tintClass } from '@/lib/tones'
 import { cn } from '@/lib/utils'
 
-// First launch (DECISIONS #46/#47, UX_GUIDELINES §7): ≤ 4 screens, skippable, ends with the pet hatch.
-const STEPS = 4
+// First launch (DECISIONS #46/#47, #95): what you can do here → hatch your pet. The swipe is taught on the first
+// real invite deck (hint, #94) and the theme lives in Settings, so a new user is in the app in two screens.
+const STEPS = 2
 const EGGS: { style: EggStyle; species: PetSpeciesId | null }[] = [
   { style: 'fire', species: 'dragon' },
   { style: 'sleepy', species: 'fish' },
@@ -55,149 +55,48 @@ export function WelcomePage() {
 
       <div className="flex flex-1 flex-col justify-center gap-6">
         {step === 0 && <Intro onNext={() => setStep(1)} />}
-        {step === 1 && <Practice onNext={() => setStep(2)} />}
-        {step === 2 && <ThemeStep onNext={() => setStep(3)} />}
-        {step === 3 && <Hatch onDone={done} />}
+        {step === 1 && <Hatch onDone={done} />}
       </div>
     </div>
   )
 }
 
+const POINTS = [
+  { key: 'games', icon: Gamepad2, tint: 2 },
+  { key: 'meet', icon: CalendarHeart, tint: 1 },
+  { key: 'pet', icon: PawPrint, tint: 5 },
+] as const
+
 function Intro({ onNext }: { onNext: () => void }) {
   const { t } = useTranslation()
+  const games = GAMES.filter((g) => g.status === 'ready').length
   return (
     <>
       <div className="flex items-end justify-center gap-2">
-        <Pet species="dragon" size={170} />
-        <Pet species="fish" size={140} />
+        <Pet species="dragon" size={140} />
+        <Pet species="fish" size={115} />
       </div>
       <div className="text-center">
         <h1 className="text-2xl font-medium">{t('welcome.introTitle')}</h1>
-        <p className="mt-2 text-muted-foreground">{t('welcome.introText')}</p>
+        <p className="mt-1 text-balance text-muted-foreground">{t('welcome.introText')}</p>
       </div>
+      <ul className="grid gap-3">
+        {POINTS.map((point) => (
+          <li key={point.key} className="flex items-center gap-3">
+            <span className={cn('grid size-11 shrink-0 place-items-center rounded-xl', tintClass(point.tint))}>
+              <point.icon className="size-6" aria-hidden="true" />
+            </span>
+            <span className="min-w-0">
+              <span className="block font-medium">{t(`welcome.points.${point.key}.title`)}</span>
+              <span className="block text-sm text-pretty text-muted-foreground">{t(`welcome.points.${point.key}.text`, { count: games })}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
       <Button size="lg" onClick={onNext}>
         {t('welcome.start')}
       </Button>
     </>
-  )
-}
-
-/** Learning by doing: swipe one demo invite. */
-function Practice({ onNext }: { onNext: () => void }) {
-  const { t } = useTranslation()
-  const [answer, setAnswer] = useState<SwipeDir | null>(null)
-  const actions = useInviteActions()
-  const result = { right: t('meetup.going'), left: t('meetup.notGoing'), up: t('meetup.maybe') }
-  return (
-    <>
-      <div className="text-center">
-        <h1 className="text-2xl font-medium">{t('welcome.practiceTitle')}</h1>
-        <p className="mt-2 text-muted-foreground">{t('welcome.practiceText')}</p>
-      </div>
-      {answer === null ? (
-        <SwipeDeck
-          items={['demo']}
-          getKey={(k) => k}
-          label={t('welcome.practiceTitle')}
-          actions={actions}
-          onSwipe={(_, dir) => setAnswer(dir)}
-          renderCard={() => (
-            <div className="p-5 pt-14">
-              <p className="text-xs text-muted-foreground">{t('welcome.demoGang')}</p>
-              <h3 className="text-xl font-medium">{t('welcome.demoTitle')}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{t('welcome.demoWhen')}</p>
-            </div>
-          )}
-        />
-      ) : (
-        <>
-          <p className="text-center text-lg" role="status">
-            {t('welcome.practiceDone', { answer: result[answer] })}
-          </p>
-          <Button size="lg" onClick={onNext}>
-            {t('welcome.next')}
-          </Button>
-        </>
-      )}
-    </>
-  )
-}
-
-function ThemeStep({ onNext }: { onNext: () => void }) {
-  const { t } = useTranslation()
-  const [theme, setThemeState] = useState<Theme>(getTheme)
-  const [mode, setModeState] = useState<Mode>(getMode)
-  const options: { value: Theme; label: string }[] = [
-    { value: 'default', label: t('pages.me.themeDefault') },
-    { value: 'cute', label: t('pages.me.themeCute') },
-  ]
-  return (
-    <>
-      <div className="text-center">
-        <h1 className="text-2xl font-medium">{t('welcome.themeTitle')}</h1>
-        <p className="mt-2 text-muted-foreground">{t('welcome.themeText')}</p>
-      </div>
-      {/* Show, don't tell: each tile is a tiny screen painted in its own theme. */}
-      <div className="grid grid-cols-2 gap-3" role="group" aria-label={t('pages.me.chooseTheme')}>
-        {options.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            aria-pressed={theme === option.value}
-            onClick={() => {
-              setTheme(option.value)
-              setThemeState(option.value)
-            }}
-            className={cn(
-              'flex flex-col items-center gap-2 rounded-2xl border-2 p-2 transition-transform active:scale-95',
-              theme === option.value ? 'border-primary' : 'border-transparent',
-            )}
-          >
-            <ThemePreview theme={option.value} />
-            <span className="text-sm font-medium">{option.label}</span>
-          </button>
-        ))}
-      </div>
-      <ModeChoice
-        value={mode}
-        onChange={(next) => {
-          setMode(next)
-          setModeState(next)
-        }}
-      />
-      <Button size="lg" onClick={onNext}>
-        {t('welcome.next')}
-      </Button>
-    </>
-  )
-}
-
-/** A mini mock screen that uses the theme's own CSS variables. */
-function ThemePreview({ theme }: { theme: Theme }) {
-  return (
-    <div
-      data-theme={theme}
-      data-mode={document.documentElement.dataset.mode}
-      className="flex aspect-[3/4] w-full flex-col gap-1.5 rounded-xl border bg-background p-2"
-      aria-hidden="true"
-    >
-      <div className="h-2 w-1/2 rounded-full bg-foreground/70" />
-      <div className="flex flex-1 flex-col justify-between rounded-lg bg-card p-1.5 shadow-sm ring-1 ring-border">
-        <div className="space-y-1">
-          <div className="h-1.5 w-3/4 rounded-full bg-muted-foreground/50" />
-          <div className="h-1.5 w-1/2 rounded-full bg-muted-foreground/30" />
-        </div>
-        <div className="flex justify-center gap-1.5">
-          <span className="size-4 rounded-full border-2 border-muted-foreground/40" />
-          <span className="size-4 rounded-full bg-primary" />
-        </div>
-      </div>
-      <div className="flex justify-around">
-        {[0, 1, 2, 3].map((i) => (
-          <span key={i} className={cn('size-2 rounded-full', i === 0 ? 'bg-primary' : 'bg-muted-foreground/30')} />
-        ))}
-      </div>
-    </div>
   )
 }
 
