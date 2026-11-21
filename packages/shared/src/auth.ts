@@ -11,6 +11,17 @@ export interface Me {
   bio: string | null
 }
 
+/** PATCH /me. Omitted fields stay unchanged; an empty/blank bio clears it. */
+export interface UpdateMeRequest {
+  displayName?: string
+  bio?: string | null
+  handle?: string
+}
+export type UpdateMeResponse = Me
+export type UpdateMeErrorResponse = AuthErrorResponse
+  | { error: { code: 'INVALID_DISPLAY_NAME' | 'INVALID_BIO' | 'INVALID_HANDLE' | 'HANDLE_TAKEN' } }
+  | { error: { code: 'HANDLE_CHANGE_TOO_SOON'; retryAt: string } }
+
 export interface DevLoginRequest { fixtureKey: string }
 export interface DevFixture { fixtureKey: string; displayName: string }
 export type DevFixturesResponse = DevFixture[]

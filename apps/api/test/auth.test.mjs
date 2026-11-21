@@ -189,6 +189,9 @@ test('real dev HTTP sessions rotate, expire, revoke, and never expose stored/pri
     const productionCookie=`thongyod_session=${productionToken}`
     const productionMe=await fetch(production.url+'/me',{headers:{Cookie:productionCookie}})
     assert.equal(productionMe.status,200);assert.equal((await productionMe.json()).userId,ids[1])
+    assert.equal((await fetch(production.url+'/me',{method:'PATCH',headers:{Cookie:productionCookie,Origin:'https://evil.example','Content-Type':'application/json'},body:'{"bio":"Rejected"}'})).status,403)
+    const productionPatch=await fetch(production.url+'/me',{method:'PATCH',headers:{Cookie:productionCookie,Origin:'https://thongyod.example','Content-Type':'application/json'},body:'{"bio":"Production profile"}'})
+    assert.equal(productionPatch.status,200);assert.equal((await productionPatch.json()).bio,'Production profile')
     const productionLogout=await fetch(production.url+'/auth/logout',{method:'POST',headers:{Cookie:productionCookie,Origin:'https://thongyod.example'}})
     assert.equal(productionLogout.status,204);assert.match(productionLogout.headers.get('set-cookie'),/; Secure$/)
     assert.equal((await fetch(production.url+'/me',{headers:{Cookie:productionCookie}})).status,401)
@@ -202,6 +205,109 @@ test('real dev HTTP sessions rotate, expire, revoke, and never expose stored/pri
     await pool.query('DELETE FROM auth_sessions WHERE user_id=ANY($1::uuid[])',[ids])
     await pool.query('DELETE FROM auth_identities WHERE user_id=ANY($1::uuid[])',[ids])
     await pool.query('DELETE FROM users WHERE id=ANY($1::uuid[])',[ids])
+    await pool.end(); restore()
+  }
+})
+
+test('PATCH /me validates partial profiles and serializes handle changes without losing data', {
+  skip: !process.env.PGPASSWORD ? 'Configure the separate local test database first' : false,
+}, async () => {
+  const restore = setEnv({ ...localEnv, PGDATABASE: process.env.TEST_PGDATABASE })
+  const config = databaseConfig()
+  assertLocalDatabase(config, 'thongyod_test')
+  const pool = new Pool(config)
+  const ids = [randomUUID(), randomUUID()]
+  const handles = ids.map(id => `profile_${id.slice(0, 8)}`)
+  const tokens = ids.map(() => randomBytes(32).toString('base64url'))
+  const cookies = tokens.map(token => `thongyod_session=${token}`)
+  let app
+  try {
+    await migrateDatabase(pool)
+    for (let i = 0; i < ids.length; i++) {
+      await pool.query("INSERT INTO users(id,display_name,display_name_key,handle,bio) VALUES($1,$2,$3,$4,'Original bio')", [ids[i], `Profile_${i}`, `profile_${i}`, handles[i]])
+      await pool.query("INSERT INTO auth_sessions(id,user_id,token_hash,source,expires_at) VALUES($1,$2,$3,'local_dev',now()+interval '30 days')", [randomUUID(), ids[i], sessionHash(tokens[i])])
+    }
+    app = await NestFactory.create(createDevAppModule(), { logger: false })
+    await app.listen(0, '127.0.0.1')
+    const url = await app.getUrl()
+    const patch = (body, cookie = cookies[0], headers = {}) => fetch(url+'/me', {
+      method: 'PATCH', headers: { Origin: origin, 'Content-Type': 'application/json', ...(cookie ? { Cookie: cookie } : {}), ...headers }, body: JSON.stringify(body),
+    })
+    const me = async (i = 0) => (await fetch(url+'/me', { headers: { Cookie: cookies[i], Origin: origin } })).json()
+    const original = await me()
+    const rejected = async (body, status, code) => {
+      const response = await patch(body)
+      assert.equal(response.status, status)
+      const result = await response.json()
+      assert.equal(result.error.code, code)
+      return result.error
+    }
+    assert.equal((await patch({ bio: 'No session' }, null)).status, 401)
+    assert.equal((await patch({ bio: 'Wrong origin' }, cookies[0], { Origin: 'https://evil.example' })).status, 403)
+    assert.equal((await patch({ bio: 'Wrong content type' }, cookies[0], { 'Content-Type': 'text/plain' })).status, 400)
+    // The framework rejects scalar JSON before it reaches the controller.
+    for (const body of [null, 'text', 1]) assert.equal((await patch(body)).status, 400)
+    for (const body of [[], { userId: ids[1] }, { coverUrl: '/files/no.webp' }, { handleChangedAt: null }]) {
+      await rejected(body, 400, 'INVALID_REQUEST')
+    }
+    for (const displayName of [null, 123, '', 'A', 'A'.repeat(21), 'Name!', 'A\nB', '😀😀']) {
+      await rejected({ displayName }, 400, 'INVALID_DISPLAY_NAME')
+    }
+    for (const bio of [123, {}, '😀'.repeat(81)]) await rejected({ bio }, 400, 'INVALID_BIO')
+    for (const handle of [null, 123, '', 'abc', '1abc', 'a'.repeat(21), 'name-name', 'name name', '@@name', 'ไทยไทย']) {
+      await rejected({ handle }, 400, 'INVALID_HANDLE')
+    }
+    await rejected({ handle: handles[1], bio: 'Must roll back' }, 409, 'HANDLE_TAKEN')
+    assert.deepEqual(await me(), original)
+    const empty = await patch({})
+    assert.equal(empty.status, 200); assert.deepEqual(await empty.json(), original)
+    const duplicate = await patch({ displayName: '  Profile_1  ', bio: `  ${'😀'.repeat(80)}  ` })
+    assert.equal(duplicate.status, 200); assert.equal(duplicate.headers.get('cache-control'), 'no-store')
+    const renamed = await duplicate.json()
+    assert.equal(renamed.displayName, 'Profile_1'); assert.equal(renamed.bio, '😀'.repeat(80))
+    assert.equal(renamed.handle, handles[0]); assert.equal(renamed.handleChangeableAt, null)
+    assert.deepEqual(Object.keys(renamed).sort(), Object.keys(original).sort())
+    for (const bio of [null, '   ']) {
+      const cleared = await patch({ bio })
+      assert.equal(cleared.status, 200); assert.equal((await cleared.json()).bio, null)
+    }
+    const chosen = `new_${ids[0].slice(0, 8)}`
+    const changed = await patch({ handle: `  @${chosen.toUpperCase()}  ` })
+    assert.equal(changed.status, 200)
+    const updated = await changed.json()
+    assert.equal(updated.handle, chosen)
+    const stored = (await pool.query('SELECT handle_changed_at FROM users WHERE id=$1', [ids[0]])).rows[0]
+    assert.equal(updated.handleChangeableAt, new Date(stored.handle_changed_at.getTime()+30*24*3600_000).toISOString())
+    const same = await patch({ handle: chosen.toUpperCase(), bio: 'Still editable' })
+    assert.equal(same.status, 200); assert.equal((await same.json()).handleChangeableAt, updated.handleChangeableAt)
+    const retry = await rejected({ handle: `next_${ids[0].slice(0,8)}`, bio: 'Must not save' }, 429, 'HANDLE_CHANGE_TOO_SOON')
+    assert.equal(retry.retryAt, updated.handleChangeableAt); assert.equal((await me()).bio, 'Still editable')
+    await pool.query("UPDATE users SET handle_changed_at=clock_timestamp()-interval '720 hours' WHERE id=$1", [ids[0]])
+    assert.equal((await patch({ handle: handles[0] })).status, 200)
+
+    await pool.query('UPDATE users SET handle_changed_at=NULL WHERE id=ANY($1::uuid[])', [ids])
+    const races = await Promise.all(['a','b'].map(side => patch({ handle: `race_${side}_${ids[0].slice(0,8)}`, bio: `Winner ${side}` })))
+    assert.deepEqual(races.map(r => r.status).sort(), [200,429])
+    const winner = await races.find(r => r.status === 200).json()
+    assert.deepEqual(await me(), winner)
+    assert.equal((await (await patch({ bio: 'Own account only' }, cookies[0], { 'X-User-Id': ids[1] })).json()).userId, ids[0])
+    assert.equal((await me(1)).bio, 'Original bio')
+
+    await pool.query('UPDATE users SET handle_changed_at=NULL WHERE id=ANY($1::uuid[])', [ids])
+    const before = await Promise.all([me(0), me(1)])
+    const sharedHandle = `taken_${ids[0].slice(0,8)}`
+    const claims = await Promise.all(cookies.map((cookie, i) => patch({ handle: sharedHandle, bio: `Claim ${i}` }, cookie)))
+    assert.deepEqual(claims.map(r => r.status).sort(), [200,409])
+    const losingIndex = claims.findIndex(r => r.status === 409)
+    assert.equal((await claims[losingIndex].json()).error.code, 'HANDLE_TAKEN')
+    assert.deepEqual(await me(losingIndex), before[losingIndex])
+    const edits = await Promise.all([patch({ bio: 'Concurrent bio' }), patch({ displayName: 'Concurrent_Name' })])
+    assert.deepEqual(edits.map(r => r.status), [200,200])
+    assert.equal((await me()).bio, 'Concurrent bio'); assert.equal((await me()).displayName, 'Concurrent_Name')
+  } finally {
+    await app?.close()
+    await pool.query('DELETE FROM auth_sessions WHERE user_id=ANY($1::uuid[])', [ids])
+    await pool.query('DELETE FROM users WHERE id=ANY($1::uuid[])', [ids])
     await pool.end(); restore()
   }
 })

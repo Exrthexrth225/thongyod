@@ -1,5 +1,8 @@
 export type {
   Me,
+  UpdateMeRequest,
+  UpdateMeResponse,
+  UpdateMeErrorResponse,
   DevLoginRequest,
   DevFixture,
   DevFixturesResponse,
