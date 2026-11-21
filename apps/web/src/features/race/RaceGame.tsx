@@ -47,6 +47,7 @@ export function RaceGame() {
   const [finished, setFinished] = useState<number[]>([])
   const runnerEls = useRef<(HTMLDivElement | null)[]>([])
   const trackEls = useRef<(HTMLDivElement | null)[]>([])
+  const trackBox = useRef<HTMLDivElement>(null)
   const frame = useRef(0)
   const timers = useRef<number[]>([])
   const skip = useRef(false)
@@ -118,6 +119,7 @@ export function RaceGame() {
       last = now
       const lead = Math.max(...r.paths.map((p) => positionAt(p, simT)))
       const rate = lead > SLOWMO_FROM && done.length === 0 ? SLOWMO_RATE : 1
+      trackBox.current?.style.setProperty('--flip', rate < 1 ? '0.55s' : '0.24s')
       simT = skip.current ? end : simT + (dt / UNIT_MS) * rate
       r.paths.forEach((p, i) => {
         const el = runnerEls.current[i]
@@ -220,6 +222,7 @@ export function RaceGame() {
         aria-label={phase === 'running' ? t('race.skip') : t('race.trackLabel')}
         onClick={() => (skip.current = true)}
         onKeyDown={(e) => e.key === 'Enter' && (skip.current = true)}
+        ref={trackBox}
         className="on-ink relative flex flex-col gap-1.5 rounded-[28px] bg-ink p-3"
       >
         {runners.map((r, i) => {
@@ -229,7 +232,7 @@ export function RaceGame() {
               <span className="race-finish absolute inset-y-1 right-1 w-2.5 rounded-sm" aria-hidden="true" />
               <span className="pointer-events-none absolute inset-y-0 left-16 flex items-center truncate pr-6 text-sm font-semibold text-muted-foreground">{r.name}</span>
               <div ref={(el) => void (runnerEls.current[i] = el)} className="absolute top-1 left-0.5 will-change-transform" style={{ transform: 'translateX(0)' }}>
-                <RaceRunner racer={r.racer} initial={String(i + 1)} running={phase === 'running' && place === -1} className={cn(hero === i && 'scale-110')} />
+                <RaceRunner racer={r.racer} initial={String(i + 1)} running={phase === 'running' && place === -1} won={place === 0} className="size-13" />
                 {place !== -1 && (
                   <span className="num-pop absolute -top-1 -right-1 grid size-6 place-items-center rounded-full bg-yolk text-xs font-bold text-on-slab">{place + 1}</span>
                 )}
@@ -257,7 +260,7 @@ export function RaceGame() {
             {order.map((runner, place) => (
               <li key={runner} className={cn('flex items-center gap-3 rounded-2xl px-2 py-1', runner === hero && 'bg-accent')}>
                 <span className="w-6 text-center font-heading text-lg font-bold tabular-nums">{place + 1}</span>
-                <RaceRunner racer={runners[runner].racer} initial={String(runner + 1)} className="size-9" />
+                <RaceRunner racer={runners[runner].racer} initial={String(runner + 1)} won={place === 0} className="size-10" />
                 <span className="min-w-0 flex-1 truncate font-medium">{runners[runner].name}</span>
               </li>
             ))}

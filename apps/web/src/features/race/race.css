@@ -1,6 +1,20 @@
 /* สัตว์วิ่งแข่ง (#103). Runners are moved by JS (transform); here only the bobbing and the track. */
 .race-runner.is-running .race-body { animation: race-bob 0.26s ease-in-out infinite alternate; }
-.race-runner.is-running img { animation: race-bob 0.26s ease-in-out infinite alternate; }
+/* Two running frames flipped like a flipbook; the body lifts on the tucked frame. --flip = one full stride. */
+.race-frame-a { animation: race-flip-a var(--flip, 0.24s) steps(1) infinite; }
+.race-frame-b { animation: race-flip-b var(--flip, 0.24s) steps(1) infinite; }
+@keyframes race-flip-a { 0% { opacity: 1; transform: none; } 50% { opacity: 0; } }
+@keyframes race-flip-b { 0% { opacity: 0; } 50% { opacity: 1; transform: translateY(-6%); } }
+/* The winner cheers: hops with a squash on landing. */
+.race-win { transform-origin: 50% 100%; animation: race-win 0.7s cubic-bezier(0.3, 0.7, 0.4, 1) infinite; }
+@keyframes race-win {
+  0% { transform: translateY(0) scale(1.12, 0.88); }
+  20% { transform: translateY(-22%) scale(0.95, 1.06); }
+  45% { transform: translateY(-30%) scale(1, 1); }
+  75% { transform: translateY(0) scale(1, 1); }
+  85% { transform: translateY(0) scale(1.12, 0.88); }
+  100% { transform: translateY(0) scale(1.12, 0.88); }
+}
 .race-leg { position: absolute; bottom: -3px; width: 9px; height: 12px; border-radius: 6px; box-shadow: 0 0 0 2px var(--ink); }
 .race-leg-a { left: 12px; }
 .race-leg-b { right: 12px; }
@@ -14,5 +28,5 @@
 .race-count { animation: race-count 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
 @keyframes race-count { from { transform: scale(2.2); opacity: 0; } 30% { opacity: 1; } to { transform: scale(0.9); opacity: 0.9; } }
 @media (prefers-reduced-motion: reduce) {
-  .race-runner.is-running .race-body, .race-runner.is-running img, .race-runner.is-running .race-leg-a, .race-runner.is-running .race-leg-b, .race-count { animation: none; }
+  .race-runner.is-running .race-body, .race-frame-a, .race-frame-b, .race-win, .race-runner.is-running .race-leg-a, .race-runner.is-running .race-leg-b, .race-count { animation: none; }
 }
