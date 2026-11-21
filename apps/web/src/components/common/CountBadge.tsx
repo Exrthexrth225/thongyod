@@ -1,9 +1,11 @@
 import { cn } from '@/lib/utils'
 
-// Small red number on an icon (tab bar, bell). Hidden at 0; shows "9+" above 9.
+// Small red number on an icon (the bell). Hidden at 0; shows "9+" above 9. `dot` = just a small dot, no number
+// (tab bar: "something is waiting" without a second count next to the bell, #94).
 // Put it inside a `relative` wrapper around the icon.
-export function CountBadge({ count, className }: { count: number; className?: string }) {
+export function CountBadge({ count, className, dot = false }: { count: number; className?: string; dot?: boolean }) {
   if (count <= 0) return null
+  if (dot) return <span aria-hidden="true" className={cn('absolute -top-0.5 -right-1 size-2.5 rounded-full bg-destructive ring-2 ring-background', className)} />
   return (
     <span
       aria-hidden="true"

@@ -51,7 +51,7 @@
 | SeeAllLink | `src/components/common/SeeAllLink.tsx` | ours | "ดูทั้งหมด ›" link for a SectionHeader action | to, label? | Use whenever a section shows only part of a list (#59). |
 | FeedRow | `src/components/home/FeedRow.tsx` | ours | One friends' update in a vertical list (avatar, 2-line sentence, gang · time ago) | item, now | Not a link until FeedItem has target ids. |
 | GangAvatar | `src/components/gang/GangAvatar.tsx` | ours | Gang picture placeholder: first letter in a stable tint (hash of id → tint 1–8) | id, name, className | Replace with the gang photo when gangs get pictures. |
-| CountBadge | `src/components/common/CountBadge.tsx` | ours | Red number on an icon ("9+" above 9), hidden at 0 | count, className | Tab bar (waiting invites) and Home bell. Wrap the icon in `relative`. |
+| CountBadge | `src/components/common/CountBadge.tsx` | ours | Red number on an icon ("9+" above 9), hidden at 0 | count, className | Tab bar (waiting invites) and Home bell. Wrap the icon in `relative`. `dot` = small dot without a number (tab bar, #94). |
 | NotificationRow | `src/components/notifications/NotificationRow.tsx` | ours | One notification: actor avatar + kind icon, sentence (`notificationText`), time ago, unread dot | item, now, onOpen | Kind → icon/tone map inside. |
 | SoundToggle | `src/components/common/SoundToggle.tsx` | ours | 🔊/🔇 button for a game header, per game, default on | game | Read the value with `useGameSound(game)` (`lib/soundPrefs.ts`). |
 | ChipSelect | `src/components/common/ChipSelect.tsx` | ours | Wrap of chips, many (checkbox) or one (radio) | options {value,label,icon?}, value[], onChange, label, single? | Filters/categories. For 2–4 equal options use SegmentedChoice. |
@@ -138,3 +138,5 @@
 | checkCreateForm, dateFor, combineDateTime, initialDay | `src/features/meetups/createForm.ts` | "ชวนนัด" form rules (tested). `initialDay` reads `?date=` from the calendar. |
 | monthGrid, gridRange, groupByDay, dayKey, defaultDay | `src/features/calendar/month.ts` | Month calendar math (tested); `groupByDay` works for any `{ startsAt }` list. |
 | useFriendSubtitle | `src/features/friends/useFriendSubtitle.ts` | "สายมู · เพื่อนร่วมกัน 2 คน" line. |
+
+| useFirstTimesHint | `src/lib/hints.ts` | ours | Show a tip only the first N times (default 3), counted per browser | id, times? | Swipe hint under invite decks (#94). Use for any "how to" line that becomes noise once learned. |

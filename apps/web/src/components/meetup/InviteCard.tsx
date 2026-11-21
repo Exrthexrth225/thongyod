@@ -40,7 +40,7 @@ export function InviteCard({ meetup, now, onHide, onOpen, tall }: InviteCardProp
       <p className="flex items-center gap-2 text-sm">
         <Clock className="size-4 text-muted-foreground" aria-hidden="true" />
         {formatDayLabel(startsAt, now)} {formatTime(startsAt)}
-        {countdown && <span className="rounded-md bg-accent px-2 text-xs font-medium text-accent-foreground">{countdown}</span>}
+        {countdown && <span className="text-muted-foreground">· {countdown}</span>}
       </p>
       <p className="flex items-center gap-2 text-sm text-muted-foreground">
         <Users className="size-4" aria-hidden="true" />
@@ -53,9 +53,8 @@ export function InviteCard({ meetup, now, onHide, onOpen, tall }: InviteCardProp
           {t('meetup.createdBy', { name: meetup.createdBy.displayName })}
         </p>
       )}
-      <p className="mt-auto text-center text-xs text-muted-foreground">{t('meetup.tapForDetails')}</p>
       {onHide && (
-        <div className="-mt-2 -mb-3 flex justify-center">
+        <div className="mt-auto -mb-3 flex justify-center">
           <HideMeetupButton onClick={onHide} />
         </div>
       )}

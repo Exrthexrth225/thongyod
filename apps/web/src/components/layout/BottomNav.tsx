@@ -47,7 +47,7 @@ export function BottomNav() {
                   ) : (
                     <span className="relative">
                       <Icon className="size-6" strokeWidth={isActive ? 2.4 : 1.8} aria-hidden="true" />
-                      {key === 'home' && <CountBadge count={waiting} />}
+                      {key === 'home' && <CountBadge dot count={waiting} />}
                     </span>
                   )}
                   <span>

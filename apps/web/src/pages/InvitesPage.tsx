@@ -12,10 +12,12 @@ import { canHide } from '@/features/meetups/derive'
 import { SWIPE_TO_RESPONSE, useInviteActions } from '@/features/meetups/useInviteActions'
 import { useMeetupActions } from '@/features/meetups/useMeetupActions'
 import { useWaitingMeetups } from '@/features/meetups/useWaiting'
+import { useFirstTimesHint } from '@/lib/hints'
 
 // /invites — every invite waiting for me, as a full-page Tinder-style deck (DECISIONS #57).
 export function InvitesPage() {
   const { t } = useTranslation()
+  const swipeHint = useFirstTimesHint('swipe-deck')
   const navigate = useNavigate()
   const { items, query, now } = useWaitingMeetups()
   const actions = useMeetupActions()
@@ -25,7 +27,7 @@ export function InvitesPage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <PageHeader title={t('home.waitingTitle', { count: items.length })} subtitle={items.length > 0 ? t('home.swipeHint') : undefined} backTo="/" />
+      <PageHeader title={t('home.waitingTitle', { count: items.length })} subtitle={items.length > 0 && swipeHint ? t('home.swipeHint') : undefined} backTo="/" />
       {query.isPending ? (
         <LoadingState rows={3} />
       ) : query.isError ? (

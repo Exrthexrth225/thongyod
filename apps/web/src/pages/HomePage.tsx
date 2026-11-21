@@ -33,12 +33,14 @@ import { getMyPet } from '@/features/onboarding/storage'
 import { useHomeLayout } from '@/features/settings/homeLayout'
 import { addDays, formatDayLabel, isSameDay, startOfWeek } from '@/lib/date'
 import { pendingSubtitle, pendingTitle } from '@/lib/describe'
+import { useFirstTimesHint } from '@/lib/hints'
 
 /** Lists on Home show this many rows; the rest are behind "ดูทั้งหมด". */
 const ROW_PREVIEW = 3
 
 export function HomePage() {
   const { t } = useTranslation()
+  const swipeHint = useFirstTimesHint('swipe-deck')
   const now = useMemo(() => new Date(), [])
   const [selectedDay, setSelectedDay] = useState(now)
   const actions = useMeetupActions()
@@ -98,7 +100,7 @@ export function HomePage() {
                 />
               )}
             />
-            <p className="pt-1 text-center text-xs text-muted-foreground">{t('home.swipeHint')}</p>
+            {swipeHint && <p className="pt-1 text-center text-xs text-muted-foreground">{t('home.swipeHint')}</p>}
           </div>
         )}
 
