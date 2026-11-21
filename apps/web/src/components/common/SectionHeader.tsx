@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import { usePop } from '@/lib/usePop'
+import { cn } from '@/lib/utils'
 
 type SectionHeaderProps = {
   title: string
@@ -12,6 +14,7 @@ type SectionHeaderProps = {
 
 // Heading above a group of cards on a page. Big and bold (Kanit): the page's structure reads from these.
 export function SectionHeader({ title, action, muted = false, count }: SectionHeaderProps) {
+  const pop = usePop(count)
   return (
     <div className="flex items-center gap-2 px-4 pt-3 pb-2">
       {muted ? (
@@ -20,7 +23,9 @@ export function SectionHeader({ title, action, muted = false, count }: SectionHe
         <h2 className="text-[22px] leading-tight font-bold text-balance">{title}</h2>
       )}
       {count !== undefined && count !== 0 && (
-        <span className="rounded-full bg-tangerine px-2.5 text-[13px] leading-6 font-semibold text-on-slab tabular-nums">{count}</span>
+        <span key={pop.key} className={cn('rounded-full bg-tangerine px-2.5 text-[13px] leading-6 font-semibold text-on-slab tabular-nums', pop.className)}>
+          {count}
+        </span>
       )}
       {action && <span className="ml-auto shrink-0">{action}</span>}
     </div>

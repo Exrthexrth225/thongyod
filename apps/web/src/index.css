@@ -380,35 +380,36 @@
 
 /* Colour-block scopes (DECISIONS #97). Put one on a dark ink block or a light colour slab and every
  * component inside (rows, chips, muted text, cards) re-colours itself through the usual tokens. */
-.on-ink {
-    --foreground: var(--ink-foreground);
-    --card-foreground: var(--ink-foreground);
-    --muted-foreground: var(--ink-muted);
-    --card: rgb(255 255 255 / 0.09);
-    --muted: rgb(255 255 255 / 0.09);
-    --border: rgb(255 255 255 / 0.12);
-    --background: var(--ink);
-    color: var(--ink-foreground);
-}
-.on-slab {
-    --foreground: var(--on-slab);
-    --card-foreground: var(--on-slab);
-    --muted-foreground: color-mix(in oklab, var(--on-slab) 74%, transparent);
-    --card: rgb(255 255 255 / 0.4);
-    --muted: rgb(255 255 255 / 0.32);
-    --border: color-mix(in oklab, var(--on-slab) 14%, transparent);
-    --background: transparent;
-    --brand: var(--on-slab);
-    color: var(--on-slab);
-}
-[data-mode="dark"] .on-slab {
-    --card: rgb(255 255 255 / 0.3);
-    --muted: rgb(255 255 255 / 0.24);
+@layer components {
+    .on-ink {
+        --foreground: var(--ink-foreground);
+        --card-foreground: var(--ink-foreground);
+        --muted-foreground: var(--ink-muted);
+        --card: rgb(255 255 255 / 0.09);
+        --muted: rgb(255 255 255 / 0.09);
+        --border: rgb(255 255 255 / 0.12);
+        --background: var(--ink);
+        color: var(--ink-foreground);
+    }
+    .on-slab {
+        --foreground: var(--on-slab);
+        --card-foreground: var(--on-slab);
+        --muted-foreground: color-mix(in oklab, var(--on-slab) 74%, transparent);
+        --card: rgb(255 255 255 / 0.4);
+        --muted: rgb(255 255 255 / 0.32);
+        --border: color-mix(in oklab, var(--on-slab) 14%, transparent);
+        --background: transparent;
+        --brand: var(--on-slab);
+        color: var(--on-slab);
+    }
+    [data-mode="dark"] .on-slab {
+        --card: rgb(255 255 255 / 0.3);
+        --muted: rgb(255 255 255 / 0.24);
+    }
 }
 
 /* A number that just changed pops (motion plan #4 and #7). Re-key the element to replay it. */
 .num-pop {
-    display: inline-block;
     animation: num-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes num-pop {

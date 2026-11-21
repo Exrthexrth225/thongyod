@@ -25,7 +25,7 @@ export function DailyMissions({ petName, species }: { petName: string; species: 
             {all ? t('home.missionsDone', { name: petName }) : t('home.missionsHint', { name: petName })}
           </span>
         </span>
-        <span key={done.length} className="num-pop font-heading text-2xl font-bold tabular-nums">
+        <span key={done.length} className="num-pop inline-block font-heading text-2xl font-bold tabular-nums">
           {done.length}/{MISSIONS.length}
         </span>
       </Link>
