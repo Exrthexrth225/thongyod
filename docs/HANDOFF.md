@@ -703,6 +703,10 @@ Many phones in one game. Only the server knows everyone's role; each phone gets 
 - Adult eating flipbook (image/21, 22): <species>/eat1–4.webp (`eat.py`), #108.
 - 16 souvenirs (image/25): assets/souvenirs → `SOUVENIR_ART` in config/souvenirs.ts. Item `lantern` is now shown as กระทงจิ๋ว (that is what Earth drew; the id stays).
 
+## Waiting for Earth's art (2026-11-22, late)
+- image/26-racers-fall.png, 27-racers-sleep.png (4×2, racer order) → replace the rotated run frame in `[data-ev='trip']` / `[data-ev='nap']` (race.css) with these poses.
+- image/28-race-props.png (3×2: rock, peel, bee, Zzz, ?, !) → replace the SVG/text drawings in `features/race/RaceFx.tsx`.
+
 ## 2026-11-22 night session (DECISIONS #97–#107)
 - New look for the whole app (#97): pop colour blocks, night-indigo dark mode, Kanit headings, floating dark tab bar; ค่าเริ่มต้น/น่ารัก themes removed. Colour-block scopes `.on-ink` / `.on-slab` re-colour everything inside.
 - Motion plan (#98): pressable, confetti, invite fly/drop/float, daily Home intro, tab hop, page push, shimmer skeletons, number pops.

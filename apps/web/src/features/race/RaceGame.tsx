@@ -13,7 +13,8 @@ import { playSound, unlockSound } from '@/lib/sound'
 import { useGameSound } from '@/lib/soundPrefs'
 import { useMediaQuery } from '@/lib/useMediaQuery'
 import { cn } from '@/lib/utils'
-import { MAX_RUNNERS, MIN_RUNNERS, RACER_IDS, makeRace, positionAt, type Race } from './logic'
+import { MAX_RUNNERS, MIN_RUNNERS, RACER_IDS, eventAt, makeRace, positionAt, type EventKind, type Race } from './logic'
+import { RaceFx, RaceProp } from './RaceFx'
 import { RaceRunner } from './RaceRunner'
 import { loadRunners, saveRunners, type Runner } from './storage'
 import './race.css'
@@ -31,6 +32,7 @@ const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)'
 
 /** Phone held sideways (short screen): the race takes the whole screen (#112). */
 const SIDEWAYS = '(orientation: landscape) and (max-height: 560px)'
+const EVENT_SOUND: Record<EventKind, 'wrong' | 'flip' | 'roll' | 'pass' | 'pop'> = { trip: 'wrong', banana: 'flip', prank: 'flip', nap: 'pop', bee: 'roll', wrongWay: 'pass' }
 
 // สัตว์วิ่งแข่ง (DECISIONS #103, #112): pick who races, 3-2-1, they run on one grass field; the order was decided
 // fairly at the start and the run is staged so the lead changes and the end is close. "ที่ 1 ชนะ" or "ที่โหล่โดน".
@@ -52,7 +54,12 @@ export function RaceGame() {
   const [phase, setPhase] = useState<Phase>('setup')
   const [count, setCount] = useState(3)
   const [race, setRace] = useState<Race | null>(null)
+  /** Changes every race, so props from the last race never linger. */
+  const [raceId, setRaceId] = useState(0)
   const [finished, setFinished] = useState<number[]>([])
+  /** What the announcer is saying (#114). */
+  const [call, setCall] = useState<{ id: number; text: string } | null>(null)
+  const propEls = useRef<(HTMLSpanElement | null)[]>([])
   const runnerEls = useRef<(HTMLDivElement | null)[]>([])
   const trackEls = useRef<(HTMLDivElement | null)[]>([])
   const trackBox = useRef<HTMLDivElement>(null)
@@ -99,11 +106,19 @@ export function RaceGame() {
     const beat = race ? 450 : 700
     const next = makeRace(runners.length)
     setRace(next)
+    setRaceId((n) => n + 1)
+    propEls.current = []
     setRaceGoal(goal)
     goalNow.current = goal
     setFinished([])
+    setCall(null)
     skip.current = false
-    runnerEls.current.forEach((el) => el && (el.style.transform = 'translateX(0)'))
+    runnerEls.current.forEach((el) => {
+      if (!el) return
+      el.style.transform = 'translateX(0)'
+      el.dataset.ev = ''
+      el.dataset.act = ''
+    })
     if (reducedMotion()) return finish(next, next.order, goal)
     setPhase('countdown')
     setCount(3)
@@ -128,6 +143,13 @@ export function RaceGame() {
     let last = -1
     const done: number[] = []
     const end = Math.max(...r.paths.map((p) => p.finish))
+    const evNow: (EventKind | null)[] = r.paths.map(() => null)
+    /** Where runner i stands (px) at race time t. */
+    const px = (i: number, t: number) => {
+      const el = runnerEls.current[i]
+      const track = trackEls.current[i]
+      return el && track ? positionAt(r.paths[i], t) * (track.clientWidth - el.clientWidth - 30) : 0
+    }
     const tick = (now: number) => {
       if (last < 0) last = now
       const dt = Math.min(64, now - last)
@@ -138,13 +160,41 @@ export function RaceGame() {
       simT = skip.current ? end : simT + (dt / UNIT_MS) * rate
       r.paths.forEach((p, i) => {
         const el = runnerEls.current[i]
-        const track = trackEls.current[i]
         // The runner starts 8px in and stops with its nose just over the finish line (22px from the edge).
-        if (el && track) el.style.transform = `translateX(${positionAt(p, simT) * (track.clientWidth - el.clientWidth - 30)}px)`
+        if (el) el.style.transform = `translateX(${px(i, simT)}px)`
+        // Events (#114): the slot's data-ev drives the pose and the little drawings in race.css.
+        const ev = skip.current ? null : eventAt(p, simT)
+        if (el && ev !== evNow[i]) {
+          evNow[i] = ev
+          el.dataset.ev = ev ?? ''
+          const e = r.events.find((x) => x.runner === i)
+          if (ev && e) {
+            el.style.setProperty('--ev-ms', `${Math.round((e.dur * UNIT_MS) / rate)}ms`)
+            const name = runners[i]?.name ?? ''
+            const by = e.by !== undefined ? (runners[e.by]?.name ?? '') : ''
+            const id = Date.now()
+            setCall({ id, text: t(`race.ev.${ev}`, { name, by }) })
+            timers.current.push(window.setTimeout(() => setCall((c) => (c?.id === id ? null : c)), 1900))
+            if (sound) playSound(EVENT_SOUND[ev], 0.9)
+          }
+        }
         if (simT >= p.finish && !done.includes(i)) {
           done.push(i)
           if (sound) playSound(done.length === 1 ? 'pop' : 'tick')
         }
+      })
+      // Props: a rock or a peel appears just before the runner reaches it; a prankster hops as it throws.
+      r.events.forEach((e, k) => {
+        const prop = propEls.current[k]
+        const thrower = e.by !== undefined ? runnerEls.current[e.by] : null
+        if (thrower) thrower.dataset.act = !skip.current && simT >= e.at - 0.07 && simT < e.at + 0.02 ? 'throw' : ''
+        if (!prop) return
+        const on = !skip.current && simT >= e.at - 0.06 && simT < e.at + e.dur + 0.12
+        if (on && prop.dataset.on !== '1') {
+          const runnerW = runnerEls.current[e.runner]?.clientWidth ?? 40
+          prop.style.left = `${8 + px(e.runner, e.at) + runnerW * 0.78}px`
+          prop.dataset.on = '1'
+        } else if (!on && prop.dataset.on === '1') prop.dataset.on = ''
       })
       setFinished((f) => (f.length === done.length ? f : [...r.order.slice(0, done.length)]))
       if (simT < end) frame.current = requestAnimationFrame(tick)
@@ -245,6 +295,13 @@ export function RaceGame() {
   const order = race?.order ?? []
   const hero = phase === 'result' ? (raceGoal === 'first' ? order[0] : order[order.length - 1]) : -1
 
+  // The announcer (#114): over the field when sideways (under the ✕), otherwise in the line under the field.
+  const callLine = call && phase === 'running' && (
+    <p key={call.id} className="race-call max-w-[90%] truncate rounded-full bg-ink px-3 py-1 font-heading text-sm font-bold text-ink-foreground" aria-live="polite">
+      {call.text}
+    </p>
+  )
+
   const field = (
     <div
       role="button"
@@ -261,8 +318,14 @@ export function RaceGame() {
         return (
           <div key={i} ref={(el) => void (trackEls.current[i] = el)} className={cn('race-lane relative', sideways ? 'min-h-0 flex-1' : 'h-15')}>
             <span className="race-start absolute inset-y-0" aria-hidden="true" />
-            <div ref={(el) => void (runnerEls.current[i] = el)} className="race-slot absolute left-2 will-change-transform" style={{ transform: 'translateX(0)' }}>
+            {race?.events.map((e, k) =>
+              e.runner === i && (e.kind === 'trip' || e.kind === 'banana' || e.kind === 'prank') ? (
+                <RaceProp key={`${raceId}-${k}`} kind={e.kind} ref={(el) => void (propEls.current[k] = el)} />
+              ) : null,
+            )}
+            <div ref={(el) => void (runnerEls.current[i] = el)} className="race-slot absolute left-2 z-[2] will-change-transform" style={{ transform: 'translateX(0)' }}>
               <RaceRunner racer={r.racer} initial={String(i + 1)} running={phase === 'running' && place === -1} won={place === 0} className="size-full" />
+              <RaceFx />
               <span className="race-tag pointer-events-none absolute -bottom-0.5 left-1/2 max-w-24 -translate-x-1/2 truncate rounded-full bg-ink px-1.5 text-[10px] leading-4 font-semibold text-ink-foreground">{r.name}</span>
               {place !== -1 && (
                 <span className="num-pop absolute -top-0.5 -right-0.5 grid size-5 place-items-center rounded-full bg-yolk text-[11px] font-bold text-on-slab ring-2 ring-ink">{place + 1}</span>
@@ -271,6 +334,7 @@ export function RaceGame() {
           </div>
         )
       })}
+      {sideways && callLine && <div className="pointer-events-none absolute inset-x-0 top-14 z-10 flex justify-center">{callLine}</div>}
       {phase === 'countdown' && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center bg-ink/55">
           <span key={count} className="race-count font-heading text-8xl font-extrabold text-yolk">
@@ -339,7 +403,9 @@ export function RaceGame() {
   return (
     <div className="flex flex-col gap-3 px-4 pb-48">
       {field}
-      {phase !== 'result' && <p className="text-center text-sm text-muted-foreground">{t('race.tapToSkip')}</p>}
+      {phase !== 'result' && (
+        <div className="flex min-h-8 items-center justify-center">{callLine || <p className="text-center text-sm text-muted-foreground">{t('race.tapToSkip')}</p>}</div>
+      )}
       {result && <BottomAction className="flex-col">{result}</BottomAction>}
     </div>
   )

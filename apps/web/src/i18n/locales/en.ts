@@ -1209,6 +1209,14 @@ export const en: Messages = {
     exit: 'Leave the track',
     order: 'Finishing order',
     nextGoal: 'Next round',
+    ev: {
+      trip: '{{name}} trips on a rock!',
+      banana: '{{name}} slips on a banana peel!',
+      prank: '{{by}} throws a peel at {{name}}!',
+      nap: '{{name}} dozes off mid-race!',
+      bee: 'A bee chases {{name}}! Run!',
+      wrongWay: '{{name}} runs the wrong way!',
+    },
     racers: { cat: 'Cat', shiba: 'Shiba', bunny: 'Bunny', duck: 'Duckling', frog: 'Frog', penguin: 'Penguin', panda: 'Panda', koala: 'Koala' },
   },
   headsUp: {

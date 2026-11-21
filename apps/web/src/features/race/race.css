@@ -43,3 +43,57 @@
 @media (prefers-reduced-motion: reduce) {
   .race-runner.is-running .race-body, .race-frame-a, .race-frame-b, .race-win, .race-runner.is-running .race-leg-a, .race-runner.is-running .race-leg-b, .race-count { animation: none; }
 }
+
+/* ---------- Race events (#114): driven by data-ev / data-act on .race-slot and data-on on .race-prop ---------- */
+.race-slot .race-runner { transform-origin: 50% 85%; transition: transform 0.18s cubic-bezier(0.3, 1.4, 0.5, 1); }
+.race-slot:is([data-ev='trip'], [data-ev='nap'], [data-ev='wrongWay']) :is(.race-frame-a, .race-frame-b) { animation-play-state: paused; }
+/* Trip: falls flat on its face, stars spin over its head. */
+.race-slot[data-ev='trip'] .race-runner { transform: translate(12%, 4%) rotate(80deg) scale(0.88); }
+/* Banana / prank: spins on the peel while sliding. */
+.race-slot:is([data-ev='banana'], [data-ev='prank']) .race-runner { animation: race-spin var(--ev-ms, 0.8s) cubic-bezier(0.3, 0.5, 0.4, 1) both; }
+@keyframes race-spin { 0% { transform: rotate(0); } 15% { transform: translateY(-14%) rotate(-140deg); } 100% { transform: rotate(-720deg); } }
+/* Nap: slumps a little; Zzz float up. */
+.race-slot[data-ev='nap'] .race-runner { transform: translateY(6%) rotate(-10deg) scale(0.95, 0.9); filter: saturate(0.85); }
+/* Wrong way: faces backwards, a question mark bobs. */
+.race-slot[data-ev='wrongWay'] .race-runner { transform: scaleX(-1); }
+/* Bee: legs go twice as fast. */
+.race-slot[data-ev='bee'] { --flip: 0.12s; }
+/* The prankster hops as it throws. */
+.race-slot[data-act='throw'] .race-runner { animation: race-throw 0.45s ease-out; }
+@keyframes race-throw { 40% { transform: translateY(-22%) rotate(-12deg); } }
+
+.race-fx { position: absolute; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 2; }
+.race-fx-stars { left: 10%; top: -18%; width: 80%; height: 40%; }
+.race-fx-stars img { position: absolute; left: 40%; top: 20%; width: 34%; animation: race-orbit 0.7s linear infinite; }
+@keyframes race-orbit {
+  0% { transform: translate(-70%, 0) scale(0.8); }
+  25% { transform: translate(0, 40%) scale(1.1); }
+  50% { transform: translate(70%, 0) scale(0.8); }
+  75% { transform: translate(0, -40%) scale(0.6); }
+  100% { transform: translate(-70%, 0) scale(0.8); }
+}
+.race-slot[data-ev='trip'] .race-fx-stars { opacity: 1; }
+.race-fx-z { right: -34%; top: 0; display: flex; gap: 1px; align-items: flex-end; color: var(--lilac); font-weight: 800; font-size: 0.9rem; text-shadow: 0 0 2px var(--ink-foreground), 0 0 2px var(--ink-foreground); }
+.race-fx-z b { animation: race-z 1.2s ease-in-out infinite; }
+.race-fx-z b:nth-child(2) { animation-delay: 0.2s; font-size: 1.1em; }
+.race-fx-z b:nth-child(3) { animation-delay: 0.4s; font-size: 1.3em; }
+@keyframes race-z { 50% { transform: translateY(-30%); } }
+.race-slot[data-ev='nap'] .race-fx-z { opacity: 1; }
+.race-fx-q { left: 30%; top: -42%; color: var(--sky); font-size: 1.4rem; font-weight: 800; -webkit-text-stroke: 1.5px #3a2416; animation: race-z 0.6s ease-in-out infinite; }
+.race-slot[data-ev='wrongWay'] .race-fx-q { opacity: 1; }
+.race-fx-bee { left: -48%; top: -6%; width: 46%; aspect-ratio: 40 / 32; animation: race-buzz 0.18s linear infinite alternate; }
+@keyframes race-buzz { to { transform: translate(6%, -10%) rotate(6deg); } }
+.race-fx-lines { left: -40%; top: 30%; width: 40%; height: 40%; background: repeating-linear-gradient(180deg, var(--chalk) 0 2px, transparent 2px 7px); mask: linear-gradient(90deg, transparent, #000); }
+.race-slot[data-ev='bee'] :is(.race-fx-bee, .race-fx-lines) { opacity: 1; }
+
+.race-prop { position: absolute; top: 58%; height: 42%; aspect-ratio: 40 / 28; translate: -50% -50%; opacity: 0; scale: 0.3; transition: opacity 0.15s, scale 0.25s cubic-bezier(0.3, 1.6, 0.5, 1); z-index: 1; }
+.race-prop[data-on='1'] { opacity: 1; scale: 1; }
+.race-prop.is-thrown[data-on='1'] { animation: race-peel-fly 0.45s cubic-bezier(0.3, 0.6, 0.5, 1); }
+@keyframes race-peel-fly { from { transform: translate(-60%, -160%) rotate(-300deg); } }
+
+.race-call { animation: race-call 0.35s cubic-bezier(0.3, 1.5, 0.5, 1); }
+@keyframes race-call { from { transform: translateY(40%) scale(0.7); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .race-fx-stars img, .race-fx-z b, .race-fx-q, .race-fx-bee, .race-call, .race-prop.is-thrown[data-on='1'] { animation: none; }
+}
