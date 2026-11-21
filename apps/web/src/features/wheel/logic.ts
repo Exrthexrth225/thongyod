@@ -8,6 +8,8 @@ export const MAX_OPTIONS = 12
 export const MAX_OPTION_LENGTH = 20
 /** Full turns before stopping, so every spin looks like a real spin. */
 export const SPIN_TURNS = 7
+/** The spin's speed curve (CSS cubic-bezier): fast, then a long crawl (#101). Used by SpinWheel and tickTimes. */
+export const SPIN_CURVE: [number, number, number, number] = [0.12, 0.7, 0.08, 1]
 
 /** Trim, drop empties, cut long text, keep at most MAX_OPTIONS. */
 export function normalizeOptions(options: string[]): string[] {
@@ -65,7 +67,7 @@ function mod(n: number, m: number): number {
  * cubic-bezier(x1, y1, x2, y2) spin of `durationMs`. Used for the tick sounds. At most `maxTicks`
  * (evenly thinned) so long spins do not machine-gun.
  */
-export function tickTimes(slices: number, durationMs: number, curve: [number, number, number, number] = [0.12, 0.7, 0.08, 1], maxTicks = 40): number[] {
+export function tickTimes(slices: number, durationMs: number, curve: [number, number, number, number] = SPIN_CURVE, maxTicks = 40): number[] {
   if (slices <= 0 || durationMs <= 0) return []
   const [x1, y1, x2, y2] = curve
   const bez = (s: number, a: number, b: number) => 3 * (1 - s) ** 2 * s * a + 3 * (1 - s) * s ** 2 * b + s ** 3

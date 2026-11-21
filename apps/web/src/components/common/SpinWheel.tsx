@@ -1,11 +1,10 @@
 import { useEffect, useRef } from 'react'
+import { SPIN_CURVE } from '@/features/wheel/logic'
 import { cn } from '@/lib/utils'
 
 // Light brand slab colours with ink text (#97, no pink): readable in light and dark mode.
 const SLICE_COLORS = ['#FFD35C', '#FFA66B', '#6FDDBE', '#8DBBFF', '#B9A0FF', '#BDE57A', '#6ED3DD', '#A9B3FF']
 const TEXT_COLOR = '#17142B'
-/** The spin's speed curve (shared with the tick timing in features/wheel/logic). */
-export const SPIN_CURVE: [number, number, number, number] = [0.12, 0.7, 0.08, 1]
 const R = 96
 const LABEL_CHARS = 10
 
