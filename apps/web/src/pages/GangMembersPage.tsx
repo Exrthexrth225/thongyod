@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { ApiError } from '@/api/client'
+import { buttonVariants } from '@/components/ui/button'
 import { useGang } from '@/api/gangs'
 import { useMe } from '@/api/profile'
 import { Avatar } from '@/components/common/Avatar'
@@ -34,7 +35,7 @@ export function GangMembersPage() {
       {gang.isPending ? (
         <LoadingState rows={5} />
       ) : gang.error instanceof ApiError && gang.error.status === 404 ? (
-        <EmptyState title={t('gang.notFound')} hint={t('gang.notFoundHint')} />
+        <EmptyState pet="shy" title={t('gang.notFound')} hint={t('gang.notFoundHint')} action={<Link to="/gangs" className={buttonVariants()}>{t('common.toGangs')}</Link>} />
       ) : gang.isError ? (
         <ErrorState onRetry={() => void gang.refetch()} />
       ) : (

@@ -63,7 +63,7 @@ export function NotificationsPage() {
       ) : list.isError && !list.data ? (
         <ErrorState onRetry={() => void list.refetch()} />
       ) : groups.length === 0 ? (
-        <EmptyState title={t('notifications.empty')} hint={t('notifications.emptyHint')} />
+        <EmptyState pet="sleep" title={t('notifications.empty')} hint={t('notifications.emptyHint')} />
       ) : (
         groups.map((group) => (
           <section key={group.key}>

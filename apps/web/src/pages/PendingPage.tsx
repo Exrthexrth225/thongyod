@@ -28,7 +28,7 @@ export function PendingPage() {
       ) : (
         <Card className="mx-4 px-4 py-1">
           {items.length === 0 ? (
-            <EmptyState title={t('home.pendingEmpty')} />
+            <EmptyState pet="happy" title={t('home.pendingEmpty')} />
           ) : (
             items.map((item) => (
               <ListRow key={item.id} leading={<IconTile icon={PENDING_ICONS[item.kind]} />} title={pendingTitle(item)} subtitle={pendingSubtitle(item, now)} />

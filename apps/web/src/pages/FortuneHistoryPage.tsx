@@ -27,6 +27,7 @@ export function FortuneHistoryPage() {
       <Card className="mx-4 px-4 py-1">
         {history.length === 0 ? (
           <EmptyState
+            pet="wave"
             title={t('fortune.historyEmpty')}
             action={
               <Link to="/fortune" className={buttonVariants({ size: 'sm' })}>

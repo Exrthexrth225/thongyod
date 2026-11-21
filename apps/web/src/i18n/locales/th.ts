@@ -15,6 +15,8 @@ export const th = {
     pageTitle: '{{page}} · ทองหยอด',
   },
   common: {
+    toGangs: 'ไปหน้าแก๊ง',
+    toHome: 'กลับหน้าหลัก',
     seeAll: 'ดูทั้งหมด',
     soundOn: 'เสียงเปิดอยู่ แตะเพื่อปิด',
     soundOff: 'เสียงปิดอยู่ แตะเพื่อเปิด',

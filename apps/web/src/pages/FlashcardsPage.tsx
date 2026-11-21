@@ -37,6 +37,7 @@ export function FlashcardsPage() {
       {decks.length === 0 ? (
         <Card className="mx-4">
           <EmptyState
+            pet="yawn"
             title={t('flashcards.empty')}
             hint={t('flashcards.emptyHint')}
             action={

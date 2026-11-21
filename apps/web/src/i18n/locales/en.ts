@@ -15,6 +15,8 @@ export const en: Messages = {
     pageTitle: '{{page}} · Thongyod',
   },
   common: {
+    toGangs: 'Go to gangs',
+    toHome: 'Back to Home',
     seeAll: 'See all',
     soundOn: 'Sound on, tap to mute',
     soundOff: 'Sound off, tap to turn on',

@@ -184,7 +184,7 @@ function MyFriends() {
         )}
         empty={
           q === '' ? (
-            <EmptyState title={t('friends.empty')} hint={t('friends.emptyHint')} />
+            <EmptyState pet="wave" title={t('friends.empty')} hint={t('friends.emptyHint')} />
           ) : (
             <EmptyState title={t('friends.noMatch', { q })} />
           )

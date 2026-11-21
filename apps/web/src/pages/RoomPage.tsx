@@ -36,7 +36,7 @@ export function RoomPage() {
   else if (room.isError && !room.data) {
     body =
       room.error instanceof ApiError && room.error.status === 404 ? (
-        <EmptyState title={t('rooms.errors.notFound')} hint={t('rooms.errors.notFoundHint')} action={<Button onClick={() => void navigate('/games/rooms')}>{t('rooms.zoneTitle')}</Button>} />
+        <EmptyState pet="shy" title={t('rooms.errors.notFound')} hint={t('rooms.errors.notFoundHint')} action={<Button onClick={() => void navigate('/games/rooms')}>{t('rooms.zoneTitle')}</Button>} />
       ) : (
         <ErrorState onRetry={() => void room.refetch()} />
       )

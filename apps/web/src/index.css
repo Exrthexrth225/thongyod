@@ -508,3 +508,19 @@
         animation: none;
     }
 }
+
+/* The pet in an empty state breathes gently (#107). */
+.empty-pet {
+    transform-origin: 50% 100%;
+    animation: empty-pet 3s ease-in-out infinite;
+}
+@keyframes empty-pet {
+    50% {
+        transform: scale(1.03, 0.97);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .empty-pet {
+        animation: none;
+    }
+}

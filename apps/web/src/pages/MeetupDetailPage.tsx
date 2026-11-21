@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { CalendarDays, Clock, EyeOff, Send, Users } from 'lucide-react'
@@ -61,7 +62,7 @@ export function MeetupDetailPage() {
       <>
         <PageHeader title={notFound ? t('meetup.notFound') : t('common.loadError')} backTo="/" />
         {notFound ? (
-          <EmptyState title={t('meetup.notFoundHint')} />
+          <EmptyState pet="shy" title={t('meetup.notFoundHint')} action={<Link to="/" className={buttonVariants()}>{t('common.toHome')}</Link>} />
         ) : (
           <ErrorState onRetry={() => void query.refetch()} />
         )}

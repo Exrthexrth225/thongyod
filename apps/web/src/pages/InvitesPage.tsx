@@ -36,6 +36,7 @@ export function InvitesPage() {
       ) : items.length === 0 ? (
         <div className="px-4">
           <EmptyState
+            pet="sleep"
             title={t('invites.allDone')}
             hint={t('invites.allDoneHint')}
             action={

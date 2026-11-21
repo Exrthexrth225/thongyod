@@ -38,6 +38,7 @@ export function BillPage() {
         <PageHeader title={t('billSplit.title')} backTo="/bills" />
         <div className="px-4">
           <EmptyState
+            pet="shy"
             title={t('billSplit.notFound')}
             action={
               <Link to="/bills" className={buttonVariants({ variant: 'outline' })}>

@@ -41,7 +41,7 @@ export function GangPage() {
       {gang.isPending ? (
         <LoadingState rows={4} />
       ) : notFound ? (
-        <EmptyState title={t('gang.notFound')} hint={t('gang.notFoundHint')} />
+        <EmptyState pet="shy" title={t('gang.notFound')} hint={t('gang.notFoundHint')} action={<Link to="/gangs" className={buttonVariants()}>{t('common.toGangs')}</Link>} />
       ) : gang.isError || !g ? (
         <ErrorState onRetry={() => void gang.refetch()} />
       ) : (

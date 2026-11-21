@@ -30,7 +30,7 @@ export function ProfileListPage({ kind }: { kind: ListKind }) {
       {profile.isPending ? (
         <LoadingState rows={4} />
       ) : notFound ? (
-        <EmptyState title={t('profile.notFound')} />
+        <EmptyState pet="shy" title={t('profile.notFound')} />
       ) : profile.isError || !p ? (
         <ErrorState onRetry={() => void profile.refetch()} />
       ) : (

@@ -34,7 +34,7 @@ export function BillsPage() {
           {t('billSplit.newBill')}
         </Button>
         {bills.length === 0 ? (
-          <EmptyState title={t('billSplit.emptyTitle')} hint={t('billSplit.emptyHint')} />
+          <EmptyState pet="eat" title={t('billSplit.emptyTitle')} hint={t('billSplit.emptyHint')} />
         ) : (
           <ul className="flex flex-col gap-2">
             {bills.map((bill) => (
