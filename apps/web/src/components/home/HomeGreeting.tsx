@@ -9,9 +9,12 @@ import { buttonVariants } from "@/components/ui/button";
 import { CountBadge } from "@/components/common/CountBadge";
 import { useUnreadNotifications } from "@/api/notifications";
 import { cn } from "@/lib/utils";
+import { SHOW_BACK } from "@/lib/nav";
 import { Badge } from "@/components/common/Badge";
 import { NotificationsSheet } from "@/components/notifications/NotificationsSheet";
 import { ScanDialog } from "@/components/scan/ScanDialog";
+import { takeAwayEvent } from "@/features/pet/away";
+import { bangkokDayKey } from "@/features/fortune/logic";
 
 type Props = {
   name: string | null;
@@ -43,6 +46,8 @@ export function HomeGreeting({ name, species, streak, onPetTap, now, intro = fal
   const [sheet, setSheet] = useState(false);
   const [scan, setScan] = useState(false);
   const [compact, setCompact] = useState(false);
+  // What the pet did while you were away (#106), worked out once per visit.
+  const [away] = useState(() => (species ? takeAwayEvent(now, bangkokDayKey(now)) : null));
   const header = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -127,13 +132,29 @@ export function HomeGreeting({ name, species, streak, onPetTap, now, intro = fal
           <div className="flex min-w-0 flex-1 flex-col items-start pb-5">
             <p className="text-base font-medium text-muted-foreground">{t(greetingKey(now.getHours()))}</p>
             <h1 className="w-full truncate text-[clamp(2.4rem,13vw,3.4rem)] leading-[1.1] font-extrabold">{name ?? " "}</h1>
-            <p className="relative mt-3 rounded-2xl bg-ink px-3 py-2 text-sm text-pretty text-ink-foreground">
-              {species
-                ? t(`home.petSays.${dayPart(now.getHours())}`, { name: t(`pet.species.${species}`) })
-                : t("home.petSays.egg")}
-              {/* Tail pointing at the pet */}
-              <span aria-hidden="true" className="absolute top-1/2 -right-1.5 size-3.5 -translate-y-1/2 rotate-45 rounded-[3px] bg-ink" />
-            </p>
+            {(() => {
+              const petName = species ? t(`pet.species.${species}`) : "";
+              const line = !species
+                ? t("home.petSays.egg")
+                : away
+                  ? t(`pet.away.${away.activity}`, { name: petName }) +
+                    (away.souvenir ? t("pet.away.found", { item: t(`pet.souvenirs.${away.souvenir}`) }) : "")
+                  : t(`home.petSays.${dayPart(now.getHours())}`, { name: petName });
+              const bubble = "relative mt-3 rounded-2xl bg-ink px-3 py-2 text-sm text-pretty text-ink-foreground";
+              const tail = <span aria-hidden="true" className="absolute top-1/2 -right-1.5 size-3.5 -translate-y-1/2 rotate-45 rounded-[3px] bg-ink" />;
+              // Brought something back: the bubble opens the souvenir book.
+              return away?.souvenir ? (
+                <Link to="/pet/album" state={SHOW_BACK} className={cn(bubble, "pressable")} aria-label={`${line}. ${t("pet.away.open")}`}>
+                  {line}
+                  {tail}
+                </Link>
+              ) : (
+                <p className={bubble}>
+                  {line}
+                  {tail}
+                </p>
+              );
+            })()}
           </div>
           {species ? (
             <Pet species={species} size={190} onTap={onPetTap} className={cn("-mr-6 -mb-3 -ml-6 shrink-0", intro && "intro-pet")} />

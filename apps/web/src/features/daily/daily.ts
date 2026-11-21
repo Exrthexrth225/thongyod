@@ -4,6 +4,7 @@ import { useSyncExternalStore } from 'react'
 import { addDays } from '@/lib/date'
 import { bangkokDayKey } from '@/features/fortune/logic'
 import { requestCelebration } from '@/features/pet/celebrate'
+import { recordCareDay } from '@/features/pet/growth'
 import { loadDraw } from '@/features/fortune/storage'
 
 export type MissionId = 'fortune' | 'pet' | 'tool'
@@ -35,6 +36,7 @@ function read(): DailyLog {
 /** Marks a mission done for today (Bangkok day). Safe to call many times. */
 export function markDone(id: MissionId, now: Date = new Date()): void {
   const day = bangkokDayKey(now)
+  if (id === 'pet') recordCareDay(day)
   if (log[day]?.includes(id)) return
   const days = Object.keys({ ...log, [day]: [] }).sort().slice(-KEEP_DAYS)
   const next: DailyLog = {}

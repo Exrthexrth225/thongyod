@@ -700,3 +700,6 @@ Many phones in one game. Only the server knows everyone's role; each phone gets 
 ## Waiting for Earth's art (2026-11-22)
 - Sticker sheet 1 (4×4): 16 game stickers → replace lucide icons on GameTile / featured game. Cut by grid.
 - Sticker sheet 2 (4×2): 8 running animals → `RACER_ART` in `features/race/RaceRunner.tsx`.
+- Pet sheets A–D (baby/teen × dragon/fish, 3×2, 6 poses: main, blink, happy, eat, sleep, shy) → per-stage poses in `components/pet/species.ts`; drop `STAGE_SCALE` shrinking.
+- Pet sheets E–F (adult eating, 4 frames) → flipbook for the `eat` action.
+- Sheet G (16 souvenirs, 4×4, order = `SOUVENIRS` in features/pet/away.ts) → `SOUVENIR_ART` in config/souvenirs.ts.

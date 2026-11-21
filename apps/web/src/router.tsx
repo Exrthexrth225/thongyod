@@ -26,6 +26,7 @@ import { CupsPage } from '@/pages/CupsPage'
 import { DicePage } from '@/pages/DicePage'
 import { FingerPage } from '@/pages/FingerPage'
 import { RacePage } from '@/pages/RacePage'
+import { PetAlbumPage } from '@/pages/PetAlbumPage'
 import { GamesPage } from '@/pages/GamesPage'
 import { RoomNewPage } from '@/pages/RoomNewPage'
 import { RoomPage } from '@/pages/RoomPage'
@@ -113,6 +114,7 @@ export const router = createRouter([
       { path: 'games/dice', element: <DicePage /> },
       { path: 'games/finger', element: <FingerPage /> },
       { path: 'games/race', element: <RacePage /> },
+      { path: 'pet/album', element: <PetAlbumPage /> },
       { path: 'games/cups', element: <CupsPage /> },
       { path: 'games/rooms', element: <RoomsPage /> },
       { path: 'games/rooms/new', element: <RoomNewPage /> },

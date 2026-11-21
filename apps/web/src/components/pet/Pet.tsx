@@ -18,6 +18,7 @@ import {
 import { CELEBRATE_EVENT, CHEER_EVENT, celebrationDue, markCelebrated } from '@/features/pet/celebrate'
 import { MOTIONS } from '@/features/pet/motions'
 import { initialTaps, tap } from '@/features/pet/taps'
+import { GREW_EVENT, STAGE_SCALE, useGrowth } from '@/features/pet/growth'
 import { cn } from '@/lib/utils'
 import { PET_SPECIES, type PetSpeciesId } from './species'
 import './pet.css'
@@ -55,6 +56,8 @@ const eased = (frames: Keyframe[]) => frames.map((k) => ({ ...k, easing: 'ease-i
 export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: PetProps) {
   const { t } = useTranslation()
   const spec = PET_SPECIES[species]
+  // Baby / teen: drawn smaller until their own art arrives (#105).
+  const stageScale = STAGE_SCALE[useGrowth().stage]
   const [pose, setPose] = useState<PoseId>('main')
   const [overlay, setOverlay] = useState<{ name: Overlay; key: number }>({ name: 'none', key: 0 })
   const [blink, setBlink] = useState(false)
@@ -183,9 +186,11 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
     }
     window.addEventListener(CELEBRATE_EVENT, celebrate)
     window.addEventListener(CHEER_EVENT, cheer)
+    window.addEventListener(GREW_EVENT, cheer)
     return () => {
       window.removeEventListener(CELEBRATE_EVENT, celebrate)
       window.removeEventListener(CHEER_EVENT, cheer)
+      window.removeEventListener(GREW_EVENT, cheer)
       window.clearTimeout(idleTimer.current)
       clearTimers()
     }
@@ -289,6 +294,9 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
           width: `${(1 / (1 + 2 * ROOM.side)) * 100}%`,
           top: `${(ROOM.top / (1 + ROOM.top + ROOM.bottom)) * 100}%`,
           height: `${(1 / (1 + ROOM.top + ROOM.bottom)) * 100}%`,
+          transform: stageScale !== 1 ? `scale(${stageScale})` : undefined,
+          transformOrigin: '50% 100%',
+          transition: 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)',
         }}
       >
         <span aria-hidden="true" className={cn('pet-shadow-wrap absolute bottom-[-3%] left-[16%] h-[9%] w-[68%]', airborne && 'pet-shadow-float')}>

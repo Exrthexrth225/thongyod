@@ -142,6 +142,27 @@ export const en: Messages = {
     billPaid: '{{name}} paid for {{subject}}',
   },
   pet: {
+    away: {
+      walk: '{{name}} went for a walk',
+      nap: '{{name}} had a nap',
+      snack: '{{name}} sneaked a snack',
+      explore: '{{name}} explored around',
+      stars: '{{name}} watched the stars waiting for you',
+      found: ' and brought back a {{item}}',
+      open: 'Open the souvenir book',
+    },
+    album: {
+      title: 'Souvenir book',
+      subtitle: '{{name}} collected these while you were away',
+      count: '{{n}}/{{total}} found',
+      unknown: 'Not found yet',
+      open: 'Souvenir book',
+    },
+    souvenirs: {
+      leaf: 'heart-shaped leaf', pebble: 'shiny pebble', shell: 'seashell', boat: 'paper boat', ticket: 'old ticket', mangoRice: 'mango sticky rice', bubbleTea: 'bubble tea', bell: 'little red bell',
+      clover: 'four-leaf clover', button: 'lost button', starCandy: 'star candy', lantern: 'tiny lantern', feather: 'feather', keychain: 'gold coin keychain', note: 'heart note', flower: 'blue flower',
+    },
+    grew: { teen: '{{name}} is a teen now!', adult: '{{name}} is all grown up!', hint: 'Thanks for coming by so often' },
     noPetTitle: 'No pet yet',
     noPetText: 'Pick an egg and hatch it',
     hatchNow: 'Hatch',

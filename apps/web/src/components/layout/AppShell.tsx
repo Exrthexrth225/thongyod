@@ -1,5 +1,6 @@
 import { Outlet, ScrollRestoration, useLocation } from 'react-router'
 import { BottomNav } from './BottomNav'
+import { PetGrowthToast } from '@/components/pet/PetGrowthToast'
 
 // Page frame for every tab: content area + fixed bottom tab bar.
 // Content is limited to phone width and centered on larger screens.
@@ -17,6 +18,7 @@ export function AppShell() {
       <ScrollRestoration />
       </main>
       <BottomNav />
+      <PetGrowthToast />
     </div>
   )
 }
