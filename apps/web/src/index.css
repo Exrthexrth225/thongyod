@@ -465,3 +465,18 @@
         animation: none;
     }
 }
+
+/* The wheel gives one small pop when it lands (#101). */
+.wheel-pop {
+    animation: wheel-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes wheel-pop {
+    40% {
+        transform: scale(1.04);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .wheel-pop {
+        animation: none;
+    }
+}

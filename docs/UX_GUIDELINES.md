@@ -38,7 +38,8 @@ Thongyod is a **student-life toolbox**: many small tools that work alone, and ev
 | `quick` | 200–250 | small enter/exit, chips, toasts |
 | `standard` | 300 | cards, sheets, page transitions |
 | `emphasis` | 400–500 | celebrations, result reveals (bounce/elastic only here) |
-| `story` | ≤ 1200 | wheel spin, shuffle, hatch — **always skippable by tap** |
+| `story` | ≤ 1200 | shuffle, hatch — **always skippable by tap** |
+| `suspense` | 4000–10000 | random picks meant to be watched together: wheel 4.5 s (#101), animal race, finger chooser countdown — **always skippable by tap**, result decided before it starts |
 
 Easing: enter = decelerate (ease-out), exit = accelerate (ease-in, ~20% shorter than enter), drag release = spring. "Feel matters more than exact numbers" — tune on a real phone.
 

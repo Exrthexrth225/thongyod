@@ -63,3 +63,12 @@ describe('tickTimes', () => {
     expect(tickTimes(10, 0)).toEqual([])
   })
 })
+
+describe('spin feel (#101)', () => {
+  it('crawls at the end: the last third of a 4.5 s spin passes only a few slice borders', () => {
+    const times = tickTimes(84, 4500, [0.12, 0.7, 0.08, 1], 84)
+    const late = times.filter((ms) => ms > 3000).length
+    expect(late).toBeGreaterThan(0)
+    expect(late / times.length).toBeLessThan(0.08)
+  })
+})

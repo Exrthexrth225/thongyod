@@ -1,8 +1,11 @@
+import { useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 
-// Pastel slices with dark text: readable in light and dark mode.
-const SLICE_COLORS = ['#FFB4A2', '#FFD6A5', '#FDF5A6', '#CAFFBF', '#9BF6FF', '#A0C4FF', '#BDB2FF', '#FFC6FF']
-const TEXT_COLOR = '#3B2F2F'
+// Light brand slab colours with ink text (#97, no pink): readable in light and dark mode.
+const SLICE_COLORS = ['#FFD35C', '#FFA66B', '#6FDDBE', '#8DBBFF', '#B9A0FF', '#BDE57A', '#6ED3DD', '#A9B3FF']
+const TEXT_COLOR = '#17142B'
+/** The spin's speed curve (shared with the tick timing in features/wheel/logic). */
+export const SPIN_CURVE: [number, number, number, number] = [0.12, 0.7, 0.08, 1]
 const R = 96
 const LABEL_CHARS = 10
 
@@ -18,10 +21,32 @@ type SpinWheelProps = {
   onTap?: () => void
   label: string
   className?: string
+  /** ms after the spin starts when the pointer knocks a slice border: it flaps there (#36). */
+  flapAt?: number[]
+  /** After the spin: this slice stays bright, the others dim, and the wheel gives a little pop. */
+  winner?: number | null
 }
 
 /** Wheel of names. It only draws; who wins is decided outside (features/wheel/logic). */
-export function SpinWheel({ options, rotation, durationMs, onSpinEnd, onTap, label, className }: SpinWheelProps) {
+export function SpinWheel({ options, rotation, durationMs, onSpinEnd, onTap, label, className, flapAt, winner = null }: SpinWheelProps) {
+  const pointer = useRef<SVGSVGElement>(null)
+  // The pointer flaps every time it passes a border; the flaps follow the wheel's slowing down.
+  useEffect(() => {
+    if (!flapAt?.length || !pointer.current?.animate) return
+    const el = pointer.current
+    const ids = flapAt.map((ms) =>
+      window.setTimeout(
+        () =>
+          el.animate([{ transform: 'translate(-50%, -0.25rem) rotate(0deg)' }, { transform: 'translate(-50%, -0.25rem) rotate(-22deg)', offset: 0.3 }, { transform: 'translate(-50%, -0.25rem) rotate(0deg)' }], {
+            duration: 160,
+            easing: 'ease-out',
+          }),
+        ms,
+      ),
+    )
+    return () => ids.forEach((id) => window.clearTimeout(id))
+  }, [flapAt])
+
   const count = Math.max(options.length, 1)
   const size = 360 / count
   const fontSize = count <= 4 ? 12 : count <= 8 ? 10 : 8.5
@@ -31,18 +56,24 @@ export function SpinWheel({ options, rotation, durationMs, onSpinEnd, onTap, lab
       type="button"
       onClick={onTap}
       aria-label={label}
-      className={cn('relative aspect-square w-full touch-manipulation select-none active:scale-[0.99]', className)}
+      className={cn('relative aspect-square w-full touch-manipulation select-none active:scale-[0.99]', winner !== null && 'wheel-pop', className)}
     >
       {/* Pointer: fixed at the top, does not rotate. */}
-      <svg viewBox="0 0 40 34" className="absolute top-0 left-1/2 z-10 w-9 -translate-x-1/2 -translate-y-1 drop-shadow" aria-hidden="true">
-        <path d="M4 3 H36 L20 31 Z" fill="var(--primary)" stroke="var(--background)" strokeWidth="3" strokeLinejoin="round" />
+      <svg
+        ref={pointer}
+        viewBox="0 0 40 34"
+        className="absolute top-0 left-1/2 z-10 w-10 drop-shadow"
+        style={{ transform: 'translate(-50%, -0.25rem)', transformOrigin: '50% 15%' }}
+        aria-hidden="true"
+      >
+        <path d="M4 3 H36 L20 31 Z" fill="var(--ink)" stroke="var(--yolk)" strokeWidth="3" strokeLinejoin="round" />
       </svg>
       {/* Rotate an HTML box (not an SVG group) so the pivot is always the exact center. */}
       <div
         className="size-full"
         style={{
           transform: `rotate(${rotation}deg)`,
-          transition: durationMs > 0 ? `transform ${durationMs}ms cubic-bezier(0.15, 0.7, 0.12, 1)` : 'none',
+          transition: durationMs > 0 ? `transform ${durationMs}ms cubic-bezier(${SPIN_CURVE.join(', ')})` : 'none',
         }}
         onTransitionEnd={(e) => {
           if (e.target === e.currentTarget) onSpinEnd?.()
@@ -57,7 +88,7 @@ export function SpinWheel({ options, rotation, durationMs, onSpinEnd, onTap, lab
             // Left half: turn the text around so it never reads upside down.
             const flip = center > 180
             return (
-              <g key={i}>
+              <g key={i} style={{ opacity: winner !== null && winner !== i ? 0.35 : 1, transition: 'opacity 0.4s ease-out' }}>
                 {count === 1 ? (
                   <circle r={R} fill={SLICE_COLORS[0]} />
                 ) : (
@@ -82,8 +113,8 @@ export function SpinWheel({ options, rotation, durationMs, onSpinEnd, onTap, lab
         </svg>
       </div>
       <svg viewBox="-100 -100 200 200" className="absolute inset-0 size-full" aria-hidden="true">
-        <circle r={16} fill="var(--background)" stroke="var(--primary)" strokeWidth="3" />
-        <circle r={5} fill="var(--primary)" />
+        <circle r={16} fill="var(--ink)" stroke="var(--yolk)" strokeWidth="3" />
+        <circle r={5} fill="var(--yolk)" />
       </svg>
     </button>
   )

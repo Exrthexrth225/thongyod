@@ -2,22 +2,22 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { HandCoins, Plus, RotateCw, Utensils, Vote, X } from 'lucide-react'
-import { SpinWheel } from '@/components/common/SpinWheel'
+import { SPIN_CURVE, SpinWheel } from '@/components/common/SpinWheel'
 import { SuggestionChips } from '@/components/common/SuggestionChips'
 import { GameHeaderActions } from '@/components/games/HowToPlay'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { celebrate } from '@/lib/celebrate'
+import { confettiFrom } from '@/lib/confetti'
 import { markDone } from '@/features/daily/daily'
 import { MAX_OPTION_LENGTH, MAX_OPTIONS, MIN_OPTIONS, canSpin, normalizeOptions, spin, tickTimes } from '@/features/wheel/logic'
 import { playSound, unlockSound } from '@/lib/sound'
 import { useGameSound } from '@/lib/soundPrefs'
 import { loadOptions, saveOptions } from '@/features/wheel/storage'
 
-/** UX_GUIDELINES motion token `story`: ≤ 1200 ms, always skippable by tap. */
-const SPIN_MS = 1200
+/** Long enough to feel the crawl at the end (Earth, #101); always skippable by tap. */
+const SPIN_MS = 4500
 const PRESETS = ['food', 'whoPays', 'yesNo'] as const
 const PRESET_ICONS = [Utensils, HandCoins, Vote]
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -39,6 +39,10 @@ export function WheelPage() {
   const [duration, setDuration] = useState(SPIN_MS)
   const [phase, setPhase] = useState<Phase>('idle')
   const [winner, setWinner] = useState<number | null>(null)
+  const [flapAt, setFlapAt] = useState<number[]>([])
+  /** The result card waits a beat so you see where the wheel landed first. */
+  const [showCard, setShowCard] = useState(false)
+  const wheelBox = useRef<HTMLDivElement>(null)
   /** Id of the spin waiting for its result (0 = none). Makes sure each result shows exactly once. */
   const pending = useRef(0)
   const spinCount = useRef(0)
@@ -71,15 +75,18 @@ export function WheelPage() {
     const next = spin(rotation, count)
     setWinner(next.index)
     setPhase('spinning')
+    setShowCard(false)
     const instant = reducedMotion()
     setDuration(instant ? 0 : SPIN_MS)
     setRotation(next.rotation)
     clearTicks()
+    // The pointer knocks each slice border: it flaps (always) and ticks (sound on), slowing down with the wheel.
+    const borders = Math.round(Math.abs(next.rotation - rotation) / (360 / count))
+    const knocks = instant ? [] : tickTimes(borders, SPIN_MS, SPIN_CURVE, 70)
+    setFlapAt(knocks)
     if (sound && !instant) {
       unlockSound()
-      // One soft tick each time the pointer passes a slice border, slowing down with the wheel.
-      const borders = Math.round(Math.abs(next.rotation - rotation) / (360 / count))
-      ticks.current = tickTimes(borders, SPIN_MS).map((ms) => window.setTimeout(() => playSound('tick', 0.8), ms))
+      ticks.current = knocks.map((ms) => window.setTimeout(() => playSound('tick', 0.8), ms))
     }
     const id = ++spinCount.current
     pending.current = id
@@ -94,8 +101,10 @@ export function WheelPage() {
     clearTicks()
     if (sound) playSound('end')
     setPhase('result')
+    setFlapAt([])
+    window.setTimeout(() => setShowCard(true), reducedMotion() ? 0 : 700)
     markDone('tool')
-    celebrate()
+    confettiFrom(wheelBox.current, 36)
     navigator.vibrate?.(30)
   }
 
@@ -131,8 +140,10 @@ export function WheelPage() {
       <PageHeader title={t('wheel.title')} subtitle={t('wheel.subtitle')} backTo="/games" action={<GameHeaderActions game="wheel" />} />
 
       <div className="flex flex-col gap-5 px-4 pb-8">
-        <div className="mx-auto w-full max-w-[320px]">
+        <div ref={wheelBox} className="mx-auto w-full max-w-[320px]">
           <SpinWheel
+            flapAt={flapAt}
+            winner={phase === 'result' ? winner : null}
             options={options}
             rotation={rotation}
             durationMs={duration}
@@ -201,7 +212,14 @@ export function WheelPage() {
         </section>
       </div>
 
-      <Dialog open={phase === 'result'} onOpenChange={(open) => !open && setPhase('idle')}>
+      <Dialog
+        open={phase === 'result' && showCard}
+        onOpenChange={(open) => {
+          if (open) return
+          setShowCard(false)
+          setPhase('idle')
+        }}
+      >
         <DialogContent title={t('wheel.resultTitle')} className="items-center text-center">
           <p className="text-3xl font-medium break-words" role="status">
             {winner !== null ? options[winner] : ''}
