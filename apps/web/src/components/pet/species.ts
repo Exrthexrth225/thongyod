@@ -26,7 +26,20 @@ import fishSleep from '@/assets/pets/v2/fish/sleep.webp'
 import fishEat from '@/assets/pets/v2/fish/eat.webp'
 import fishCelebrate from '@/assets/pets/v2/fish/celebrate.webp'
 import fishYawn from '@/assets/pets/v2/fish/yawn.webp'
+import dragonBabyMain from '@/assets/pets/v2/dragon-baby/main.webp'
+import dragonBabyBlink from '@/assets/pets/v2/dragon-baby/blink.webp'
+import dragonBabyHappy from '@/assets/pets/v2/dragon-baby/happy.webp'
+import dragonBabyEat from '@/assets/pets/v2/dragon-baby/eat.webp'
+import dragonBabySleep from '@/assets/pets/v2/dragon-baby/sleep.webp'
+import dragonBabyShy from '@/assets/pets/v2/dragon-baby/shy.webp'
+import dragonTeenMain from '@/assets/pets/v2/dragon-teen/main.webp'
+import dragonTeenBlink from '@/assets/pets/v2/dragon-teen/blink.webp'
+import dragonTeenHappy from '@/assets/pets/v2/dragon-teen/happy.webp'
+import dragonTeenEat from '@/assets/pets/v2/dragon-teen/eat.webp'
+import dragonTeenSleep from '@/assets/pets/v2/dragon-teen/sleep.webp'
+import dragonTeenShy from '@/assets/pets/v2/dragon-teen/shy.webp'
 import type { PoseId, SpeciesMoves } from '@/features/pet/behavior'
+import type { Stage } from '@/features/pet/growth'
 
 export type PetSpeciesId = 'dragon' | 'fish'
 
@@ -44,6 +57,19 @@ export type PetSpecies = {
   moves: SpeciesMoves
   /** Where little drawings start: mouth (puff, bubbles, crumbs), top of the head (hearts, sparks, z). */
   anchors: { mouth: At; head: At; /** Poses whose mouth is somewhere else (tilted drawings). */ mouthIn?: Partial<Record<PoseId, At>> }
+  /** Younger stages (#105): 6 drawn poses on the adult canvas (tools/pet-art/stage.py); the rest reuse a close one. */
+  stages?: Partial<Record<Exclude<Stage, 'adult'>, Record<PoseId, string>>>
+}
+
+type StagePoses = { main: string; blink: string; happy: string; eat: string; sleep: string; shy: string }
+/** A younger stage has 6 drawings; waving, playing and celebrating use the happy one, yawning the eyes-closed one. */
+function fill(p: StagePoses): Record<PoseId, string> {
+  return { ...p, wave: p.happy, play1: p.happy, play2: p.main, play3: p.happy, celebrate: p.happy, yawn: p.blink }
+}
+
+/** The poses to draw for this species at this stage (falls back to the adult art). */
+export function posesFor(spec: PetSpecies, stage: Stage): Record<PoseId, string> {
+  return stage === 'adult' ? spec.poses : (spec.stages?.[stage] ?? spec.poses)
 }
 
 export const PET_SPECIES: Record<PetSpeciesId, PetSpecies> = {
@@ -58,6 +84,10 @@ export const PET_SPECIES: Record<PetSpeciesId, PetSpecies> = {
       play3: { motion: 'sneeze', overlay: 'puff', ms: 1500 },
     },
     anchors: { mouth: [0.34, 0.74], head: [0.42, 0.08] },
+    stages: {
+      baby: fill({ main: dragonBabyMain, blink: dragonBabyBlink, happy: dragonBabyHappy, eat: dragonBabyEat, sleep: dragonBabySleep, shy: dragonBabyShy }),
+      teen: fill({ main: dragonTeenMain, blink: dragonTeenBlink, happy: dragonTeenHappy, eat: dragonTeenEat, sleep: dragonTeenSleep, shy: dragonTeenShy }),
+    },
   },
   fish: {
     id: 'fish',

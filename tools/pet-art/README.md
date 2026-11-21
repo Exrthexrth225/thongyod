@@ -23,3 +23,15 @@ every move inside its box on iPhone SE / 15 Pro Max / iPad, no two drawings at o
 
 Rules for new art: same character, same scale in every pose, transparent background, no shadows, no effects
 (the app draws sparks, hearts, puffs, bubbles, z).
+
+
+## Baby / teen stages (DECISIONS #105)
+
+3×2 sheets (`image/15-dragon-baby.png`, `image/16-dragon-teen.png`), poses row by row: main, blink, happy, eat, sleep, shy.
+
+```bash
+python3 tools/pet-art/stage.py image/15-dragon-baby.png apps/web/src/assets/pets/v2/dragon-baby
+python3 tools/pet-art/stage.py image/16-dragon-teen.png apps/web/src/assets/pets/v2/dragon-teen
+```
+
+Placed on the adult canvas (720×581) with one scale, same baseline, body centred; no tracing. Other poses reuse one of the six (`fill()` in species.ts).

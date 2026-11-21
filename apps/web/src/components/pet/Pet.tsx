@@ -20,7 +20,7 @@ import { MOTIONS } from '@/features/pet/motions'
 import { initialTaps, tap } from '@/features/pet/taps'
 import { GREW_EVENT, STAGE_SCALE, useGrowth } from '@/features/pet/growth'
 import { cn } from '@/lib/utils'
-import { PET_SPECIES, type PetSpeciesId } from './species'
+import { PET_SPECIES, posesFor, type PetSpeciesId } from './species'
 import './pet.css'
 
 // The pet (DECISIONS #47, #80, UX_GUIDELINES §2). Three layers that never fight each other:
@@ -56,8 +56,10 @@ const eased = (frames: Keyframe[]) => frames.map((k) => ({ ...k, easing: 'ease-i
 export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: PetProps) {
   const { t } = useTranslation()
   const spec = PET_SPECIES[species]
-  // Baby / teen: drawn smaller until their own art arrives (#105).
-  const stageScale = STAGE_SCALE[useGrowth().stage]
+  // Baby / teen: their own drawings when the species has them, and smaller (#105).
+  const stage = useGrowth().stage
+  const stageScale = STAGE_SCALE[stage]
+  const poses = posesFor(spec, stage)
   const [pose, setPose] = useState<PoseId>('main')
   const [overlay, setOverlay] = useState<{ name: Overlay; key: number }>({ name: 'none', key: 0 })
   const [blink, setBlink] = useState(false)
@@ -200,10 +202,10 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
   useEffect(() => {
     for (const p of POSES) {
       const img = new Image()
-      img.src = spec.poses[p]
+      img.src = poses[p]
       img.decode?.().catch(() => {})
     }
-  }, [spec])
+  }, [poses])
 
   // Blink now and then, only while resting on the main pose.
   useEffect(() => {
@@ -307,7 +309,7 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
             {POSES.filter((p) => p !== 'blink').map((p) => (
               <img
                 key={p}
-                src={spec.poses[p]}
+                src={poses[p]}
                 alt=""
                 draggable={false}
                 decoding="async"
@@ -316,7 +318,7 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
               />
             ))}
             <img
-              src={spec.poses.blink}
+              src={poses.blink}
               alt=""
               draggable={false}
               decoding="async"

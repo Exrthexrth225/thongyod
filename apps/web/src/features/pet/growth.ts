@@ -6,7 +6,7 @@ export type Stage = 'baby' | 'teen' | 'adult'
 export const STAGES: Stage[] = ['baby', 'teen', 'adult']
 /** Care days needed for each stage. */
 export const STAGE_AT: Record<Stage, number> = { baby: 0, teen: 2, adult: 7 }
-/** Until Earth's baby / teen art arrives, the adult art is drawn smaller. */
+/** Younger stages are drawn smaller (with their own art when the species has it, else the adult art). */
 export const STAGE_SCALE: Record<Stage, number> = { baby: 0.72, teen: 0.86, adult: 1 }
 
 export type Growth = { careDays: number; lastDay: string | null; stage: Stage }
