@@ -309,6 +309,8 @@ export const en: Messages = {
     done: 'Done',
   },
   scan: {
+    fromImage: 'Pick a photo',
+    noQrInImage: 'No QR found in this picture. Try cropping closer to the code.',
     title: 'Scan QR',
     hint: 'Friend, game room or meetup QR — just point the camera',
     open: 'Scan QR',
