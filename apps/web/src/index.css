@@ -131,6 +131,10 @@
     --ink-foreground: #ffffff;
     --brand: #6b3df0;       /* text, links, selected outlines: yolk is for surfaces only */
     --ink-muted: #b9b6cc;
+    /* Race field (#112): mown grass + chalk lines */
+    --grass: #6cc957;
+    --grass-stripe: #5fbc4b;
+    --chalk: rgb(255 255 255 / 0.85);
 
     --background: #ffffff;
     --foreground: #17142b;
@@ -206,6 +210,9 @@
     --ink-foreground: #f7f3ff;
     --brand: #c2abff;
     --ink-muted: #b8b0dc;
+    --grass: #2f7a50;
+    --grass-stripe: #2a6e48;
+    --chalk: rgb(255 255 255 / 0.6);
 
     --background: #1c1642;
     --foreground: #f7f3ff;

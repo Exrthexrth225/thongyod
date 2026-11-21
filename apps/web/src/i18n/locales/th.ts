@@ -1206,6 +1206,10 @@ export const th = {
     lost: '{{name}} โดน!',
     edit: 'แก้คน',
     again: 'แข่งอีกรอบ',
+    rotateHint: 'แข่งตอนหมุนมือถือเป็นแนวนอน สนามจะเต็มจอ',
+    exit: 'ออกจากสนาม',
+    order: 'ลำดับเข้าเส้นชัย',
+    nextGoal: 'รอบหน้า',
     racers: { cat: 'แมวส้ม', shiba: 'ชิบะ', bunny: 'กระต่าย', duck: 'ลูกเป็ด', frog: 'กบ', penguin: 'เพนกวิน', panda: 'แพนด้า', koala: 'โคอาล่า' },
   },
   headsUp: {

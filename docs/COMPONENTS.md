@@ -29,7 +29,7 @@
 | RoleReveal / RoleCardBack | `src/components/games/RoleReveal.tsx` | ours | One player's secret on one phone: closed card (game icon + tint) → tap to flip → read → hide and pass. RoleCardBack = the secret side (icon, small label, big text, note) | playerLabel, open, onOpen, onDone, doneLabel, icon, tint, back | สายลับ, คนวงใน. Use after PassPhone for any hidden-role game. |
 | SpectrumDial | `src/components/games/SpectrumDial.tsx` | ours | Half-circle scale 0–100 with optional hidden target (2/3/4-point bands in primary at 30/60/100%) and a needle; drag or arrow keys when `onChange` is given (role=slider) | left, right, value, target, onChange?, label | คลื่นความคิด. Band widths come from `features/spectrum/logic.ts` BANDS. |
 | PackPicker | `src/components/games/PackPicker.tsx` | ours | Content packs as tinted tiles; single (radio) or `multiple` (checkbox, one always stays on) | packs, value[], onChange, multiple, label | Party games, สายลับ; use for any game content picker |
-| BottomAction | `src/components/games/BottomAction.tsx` | ours | The fixed hero button bar in the thumb zone (safe-area aware) | children | Setup screens (leave `pb-28` on the page) |
+| BottomAction | `src/components/games/BottomAction.tsx` | ours | The fixed hero button bar in the thumb zone (safe-area aware) | children, className (`flex-col` for a stacked panel) | Setup screens (leave `pb-28` on the page); race result panel |
 | TimerBar | `src/components/games/TimerBar.tsx` | ours | Time-left bar + m:ss, warning tone in the last 10 s | left, total | With `useCountdown` |
 | BottomSheet | `src/components/ui/bottom-sheet.tsx` | Base UI Drawer | Sheet that slides up from the bottom: opens at ~62%, drag up for full, swipe down / backdrop to close; title + action + pinned footer | open, onOpenChange, title, action, footer | Notifications on Home; use for any "peek without leaving the page" list |
 | NotificationsSheet | `src/components/notifications/NotificationsSheet.tsx` | ours | Newest 12 notifications in a BottomSheet, อ่านทั้งหมด, ดูทั้งหมด → /notifications | open, onOpenChange | The Home bell |
@@ -99,6 +99,7 @@
 - `src/config/wordPacks.ts` → `WORD_PACKS`: word packs for word games (reuse for future word games).
 
 - `src/features/fortune/useShake.ts` → `useShake(onShake, enabled)` + `createShakeDetector()` (pure, tested): phone-shake input with iOS permission handling. Reuse for any shake feature; the tilt game needs its own tilt detector (UX_GUIDELINES §4).
+- `src/lib/useMediaQuery.ts` → `useMediaQuery(query)`: live CSS media query (e.g. phone sideways for the race field, #112).
 - `src/lib/confetti.ts` → `confettiBurst(x, y)`, `confettiFrom(el)`: brand-colour confetti (Web Animations, off with Reduce Motion, #98).
 - `src/features/pet/celebrate.ts` → `cheerPet()`: the pet on screen does a happy hop.
 - `src/lib/tones.ts` → `TONE_CLASS`, `TONE_TEXT`, `tintClass(n)`: theme-aware colors (DECISIONS #55; full-strength blocks since #97). Slab colours as Tailwind classes: `bg-yolk bg-tangerine bg-mint bg-sky bg-lilac bg-ink`, text on them `text-on-slab` (`text-on-lilac`, `text-ink-foreground`); accent text `text-brand`. Tap feedback: add `pressable`.

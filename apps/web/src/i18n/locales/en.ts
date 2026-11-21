@@ -1205,6 +1205,10 @@ export const en: Messages = {
     lost: '{{name}} loses!',
     edit: 'Edit players',
     again: 'Race again',
+    rotateHint: 'Turn your phone sideways during the race for a full-screen track',
+    exit: 'Leave the track',
+    order: 'Finishing order',
+    nextGoal: 'Next round',
     racers: { cat: 'Cat', shiba: 'Shiba', bunny: 'Bunny', duck: 'Duckling', frog: 'Frog', penguin: 'Penguin', panda: 'Panda', koala: 'Koala' },
   },
   headsUp: {
