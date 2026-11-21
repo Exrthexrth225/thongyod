@@ -145,7 +145,7 @@ export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOp
         aria-label={label}
         tabIndex={0}
         onKeyDown={onKeyDown}
-        className="relative mx-3 outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
+        className="relative mx-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
         style={{ paddingBottom: BEHIND * 10 }}
       >
         {/* Cards waiting behind, like a real stack. The next one grows into place while you drag. */}

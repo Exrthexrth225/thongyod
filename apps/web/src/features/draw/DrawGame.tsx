@@ -132,7 +132,7 @@ export function DrawGame() {
   if (stage === 'setup') {
     return (
       <div className="flex flex-col gap-3 pb-28">
-        <ol className="mx-3 grid gap-2 rounded-2xl border bg-card p-4 text-sm">
+        <ol className="mx-4 grid gap-2 rounded-2xl border bg-card p-4 text-sm">
           {(['peek', 'draw', 'guess'] as const).map((step, i) => (
             <li key={step} className="flex gap-3">
               <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-medium text-primary-foreground">{i + 1}</span>
@@ -141,7 +141,7 @@ export function DrawGame() {
           ))}
         </ol>
         <SectionHeader title={t('games.draw.timeTitle')} />
-        <div className="px-3">
+        <div className="px-4">
           <SegmentedChoice<string>
             label={t('games.draw.timeTitle')}
             value={`${settings.seconds}`}
@@ -226,7 +226,7 @@ export function DrawGame() {
   if (stage === 'draw') {
     const got = results.filter((r) => r.ok).length
     return (
-      <div className="flex flex-col gap-2 px-3 pb-4">
+      <div className="flex flex-col gap-2 px-4 pb-4">
         <div className="flex items-center gap-2">
           <TimerBar left={timer.left} total={settings.seconds} className="flex-1" />
           <span className={cn('rounded-full px-2.5 py-1 text-sm font-medium tabular-nums', TONE_CLASS.success)}>✓ {got}</span>

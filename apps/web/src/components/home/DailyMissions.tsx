@@ -17,7 +17,7 @@ export function DailyMissions({ petName }: { petName: string }) {
   const all = done.length === MISSIONS.length
   return (
     <div className="flex flex-col gap-1.5">
-      <Card className="mx-3 px-4 py-1">
+      <Card className="mx-4 px-4 py-1">
         {MISSIONS.map((id) => {
           const ok = done.includes(id)
           return (

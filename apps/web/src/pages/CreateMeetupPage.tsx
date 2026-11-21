@@ -81,7 +81,7 @@ export function CreateMeetupPage() {
       ) : allGangs.isError ? (
         <ErrorState onRetry={() => void allGangs.refetch()} />
       ) : !options || options.length === 0 ? (
-        <Card className="mx-3">
+        <Card className="mx-4">
           <EmptyState
             title={withUser ? t('createMeetup.noSharedGangs') : t('createMeetup.noGangs')}
             hint={withUser ? undefined : t('createMeetup.noGangsHint')}
@@ -151,7 +151,7 @@ function CreateForm({ gangs, requestedDate }: { gangs: GangSummary[]; requestedD
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-3">
       <section>
         <SectionHeader title={t('createMeetup.gang')} />
-        <div className="px-3">
+        <div className="px-4">
           <OptionList
             label={t('createMeetup.chooseGang')}
             value={gangId}
@@ -167,7 +167,7 @@ function CreateForm({ gangs, requestedDate }: { gangs: GangSummary[]; requestedD
 
       <section>
         <SectionHeader title={t('createMeetup.what')} />
-        <div className="flex flex-col gap-2 px-3">
+        <div className="flex flex-col gap-2 px-4">
           <Input
             value={title}
             onChange={(e) => edit(setTitle)(e.target.value)}
@@ -182,7 +182,7 @@ function CreateForm({ gangs, requestedDate }: { gangs: GangSummary[]; requestedD
 
       <section>
         <SectionHeader title={t('createMeetup.when')} />
-        <div className="flex flex-col gap-2 px-3">
+        <div className="flex flex-col gap-2 px-4">
           <SegmentedChoice<DayChoice>
             label={t('createMeetup.chooseDay')}
             value={day}
@@ -219,7 +219,7 @@ function CreateForm({ gangs, requestedDate }: { gangs: GangSummary[]; requestedD
         </div>
       </section>
 
-      <div className="flex flex-col gap-2 px-3 pt-2">
+      <div className="flex flex-col gap-2 px-4 pt-2">
         {tried && problem && (
           <p role="alert" className="text-center text-sm text-destructive">
             {PROBLEM_TEXT[problem]}

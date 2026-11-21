@@ -27,7 +27,7 @@ export function FriendsPage() {
   return (
     <div className="flex flex-col gap-3 py-3">
       <AddByHandle />
-      <div className="grid grid-cols-2 gap-2 px-3">
+      <div className="grid grid-cols-2 gap-2 px-4">
         <Link to="/friends/qr" className={buttonVariants({ variant: 'outline', className: 'bg-card' })}>
           <QrCode aria-hidden="true" />
           {t('friends.myQr')}
@@ -58,7 +58,7 @@ function AddByHandle() {
 
   return (
     <section className="flex flex-col gap-2">
-      <form onSubmit={onSearch} role="search" className="flex gap-2 px-3">
+      <form onSubmit={onSearch} role="search" className="flex gap-2 px-4">
         <div className="relative flex-1">
           <AtSign className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <Input
@@ -82,13 +82,13 @@ function AddByHandle() {
           {search.isPending ? (
             <LoadingState rows={1} />
           ) : notFound ? (
-            <Card className="mx-3">
+            <Card className="mx-4">
               <EmptyState title={t('friends.notFound', { handle: searched })} hint={t('friends.notFoundHint')} />
             </Card>
           ) : search.isError ? (
             <ErrorState onRetry={() => void search.refetch()} />
           ) : (
-            <Card className="mx-3 px-4 py-1">
+            <Card className="mx-4 px-4 py-1">
               <PersonCardRow user={search.data} />
             </Card>
           )}
@@ -121,7 +121,7 @@ function Requests() {
       {requests.data.incoming.length > 0 && (
         <section>
           <SectionHeader title={t('friends.requests', { count: requests.data.incoming.length })} />
-          <Card className="mx-3 px-4 py-1">
+          <Card className="mx-4 px-4 py-1">
             {requests.data.incoming.map((r) =>
               row(
                 r,
@@ -141,7 +141,7 @@ function Requests() {
       {requests.data.outgoing.length > 0 && (
         <section>
           <SectionHeader title={t('friends.sent', { count: requests.data.outgoing.length })} />
-          <Card className="mx-3 px-4 py-1">
+          <Card className="mx-4 px-4 py-1">
             {requests.data.outgoing.map((r) =>
               row(
                 r,
@@ -168,7 +168,7 @@ function MyFriends() {
   return (
     <section className="flex flex-col gap-2">
       <SectionHeader title={t('friends.myFriends')} />
-      <div className="px-3">
+      <div className="px-4">
         <SearchInput value={query} onChange={setQuery} placeholder={t('friends.filterPlaceholder')} label={t('friends.filterLabel')} />
       </div>
       <InfiniteList

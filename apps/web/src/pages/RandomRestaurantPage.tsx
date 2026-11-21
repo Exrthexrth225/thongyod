@@ -135,7 +135,7 @@ export function RandomRestaurantPage() {
     return (
       <>
         <PageHeader title={t('restaurants.title')} subtitle={t('restaurants.subtitle')} backTo="/explore" />
-        <Card className="mx-3">
+        <Card className="mx-4">
           <EmptyState
             title={t('restaurants.empty')}
             hint={t('restaurants.emptyHint')}
@@ -173,7 +173,7 @@ export function RandomRestaurantPage() {
         }
       />
 
-      <Card className="mx-3 flex flex-col gap-2 p-3">
+      <Card className="mx-4 flex flex-col gap-2 p-3">
         <div className="flex items-center justify-between gap-2 text-sm">
           <span className="font-medium">
             {t('restaurants.found', { count: candidates.length })}
@@ -206,11 +206,11 @@ export function RandomRestaurantPage() {
         {showAs === 'wheel' && left.length > WHEEL_MAX && <p className="text-xs text-muted-foreground">{t('restaurants.wheelTooMany')}</p>}
       </Card>
       {useWheel && (
-        <div ref={wheelBox} className="mx-auto w-full max-w-[280px] scroll-mt-24 px-3">
+        <div ref={wheelBox} className="mx-auto w-full max-w-[280px] scroll-mt-24 px-4">
           <SpinWheel options={left.map((r) => r.name)} rotation={rotation} durationMs={spinning ? SPIN_MS : 0} onSpinEnd={() => undefined} onTap={pick} label={t('restaurants.spin')} />
         </div>
       )}
-      <details className="mx-3 rounded-xl border bg-card [&_summary]:cursor-pointer" open={filtersOpen} onToggle={(e) => setFiltersOpen(e.currentTarget.open)}>
+      <details className="mx-4 rounded-xl border bg-card [&_summary]:cursor-pointer" open={filtersOpen} onToggle={(e) => setFiltersOpen(e.currentTarget.open)}>
         <summary className="flex min-h-12 items-center gap-2 px-4 text-sm font-medium">
           <SlidersHorizontal className="size-4" aria-hidden="true" />
           {t('restaurants.filters', { count: activeFilters })}
@@ -263,7 +263,7 @@ export function RandomRestaurantPage() {
 
 
       {state === 'empty' && (
-        <Card className="mx-3">
+        <Card className="mx-4">
           <EmptyState
             title={t('restaurants.noMatch')}
             hint={t('restaurants.noMatchHint')}
@@ -276,7 +276,7 @@ export function RandomRestaurantPage() {
         </Card>
       )}
       {state === 'exhausted' && (
-        <Card className="mx-3">
+        <Card className="mx-4">
           <EmptyState
             title={t('restaurants.exhausted')}
             hint={t('restaurants.exhaustedHint')}

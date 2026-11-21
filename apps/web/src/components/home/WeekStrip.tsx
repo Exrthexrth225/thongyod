@@ -14,7 +14,7 @@ type WeekStripProps = {
 export function WeekStrip({ today, selected, onSelect, markedDays }: WeekStripProps) {
   const { t } = useTranslation()
   return (
-    <div className="grid grid-cols-7 gap-1 px-3" role="group" aria-label={t('home.thisWeek')}>
+    <div className="grid grid-cols-7 gap-1 px-4" role="group" aria-label={t('home.thisWeek')}>
       {weekDays(today).map((day) => {
         const isToday = isSameDay(day, today)
         const isSelected = isSameDay(day, selected)

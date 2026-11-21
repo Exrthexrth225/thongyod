@@ -103,7 +103,7 @@ export function BombGame() {
   if (stage === 'setup') {
     return (
       <div className="flex flex-col gap-3 pb-28">
-        <ol className="mx-3 grid gap-2 rounded-2xl border bg-card p-4 text-sm">
+        <ol className="mx-4 grid gap-2 rounded-2xl border bg-card p-4 text-sm">
           {(['topic', 'pass', 'boom'] as const).map((step, i) => (
             <li key={step} className="flex gap-3">
               <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-medium text-primary-foreground">{i + 1}</span>
@@ -112,7 +112,7 @@ export function BombGame() {
           ))}
         </ol>
         <SectionHeader title={t('games.bomb.fuseTitle')} />
-        <div className="px-3">
+        <div className="px-4">
           <SegmentedChoice<FuseLength>
             label={t('games.bomb.fuseTitle')}
             value={settings.fuse}
@@ -120,7 +120,7 @@ export function BombGame() {
             options={(['short', 'normal', 'long'] as const).map((f) => ({ value: f, label: t(`games.bomb.fuse.${f}`) }))}
           />
         </div>
-        <Card className="mx-3 px-4 py-1">
+        <Card className="mx-4 px-4 py-1">
           <label className="flex min-h-14 items-center gap-3 py-2">
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-medium">{t('games.bomb.letters')}</span>

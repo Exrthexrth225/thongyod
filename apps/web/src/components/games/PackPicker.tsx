@@ -23,7 +23,7 @@ export function PackPicker({ packs, value, onChange, multiple, label }: PackPick
     onChange(on ? value.filter((v) => v !== id) : [...value, id])
   }
   return (
-    <div className="grid grid-cols-2 gap-2 px-3" role={multiple ? 'group' : 'radiogroup'} aria-label={label}>
+    <div className="grid grid-cols-2 gap-2 px-4" role={multiple ? 'group' : 'radiogroup'} aria-label={label}>
       {packs.map((pack) => {
         const selected = value.includes(pack.id)
         const Icon = pack.icon

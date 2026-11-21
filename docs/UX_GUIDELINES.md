@@ -215,17 +215,14 @@ Taken from the prompt Earth uses for client design work (CDG). Only the parts th
 - **[agreed]** Never invent facts (prices, rules, numbers): use "[รอยืนยัน]" and list it as a question.
 - **[agreed]** When art is needed, give Earth a detailed image prompt in English (subject, composition, empty space, light, palette, what to avoid); Earth generates it.
 
-**Colour — one job per colour**
-- **[agreed]** Accent (primary / orange) = things you can tap, the selected state, and progress you made. Not for plain status.
-- **[agreed]** Amber/warning tone = cautions and conditions (time running out, almost full). Red/danger = **only** real errors after something was checked, and destructive actions.
-- **[agreed]** The main action on a screen has the strongest contrast; secondary actions are outline/ghost.
-- **[agreed]** Text and UI meet WCAG AA contrast in every theme.
-- **[proposal]** Notification counts: red badge only on the bell; no count badge on the Home tab (same count twice).
+**Colour**
+- Earth (2026-11-22): the prompt's colour rules are **not** used here. Colours are chosen for what suits Thongyod (playful, two themes, tints per category); see `lib/tones.ts` and DECISIONS #86.
+- Text and UI still meet WCAG AA contrast in every theme.
 
 **Layout and components**
 - **[agreed]** Think of the whole screen first; reuse patterns already on the screen instead of inventing a new one per section.
 - **[agreed]** Don't add chips, badges or coloured callout boxes just to make something stand out; put the information into the existing row/card as plain text.
-- **[agreed]** One grid: one side margin for headers, cards and rows on every screen; right edges and centres line up.
+- **[agreed]** One grid: **16 px side margin** (`px-4` / `mx-4`) for headers, cards and rows on every screen; right edges and centres line up (#93).
 - **[agreed]** Cards in one row are the same size; labels and links line up across them.
 - **[agreed]** Links: a plain chevron ›, no arrows inside buttons.
 - **[agreed]** Carousels show part of the next item. Shortcuts sit next to the content they belong to.

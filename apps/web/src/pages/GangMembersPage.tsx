@@ -39,10 +39,10 @@ export function GangMembersPage() {
         <ErrorState onRetry={() => void gang.refetch()} />
       ) : (
         <>
-          <div className="px-3">
+          <div className="px-4">
             <SearchInput value={query} onChange={setQuery} placeholder={t('gang.memberFilterPlaceholder')} label={t('gang.memberFilterLabel')} />
           </div>
-          <Card className="mx-3 px-4 py-1">
+          <Card className="mx-4 px-4 py-1">
             {members.length === 0 ? (
               <EmptyState title={t('gang.noMemberMatch', { q: query.trim() })} />
             ) : (

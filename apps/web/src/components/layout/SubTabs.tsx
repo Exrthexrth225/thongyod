@@ -7,7 +7,7 @@ type SubTab = { to: string; label: string }
 export function SubTabs({ tabs, label }: { tabs: SubTab[]; label: string }) {
   const location = useLocation()
   return (
-    <nav aria-label={label} className="flex border-b px-3">
+    <nav aria-label={label} className="flex border-b px-4">
       {tabs.map((tab) => (
         <NavLink
           key={tab.to}

@@ -88,7 +88,7 @@ export function MyMeetupsPage() {
           days.map(([day, list]) => (
             <section key={day}>
               <SectionHeader title={formatDayLabel(new Date(day))} />
-              <Card className="mx-3 px-4 py-1">
+              <Card className="mx-4 px-4 py-1">
                 {list.map((m) => (
                   <MeetupRow key={m.id} meetup={m} />
                 ))}

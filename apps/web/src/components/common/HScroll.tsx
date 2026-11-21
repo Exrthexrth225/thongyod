@@ -9,7 +9,7 @@ export function HScroll({ children, label, className, onScroll }: { children: Re
       role="group"
       aria-label={label}
       onScroll={onScroll}
-      className={cn('flex snap-x snap-mandatory scroll-px-3 gap-2 overflow-x-auto px-3 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden', className)}
+      className={cn('flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden', className)}
     >
       {children}
     </div>

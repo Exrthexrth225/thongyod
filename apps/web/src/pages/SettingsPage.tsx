@@ -37,7 +37,7 @@ export function SettingsPage() {
       <section>
         <SectionHeader title={t('settings.home.title')} />
         <p className="px-4 pb-2 text-xs text-muted-foreground">{t('settings.home.hint')}</p>
-        <Card className="mx-3 px-4 py-1">
+        <Card className="mx-4 px-4 py-1">
           {layout.order.map((id, index) => {
             const label = t(SECTION_LABEL[id])
             const visible = !layout.hidden.includes(id)
@@ -80,7 +80,7 @@ export function SettingsPage() {
 
       <section>
         <SectionHeader title={t('pages.me.theme')} />
-        <div className="px-3">
+        <div className="px-4">
           <SegmentedChoice<Theme>
             label={t('pages.me.chooseTheme')}
             value={theme}
@@ -108,7 +108,7 @@ export function SettingsPage() {
 
       <section>
         <SectionHeader title={t('pages.me.language')} />
-        <div className="px-3">
+        <div className="px-4">
           {/* Language names are always shown in their own language. */}
           <SegmentedChoice<Language>
             label={t('pages.me.chooseLanguage')}
@@ -124,7 +124,7 @@ export function SettingsPage() {
 
       <section>
         <SectionHeader title={t('settings.more')} />
-        <Card className="mx-3 px-4 py-1">
+        <Card className="mx-4 px-4 py-1">
           <ListRow leading={<IconTile icon={Bell} />} title={t('settings.notifications')} to="/settings/notifications" />
           <ListRow leading={<IconTile icon={Lock} />} title={t('settings.privacy')} subtitle={t('explore.soon')} />
           <ListRow leading={<IconTile icon={MessageCircle} />} title={t('settings.lineAccount')} subtitle={t('explore.soon')} />

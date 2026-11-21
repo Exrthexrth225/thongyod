@@ -45,7 +45,7 @@ export function PartyRoom({ room, meId, onLeave }: Props) {
     return (
       <RoomLobby room={room} isHost={isHost} minPlayers={minPlayers} starting={start.isPending} onStart={next} onLeave={onLeave}>
         <span className="text-sm font-medium">{t('games.party.packsTitle')}</span>
-        <div className="-mx-3">
+        <div className="-mx-4">
           <PackPicker
             multiple
             label={t('games.party.packsTitle')}

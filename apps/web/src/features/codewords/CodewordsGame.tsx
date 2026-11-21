@@ -99,7 +99,7 @@ export function CodewordsGame() {
   if (!game) {
     return (
       <div className="flex flex-col gap-3 pb-28">
-        <ol className="mx-3 grid gap-2 rounded-2xl border bg-card p-4 text-sm">
+        <ol className="mx-4 grid gap-2 rounded-2xl border bg-card p-4 text-sm">
           {(['teams', 'clue', 'open'] as const).map((step, i) => (
             <li key={step} className="flex gap-3">
               <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-medium text-primary-foreground">{i + 1}</span>
@@ -129,7 +129,7 @@ export function CodewordsGame() {
   const show = peek || over
 
   return (
-    <div className="flex flex-col gap-3 px-3 pb-8">
+    <div className="flex flex-col gap-3 px-4 pb-8">
       <div className="grid grid-cols-2 gap-2">
         {(['a', 'b'] as const).map((team) => (
           <div

@@ -35,7 +35,7 @@ export function UpdatesPage() {
         days.map((items) => (
           <section key={items[0].id}>
             <SectionHeader title={formatDayLabel(new Date(items[0].createdAt), now)} />
-            <Card className="mx-3 px-4 py-1">
+            <Card className="mx-4 px-4 py-1">
               {items.map((item) => (
                 <FeedRow key={item.id} item={item} now={now} />
               ))}

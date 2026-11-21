@@ -22,13 +22,13 @@ export function AddFriendPage() {
       {owner.isPending ? (
         <LoadingState rows={1} />
       ) : invalid ? (
-        <Card className="mx-3">
+        <Card className="mx-4">
           <EmptyState title={t('friends.link.invalid')} hint={t('friends.link.invalidHint')} />
         </Card>
       ) : owner.isError ? (
         <ErrorState onRetry={() => void owner.refetch()} />
       ) : (
-        <Card className="mx-3 px-4 py-1">
+        <Card className="mx-4 px-4 py-1">
           <PersonCardRow user={owner.data} />
         </Card>
       )}

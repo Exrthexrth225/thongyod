@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 export function LoadingState({ rows = 3 }: { rows?: number }) {
   const { t } = useTranslation()
   return (
-    <div role="status" aria-label={t('common.loading')} className="flex flex-col gap-3 px-3">
+    <div role="status" aria-label={t('common.loading')} className="flex flex-col gap-3 px-4">
       {Array.from({ length: rows }, (_, i) => (
         <Skeleton key={i} className="h-16 w-full rounded-xl" />
       ))}

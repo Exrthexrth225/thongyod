@@ -90,7 +90,7 @@ function DeckEditor({ deck }: { deck: Deck }) {
         }
       />
 
-      <div className="px-3">
+      <div className="px-4">
         <Input
           value={deck.title}
           maxLength={TITLE_MAX}
@@ -111,7 +111,7 @@ function DeckEditor({ deck }: { deck: Deck }) {
             </Button>
           }
         />
-        <Card className="mx-3 px-4 py-1">
+        <Card className="mx-4 px-4 py-1">
           {deck.cards.length === 0 ? (
             <EmptyState title={t('flashcards.noCards')} />
           ) : (
@@ -131,7 +131,7 @@ function DeckEditor({ deck }: { deck: Deck }) {
         </Card>
       </section>
 
-      <form onSubmit={onAdd} className="mx-3 flex flex-col gap-2 rounded-xl border bg-card p-3">
+      <form onSubmit={onAdd} className="mx-4 flex flex-col gap-2 rounded-xl border bg-card p-3">
         {full ? (
           <p className="text-sm text-muted-foreground">{t('flashcards.full', { max: CARDS_MAX })}</p>
         ) : (

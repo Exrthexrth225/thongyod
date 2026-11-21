@@ -44,7 +44,7 @@ export function LuckyColorPage() {
     <div className="flex flex-col gap-3 pb-10">
       <PageHeader title={t('luckyColor.title')} subtitle={t('luckyColor.disclaimer')} backTo="/explore" />
 
-      <div className="px-3">
+      <div className="px-4">
         <SegmentedChoice<Mode>
           label={t('luckyColor.title')}
           value={mode}
@@ -59,7 +59,7 @@ export function LuckyColorPage() {
       {mode === 'birth' && (
         <section>
           <SectionHeader title={t('luckyColor.birthTitle')} />
-          <div className="flex flex-wrap gap-2 px-3" role="radiogroup" aria-label={t('luckyColor.birthTitle')}>
+          <div className="flex flex-wrap gap-2 px-4" role="radiogroup" aria-label={t('luckyColor.birthTitle')}>
             {WEEK.map((day) => (
                 <button
                   key={day}
@@ -88,16 +88,16 @@ export function LuckyColorPage() {
       </div>
       <p className="text-center text-sm text-muted-foreground">{t('luckyColor.for', { day: t(`luckyColor.days.${start}`) })}</p>
 
-      <div className="grid grid-cols-2 gap-2 px-3">
+      <div className="grid grid-cols-2 gap-2 px-4">
         {SHOWN.map((topic) => (
           <ColorCard key={topic} topic={topic} color={colors[topic]} />
         ))}
       </div>
-      <div className="px-3">
+      <div className="px-4">
         <ColorCard topic="avoid" color={colors.avoid} />
       </div>
 
-      <div className="px-3 pt-1">
+      <div className="px-4 pt-1">
         <a href={lineShareUrl(shareText)} target="_blank" rel="noreferrer" className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'w-full')}>
           <Share2 data-icon="inline-start" />
           {t('luckyColor.share')}

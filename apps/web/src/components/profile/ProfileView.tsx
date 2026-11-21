@@ -31,7 +31,7 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
   return (
     <div className="flex flex-col gap-3 pb-6">
       {/* Cover: uploaded photo, or the theme color. */}
-      <div className="mx-3 h-28 overflow-hidden rounded-2xl bg-gradient-to-br from-primary/70 to-accent" aria-hidden="true">
+      <div className="mx-4 h-28 overflow-hidden rounded-2xl bg-gradient-to-br from-primary/70 to-accent" aria-hidden="true">
         {profile.coverUrl && <img src={profile.coverUrl} alt="" className="size-full object-cover" />}
       </div>
       <div className="-mt-12 flex flex-col items-center gap-1 px-4 text-center">
@@ -52,7 +52,7 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
       <div className="flex justify-center gap-2 px-4">{actions}</div>
 
       {profile.stats && (
-        <Card className="mx-3 grid grid-cols-3 divide-x overflow-hidden p-0 text-center">
+        <Card className="mx-4 grid grid-cols-3 divide-x overflow-hidden p-0 text-center">
           {[
             { key: 'friends', value: profile.stats.friends, label: t('profile.stats.friends'), to: isSelf ? '/gangs/friends' : profile.mutualFriends > 0 ? `/u/${profile.userId}/mutual` : null },
             { key: 'gangs', value: profile.stats.gangs, label: t('profile.stats.gangs'), to: isSelf ? '/gangs' : null },
@@ -90,7 +90,7 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
       {profile.upcomingTogether && profile.upcomingTogether.length > 0 && (
         <section>
           <SectionHeader title={t('profile.upcomingTogether')} />
-          <Card className="mx-3 px-4 py-1">
+          <Card className="mx-4 px-4 py-1">
             {profile.upcomingTogether.map((m) => (
               <MeetupRow key={m.id} meetup={m} showDay />
             ))}
@@ -104,7 +104,7 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
             title={t('profile.sharedGangs', { count: profile.sharedGangs.length })}
             action={profile.sharedGangs.length > CHIP_PREVIEW && <SeeAllLink to={`/u/${profile.userId}/gangs`} />}
           />
-          <div className="flex flex-wrap gap-2 px-3">
+          <div className="flex flex-wrap gap-2 px-4">
             {profile.sharedGangs.slice(0, CHIP_PREVIEW).map((g) => (
               <Link key={g.id} to={`/gangs/${g.id}`} className="flex min-h-9 items-center gap-1.5 rounded-lg border bg-card px-3 py-1.5 text-sm active:opacity-70">
                 <Users className="size-4 text-muted-foreground" aria-hidden="true" />
@@ -122,7 +122,7 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
             title={t('profile.mutualTitle', { count: profile.mutualFriends })}
             action={<SeeAllLink to={`/u/${profile.userId}/mutual`} />}
           />
-          <Link to={`/u/${profile.userId}/mutual`} className="mx-3 flex items-center gap-3 rounded-xl border bg-card p-3 active:opacity-80">
+          <Link to={`/u/${profile.userId}/mutual`} className="mx-4 flex items-center gap-3 rounded-xl border bg-card p-3 active:opacity-80">
             <AvatarStack names={profile.mutualPreview.map((p) => p.displayName)} total={profile.mutualFriends} />
             <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
               {profile.mutualPreview.map((p) => p.displayName).join(', ')}
@@ -137,7 +137,7 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
             title={t('profile.titles', { count: profile.titles.length })}
             action={profile.titles.length > CHIP_PREVIEW && <SeeAllLink to={`/u/${profile.userId}/titles`} />}
           />
-          <div className="flex flex-wrap gap-2 px-3">
+          <div className="flex flex-wrap gap-2 px-4">
             {profile.titles.slice(0, CHIP_PREVIEW).map((title) => (
               <span key={title.id} className="flex items-center gap-1.5 rounded-lg border bg-card px-3 py-1.5 text-sm">
                 <Award className="size-4 text-primary" aria-hidden="true" />

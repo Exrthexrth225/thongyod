@@ -29,11 +29,11 @@ export function InfiniteList<T>({ query, renderItem, getKey, empty }: InfiniteLi
 
   const pages = query.data?.pages ?? []
   const items = pages.flatMap((page) => page.items)
-  if (items.length === 0) return <Card className="mx-3">{empty}</Card>
+  if (items.length === 0) return <Card className="mx-4">{empty}</Card>
 
   return (
     <div className="flex flex-col gap-2">
-      <Card className="mx-3 px-4 py-1">
+      <Card className="mx-4 px-4 py-1">
         {items.map((item) => (
           <div key={getKey(item)} className="[&+&]:border-t">
             {renderItem(item)}

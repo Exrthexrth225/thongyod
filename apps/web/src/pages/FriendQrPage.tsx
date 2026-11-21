@@ -26,7 +26,7 @@ export function FriendQrPage() {
   return (
     <div className="flex flex-col gap-4 pb-6">
       <PageHeader title={t('friends.addFriend')} backTo="/gangs/friends" />
-      <div className="px-3">
+      <div className="px-4">
         <SegmentedChoice<Mode>
           label={t('friends.qr.modeLabel')}
           value={mode}
@@ -71,7 +71,7 @@ function MyQr() {
   }
 
   return (
-    <div className="flex flex-col gap-4 px-3">
+    <div className="flex flex-col gap-4 px-4">
       <QrCodeCard value={url} label={t('friends.myQr')} />
       <p className="text-center text-sm text-muted-foreground">{t('friends.qr.hint')}</p>
       <div className="grid grid-cols-2 gap-2">
@@ -103,7 +103,7 @@ function MyQr() {
 
 function ScanQr() {
   return (
-    <div className="px-3">
+    <div className="px-4">
       <AppScanner />
     </div>
   )

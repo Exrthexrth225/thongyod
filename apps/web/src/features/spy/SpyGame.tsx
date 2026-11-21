@@ -83,7 +83,7 @@ export function SpyGame() {
     const placesMode = settings.mode === 'places'
     return (
       <div className="flex flex-col gap-3 pb-28">
-        <ol className="mx-3 grid gap-2 rounded-2xl border bg-card p-4 text-sm">
+        <ol className="mx-4 grid gap-2 rounded-2xl border bg-card p-4 text-sm">
           {(['deal', 'ask', 'vote'] as const).map((step, i) => (
             <li key={step} className="flex gap-3">
               <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-medium text-primary-foreground">{i + 1}</span>
@@ -93,7 +93,7 @@ export function SpyGame() {
         </ol>
 
         <SectionHeader title={t('games.spy.modeTitle')} />
-        <div className="px-3">
+        <div className="px-4">
           <SegmentedChoice<SpyMode>
             label={t('games.spy.modeTitle')}
             value={settings.mode}
@@ -105,7 +105,7 @@ export function SpyGame() {
           />
         </div>
 
-        <div className="mx-3 grid grid-cols-2 gap-2">
+        <div className="mx-4 grid grid-cols-2 gap-2">
           <div className="flex flex-col items-start gap-2 rounded-2xl border bg-card p-3">
             <span className="text-sm font-medium">{t('games.spy.players')}</span>
             <NumberStepper label={t('games.spy.players')} value={settings.players} min={3} max={12} onChange={(players) => set({ players })} />
@@ -117,7 +117,7 @@ export function SpyGame() {
         </div>
 
         <SectionHeader title={t('games.spy.minutesTitle')} />
-        <div className="px-3">
+        <div className="px-4">
           <SegmentedChoice<`${SpyMinutes}`>
             label={t('games.spy.minutesTitle')}
             value={`${settings.minutes}`}

@@ -44,7 +44,7 @@ export function MonthGrid({ month, today, selected, onSelect, marks, onSwipeMont
 
   return (
     <div
-      className="touch-pan-y px-3 select-none"
+      className="touch-pan-y px-4 select-none"
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}
       onPointerCancel={() => (start.current = null)}

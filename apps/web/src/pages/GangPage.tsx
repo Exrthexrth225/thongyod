@@ -68,7 +68,7 @@ export function GangPage() {
 
             <section>
               <SectionHeader title={t('gang.upcoming')} />
-              <Card className="mx-3 px-4 py-1">
+              <Card className="mx-4 px-4 py-1">
                 {g.upcoming.length > 0 ? (
                   g.upcoming.map((m) => <MeetupRow key={m.id} meetup={m} showDay />)
                 ) : (
@@ -79,7 +79,7 @@ export function GangPage() {
 
             <section>
               <SectionHeader title={t('gang.titles', { count: g.titles.length })} />
-              <Card className="mx-3 px-4 py-1">
+              <Card className="mx-4 px-4 py-1">
                 {g.titles.length > 0 ? (
                   g.titles.map((x) => (
                     <ListRow

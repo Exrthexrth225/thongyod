@@ -17,7 +17,7 @@ export function QuickTools() {
     { key: 'all', to: '/explore', icon: LayoutGrid, label: t('home.tools.all'), tone: 'bg-muted text-muted-foreground' },
   ]
   return (
-    <nav aria-label={t('home.toolsTitle')} className="grid grid-cols-4 gap-x-1 px-3">
+    <nav aria-label={t('home.toolsTitle')} className="grid grid-cols-4 gap-x-1 px-4">
       {tiles.map(({ key, to, icon: Icon, label, tone }) => (
         <Link key={key} to={to} state={SHOW_BACK} className="flex flex-col items-center gap-1.5 rounded-xl py-1 active:scale-95">
           <span className={cn('grid size-12 place-items-center rounded-2xl', tone)}>

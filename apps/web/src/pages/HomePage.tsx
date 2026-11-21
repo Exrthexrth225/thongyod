@@ -110,7 +110,7 @@ export function HomePage() {
           ) : meetupsQuery.isError ? (
             <ErrorState onRetry={() => void meetupsQuery.refetch()} />
           ) : (
-            <Card className="mx-3 mt-1 px-4 py-1">
+            <Card className="mx-4 mt-1 px-4 py-1">
               {agenda.length > 0 ? (
                 agenda.map((m) => <MeetupRow key={m.id} meetup={m} />)
               ) : (
@@ -127,7 +127,7 @@ export function HomePage() {
         {pending.length > 0 && (
           <div className="flex flex-col gap-1">
             <SectionHeader muted title={t('home.pendingTitle', { count: pending.length })} action={pending.length > ROW_PREVIEW && <SeeAllLink to="/pending" />} />
-            <Card className="mx-3 px-4 py-1">
+            <Card className="mx-4 px-4 py-1">
               {pending.slice(0, ROW_PREVIEW).map((item) => (
                 <ListRow key={item.id} leading={<IconTile icon={PENDING_ICONS[item.kind]} />} title={pendingTitle(item)} subtitle={pendingSubtitle(item, now)} />
               ))}
@@ -139,7 +139,7 @@ export function HomePage() {
 
     friends: (
       <HomeZone title={t('home.zones.friends')} action={feed.length > ROW_PREVIEW && <SeeAllLink to="/updates" />}>
-        <Card className="mx-3 px-4 py-1">
+        <Card className="mx-4 px-4 py-1">
           {homeQuery.isPending ? (
             <LoadingState rows={2} />
           ) : feed.length > 0 ? (

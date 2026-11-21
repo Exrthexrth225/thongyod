@@ -12,7 +12,7 @@ import { TOOLS, type Tool } from '@/config/tools'
 
 function ToolList({ tools }: { tools: Tool[] }) {
   return (
-    <Card className="mx-3 px-4 py-1">
+    <Card className="mx-4 px-4 py-1">
       {tools.map((tool) => (
         <ToolRow key={tool.id} tool={tool} />
       ))}
@@ -38,7 +38,7 @@ export function ExplorePage() {
       <section className="flex flex-col gap-2">
         <SectionHeader title={t('explore.withFriends')} />
         {featured.map((tool) => (
-          <div key={tool.id} className="px-3">
+          <div key={tool.id} className="px-4">
             <FeaturedAction tool={tool} />
           </div>
         ))}
@@ -47,7 +47,7 @@ export function ExplorePage() {
 
       <section>
         <SectionHeader title={t('games.title')} />
-        <Card className="mx-3 px-4 py-1">
+        <Card className="mx-4 px-4 py-1">
           <ListRow
             to="/games"
             leading={<IconTile icon={Gamepad2} />}

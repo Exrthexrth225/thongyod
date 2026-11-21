@@ -24,7 +24,7 @@ export function FortuneHistoryPage() {
   return (
     <div className="flex flex-col gap-3 pb-8">
       <PageHeader title={t('fortune.historyTitle')} subtitle={t('fortune.historyHint', { days: HISTORY_DAYS })} backTo="/fortune" />
-      <Card className="mx-3 px-4 py-1">
+      <Card className="mx-4 px-4 py-1">
         {history.length === 0 ? (
           <EmptyState
             title={t('fortune.historyEmpty')}

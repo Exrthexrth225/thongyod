@@ -29,7 +29,7 @@ export function SetupScreen({ saved, onChange, tilt, onStart }: Props) {
   return (
     <div className="flex flex-col gap-3 pb-28">
       {/* How to play as three pictures (show, don't tell). */}
-      <section aria-label={t('headsUp.howTitle')} className="grid grid-cols-3 gap-2 px-3">
+      <section aria-label={t('headsUp.howTitle')} className="grid grid-cols-3 gap-2 px-4">
         {[
           { icon: Smartphone, text: t('headsUp.how.forehead'), tone: 'neutral' as const },
           { icon: ArrowDown, text: t('headsUp.how.down'), tone: 'success' as const },
@@ -46,7 +46,7 @@ export function SetupScreen({ saved, onChange, tilt, onStart }: Props) {
 
       <section>
         <SectionHeader title={t('headsUp.packsTitle')} />
-        <div className="grid grid-cols-2 gap-2 px-3" role="radiogroup" aria-label={t('headsUp.packsTitle')}>
+        <div className="grid grid-cols-2 gap-2 px-4" role="radiogroup" aria-label={t('headsUp.packsTitle')}>
           {[...WORD_PACKS.map((p) => ({ id: p.id as string, icon: p.icon, tint: p.tint, level: p.level, count: p.words.length })), { id: MIX_PACK, icon: Shuffle, tint: 5, level: null, count: null }].map((pack) => {
             const selected = saved.pack === pack.id
             const best = saved.best[pack.id]
@@ -83,7 +83,7 @@ export function SetupScreen({ saved, onChange, tilt, onStart }: Props) {
 
       <section>
         <SectionHeader title={t('headsUp.timeTitle')} />
-        <div className="px-3">
+        <div className="px-4">
           <SegmentedChoice<`${RoundSeconds}`>
             label={t('headsUp.timeTitle')}
             value={`${saved.seconds}`}
@@ -98,7 +98,7 @@ export function SetupScreen({ saved, onChange, tilt, onStart }: Props) {
 
       <section>
         <SectionHeader title={t('headsUp.optionsTitle')} />
-        <Card className="mx-3 px-4 py-1">
+        <Card className="mx-4 px-4 py-1">
           <ToggleRow
             title={t('headsUp.useTilt')}
             hint={tilt === 'unsupported' ? t('headsUp.tiltUnsupported') : tilt === 'denied' ? t('headsUp.tiltDenied') : t('headsUp.useTiltHint')}

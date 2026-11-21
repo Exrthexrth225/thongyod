@@ -23,7 +23,7 @@ export function MyRestaurantsPage() {
     <div className="flex flex-col gap-3 pb-28">
       <PageHeader title={t('restaurants.mine')} subtitle={t('restaurants.mineSubtitle', { count: places.length })} backTo="/random-restaurant" />
       {places.length === 0 ? (
-        <Card className="mx-3">
+        <Card className="mx-4">
           <EmptyState
             title={t('restaurants.empty')}
             hint={t('restaurants.emptyHint')}
@@ -36,7 +36,7 @@ export function MyRestaurantsPage() {
           />
         </Card>
       ) : (
-        <Card className="mx-3 px-4 py-1">
+        <Card className="mx-4 px-4 py-1">
           {places.map((r) => (
             <div key={r.id} className="flex min-h-14 items-center gap-3 py-2 [&+&]:border-t">
               <button type="button" onClick={() => setEditing(r)} className="flex min-w-0 flex-1 items-center gap-3 text-left active:opacity-70">

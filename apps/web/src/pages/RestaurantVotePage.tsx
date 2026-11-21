@@ -156,7 +156,7 @@ export function RestaurantVotePage() {
             </Link>
           }
         />
-        <div className="px-3">
+        <div className="px-4">
           {places.length > 0 ? (
             <ChipSelect<string> label={t('restaurantVote.fromMine')} value={picked} onChange={setPicked} options={places.map((p) => ({ value: p.id, label: p.name }))} />
           ) : (
@@ -167,14 +167,14 @@ export function RestaurantVotePage() {
 
       <section>
         <SectionHeader title={t('restaurantVote.typeIn')} />
-        <form onSubmit={addTyped} className="flex gap-2 px-3">
+        <form onSubmit={addTyped} className="flex gap-2 px-4">
           <Input value={draft} maxLength={NAME_MAX} onChange={(e) => setDraft(e.target.value)} placeholder={t('restaurants.namePlaceholder')} aria-label={t('restaurantVote.typeIn')} />
           <Button type="submit" size="icon" variant="outline" aria-label={t('restaurantVote.add')} disabled={!draft.trim()}>
             <Plus />
           </Button>
         </form>
         {typed.length > 0 && (
-          <div className="flex flex-wrap gap-2 px-3 pt-2">
+          <div className="flex flex-wrap gap-2 px-4 pt-2">
             {typed.map((n) => (
               <span key={n} className="flex min-h-9 items-center gap-1 rounded-full border bg-card pr-1 pl-3 text-sm">
                 {n}
@@ -189,7 +189,7 @@ export function RestaurantVotePage() {
 
       <section>
         <SectionHeader title={t('restaurantVote.voters')} />
-        <div className="flex items-center gap-3 px-3">
+        <div className="flex items-center gap-3 px-4">
           <Users className="size-5 text-muted-foreground" aria-hidden="true" />
           <NumberStepper value={voters} onChange={setVoters} min={MIN_VOTERS} max={MAX_VOTERS} label={t('restaurantVote.voters')} />
         </div>

@@ -34,7 +34,7 @@ export function ProfileListPage({ kind }: { kind: ListKind }) {
       ) : profile.isError || !p ? (
         <ErrorState onRetry={() => void profile.refetch()} />
       ) : (
-        <Card className="mx-3 px-4 py-1">
+        <Card className="mx-4 px-4 py-1">
           {kind === 'titles' ? (
             (p.titles ?? []).length === 0 ? (
               <EmptyState title={t('profile.noTitles')} />

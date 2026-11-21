@@ -37,7 +37,7 @@ export function NotificationSettingsPage() {
 
       <section>
         <SectionHeader title={t('notifySettings.pause')} />
-        <div className="flex flex-col gap-2 px-3">
+        <div className="flex flex-col gap-2 px-4">
           <SegmentedChoice<PauseChoice>
             label={t('notifySettings.pause')}
             value={pauseChoice}
@@ -58,7 +58,7 @@ export function NotificationSettingsPage() {
 
       <section>
         <SectionHeader title={t('notifySettings.what')} />
-        <Card className="mx-3 px-4 py-1">
+        <Card className="mx-4 px-4 py-1">
           {CATEGORIES.map((c) => (
             <label key={c} className="flex min-h-14 items-center gap-3 py-2 [&+&]:border-t">
               <IconTile icon={ICON[c]} tone={prefs.on[c] ? 'accent' : 'neutral'} />
@@ -86,7 +86,7 @@ export function NotificationSettingsPage() {
       {prefs.on.reminders && (
         <section>
           <SectionHeader title={t('notifySettings.reminderWhen')} />
-          <div className="px-3">
+          <div className="px-4">
             <SegmentedChoice<`${ReminderMinutes}`>
               label={t('notifySettings.reminderWhen')}
               value={`${prefs.reminderMinutes}`}
@@ -102,7 +102,7 @@ export function NotificationSettingsPage() {
 
       <section>
         <SectionHeader title={t('notifySettings.quiet')} />
-        <Card className="mx-3 flex flex-col gap-2 p-4">
+        <Card className="mx-4 flex flex-col gap-2 p-4">
           <div className="flex items-center gap-2">
             <Moon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             <Input type="time" value={prefs.quietStart} onChange={(e) => e.target.value && setNotifyPrefs({ ...prefs, quietStart: e.target.value })} aria-label={t('notifySettings.quietFrom')} />

@@ -35,7 +35,7 @@ export function FlashcardsPage() {
     <div className="flex flex-col gap-3 pb-28">
       <PageHeader title={t('flashcards.title')} subtitle={t('flashcards.onDevice')} backTo="/explore" />
       {decks.length === 0 ? (
-        <Card className="mx-3">
+        <Card className="mx-4">
           <EmptyState
             title={t('flashcards.empty')}
             hint={t('flashcards.emptyHint')}
@@ -48,7 +48,7 @@ export function FlashcardsPage() {
           />
         </Card>
       ) : (
-        <Card className="mx-3 px-4 py-1">
+        <Card className="mx-4 px-4 py-1">
           {decks.map((deck, i) => (
             <ListRow
               key={deck.id}

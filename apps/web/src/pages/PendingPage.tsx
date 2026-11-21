@@ -26,7 +26,7 @@ export function PendingPage() {
       ) : home.isError ? (
         <ErrorState onRetry={() => void home.refetch()} />
       ) : (
-        <Card className="mx-3 px-4 py-1">
+        <Card className="mx-4 px-4 py-1">
           {items.length === 0 ? (
             <EmptyState title={t('home.pendingEmpty')} />
           ) : (

@@ -88,7 +88,7 @@ export function MeetupDetailPage() {
       <div className={cn('flex flex-col gap-3 pb-6', fromInvite && 'invite-expand', showAnswerBar && 'pb-28')}>
         <PageHeader title={meetup.title} subtitle={meetup.gangName} backTo="/" />
 
-        <Card className="mx-3 flex flex-col gap-2 p-4 text-sm">
+        <Card className="mx-4 flex flex-col gap-2 p-4 text-sm">
           <p className="flex items-center gap-2">
             <CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" />
             {formatFullDay(startsAt)}
@@ -123,7 +123,7 @@ export function MeetupDetailPage() {
 
         <section>
           <SectionHeader title={t('meetup.myAnswer')} />
-          <Card className="mx-3 p-4">
+          <Card className="mx-4 p-4">
             {hidden ? (
               <div className="flex flex-col items-center gap-2 text-center">
                 <EyeOff className="size-5 text-muted-foreground" aria-hidden="true" />
@@ -166,7 +166,7 @@ export function MeetupDetailPage() {
               const people = listed.filter((m) => groupOf(m) === key)
               if (people.length === 0) return null
               return (
-                <Card key={key} className="mx-3 px-4 py-1">
+                <Card key={key} className="mx-4 px-4 py-1">
                   <h3 className="pt-2 text-xs font-medium text-muted-foreground">
                     {t('meetup.groupCount', { label: t(label), count: people.length })}
                   </h3>

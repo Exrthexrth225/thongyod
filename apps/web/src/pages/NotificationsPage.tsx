@@ -68,7 +68,7 @@ export function NotificationsPage() {
         groups.map((group) => (
           <section key={group.key}>
             <SectionHeader title={group.title} />
-            <Card className="mx-3 divide-y px-4 py-0">
+            <Card className="mx-4 divide-y px-4 py-0">
               {group.items.map((item) => (
                 <NotificationRow key={item.id} item={item} now={now} onOpen={() => open(item)} />
               ))}

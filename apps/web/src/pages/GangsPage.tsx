@@ -18,7 +18,7 @@ export function GangsPage() {
 
   return (
     <div className="flex flex-col gap-3 py-3">
-      <div className="px-3">
+      <div className="px-4">
         <SearchInput value={query} onChange={setQuery} placeholder={t('gang.filterPlaceholder')} label={t('gang.filterLabel')} />
       </div>
       <InfiniteList

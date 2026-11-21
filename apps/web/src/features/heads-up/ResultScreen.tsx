@@ -23,7 +23,7 @@ type Props = {
 export function ResultScreen({ answers, score, packName, isBest, shareUrl, onToggle, onAgain, onChangePack }: Props) {
   const { t } = useTranslation()
   return (
-    <div className="flex flex-col gap-4 px-3 pb-8">
+    <div className="flex flex-col gap-4 px-4 pb-8">
       <div className="flex flex-col items-center gap-2 pt-2 text-center">
         <span className={cn('flex size-20 items-center justify-center rounded-full', TONE_CLASS.accent)} aria-hidden="true">
           <Trophy className="size-10" />

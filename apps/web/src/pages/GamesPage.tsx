@@ -17,7 +17,7 @@ export function GamesPage() {
   return (
     <div className="flex flex-col gap-2 pb-8">
       <PageHeader title={t('games.title')} subtitle={t('games.subtitle')} backTo="/explore" />
-      <Link to="/games/rooms" state={SHOW_BACK} className="mx-3 flex items-center gap-3 rounded-2xl border bg-card p-4 active:scale-[0.99]">
+      <Link to="/games/rooms" state={SHOW_BACK} className="mx-4 flex items-center gap-3 rounded-2xl border bg-card p-4 active:scale-[0.99]">
         <span className={cn('grid size-12 shrink-0 place-items-center rounded-2xl', tintClass(5))}>
           <Wifi className="size-6" aria-hidden="true" />
         </span>
@@ -32,7 +32,7 @@ export function GamesPage() {
         return (
           <section key={kind}>
             <SectionHeader title={t(`games.kinds.${kind}`)} />
-            <div className="stagger grid grid-cols-2 gap-2 px-3">
+            <div className="stagger grid grid-cols-2 gap-2 px-4">
               {list.map((g) => (
                 <GameTile key={g.id} game={g} />
               ))}

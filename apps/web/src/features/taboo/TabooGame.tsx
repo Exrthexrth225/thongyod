@@ -120,7 +120,7 @@ export function TabooGame() {
   if (stage === 'setup') {
     return (
       <div className="flex flex-col gap-3 pb-28">
-        <ol className="mx-3 grid gap-2 rounded-2xl border bg-card p-4 text-sm">
+        <ol className="mx-4 grid gap-2 rounded-2xl border bg-card p-4 text-sm">
           {(['teams', 'clue', 'watch'] as const).map((step, i) => (
             <li key={step} className="flex gap-3">
               <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-medium text-primary-foreground">{i + 1}</span>
@@ -129,7 +129,7 @@ export function TabooGame() {
           ))}
         </ol>
         <SectionHeader title={t('games.taboo.teamsTitle')} />
-        <div className="px-3">
+        <div className="px-4">
           <SegmentedChoice<string>
             label={t('games.taboo.teamsTitle')}
             value={`${settings.teams}`}
@@ -138,7 +138,7 @@ export function TabooGame() {
           />
         </div>
         <SectionHeader title={t('games.taboo.timeTitle')} />
-        <div className="px-3">
+        <div className="px-4">
           <SegmentedChoice<string>
             label={t('games.taboo.timeTitle')}
             value={`${settings.seconds}`}
@@ -147,7 +147,7 @@ export function TabooGame() {
           />
         </div>
         <SectionHeader title={t('games.taboo.roundsTitle')} />
-        <div className="px-3">
+        <div className="px-4">
           <SegmentedChoice<string>
             label={t('games.taboo.roundsTitle')}
             value={`${settings.rounds}`}
@@ -155,7 +155,7 @@ export function TabooGame() {
             options={ROUNDS.map((n) => ({ value: `${n}`, label: t('games.taboo.roundsCount', { count: n }) }))}
           />
         </div>
-        <Card className="mx-3 px-4 py-1">
+        <Card className="mx-4 px-4 py-1">
           <label className="flex min-h-14 items-center gap-3 py-2">
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-medium">{t('games.taboo.skipCosts')}</span>

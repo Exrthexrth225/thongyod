@@ -29,7 +29,7 @@ export function RoomsPage() {
     <div className="flex flex-col gap-2 pb-8">
       <PageHeader title={t('rooms.zoneTitle')} subtitle={t('rooms.zoneSubtitle')} backTo="/games" />
 
-      <section className="px-3">
+      <section className="px-4">
         <div className="flex items-center gap-3 rounded-2xl border bg-card p-4">
           <span className={cn('grid size-12 shrink-0 place-items-center rounded-2xl', tintClass(5))}>
             <Wifi className="size-6" aria-hidden="true" />
@@ -39,7 +39,7 @@ export function RoomsPage() {
       </section>
 
       <SectionHeader title={t('rooms.joinTitle')} />
-      <form onSubmit={join} className="mx-3 flex flex-col gap-2 rounded-3xl border bg-card p-4">
+      <form onSubmit={join} className="mx-4 flex flex-col gap-2 rounded-3xl border bg-card p-4">
         <label htmlFor="room-code" className="text-sm font-medium">
           {t('rooms.codeLabel')}
         </label>
@@ -68,7 +68,7 @@ export function RoomsPage() {
       </form>
 
       <SectionHeader title={t('rooms.createTitle')} />
-      <ul className="mx-3 grid gap-2">
+      <ul className="mx-4 grid gap-2">
         {roomGames.map((g) => (
           <li key={g.id}>
             <button

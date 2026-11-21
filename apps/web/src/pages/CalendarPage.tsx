@@ -105,7 +105,7 @@ export function CalendarPage() {
           ) : query.isError ? (
             <ErrorState onRetry={() => void query.refetch()} />
           ) : (
-            <Card className="mx-3 px-4 py-1">
+            <Card className="mx-4 px-4 py-1">
               {dayItems.length > 0 ? (
                 dayItems.map((m) => <MeetupRow key={m.id} meetup={m} />)
               ) : (
