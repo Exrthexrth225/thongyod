@@ -30,6 +30,7 @@ import { RoomPage } from '@/pages/RoomPage'
 import { RoomsPage } from '@/pages/RoomsPage'
 import { SpyPage } from '@/pages/SpyPage'
 import { InsiderPage } from '@/pages/InsiderPage'
+import { SpectrumPage } from '@/pages/SpectrumPage'
 import { TabooPage } from '@/pages/TabooPage'
 import { MostLikelyPage, NeverHavePage } from '@/pages/PartyGamePages'
 import { HeadsUpPage } from '@/pages/HeadsUpPage'
@@ -101,6 +102,7 @@ export const router = createRouter([
       { path: 'games/never', element: <NeverHavePage /> },
       { path: 'games/spy', element: <SpyPage /> },
       { path: 'games/insider', element: <InsiderPage /> },
+      { path: 'games/spectrum', element: <SpectrumPage /> },
       { path: 'games/bomb', element: <BombPage /> },
       { path: 'games/taboo', element: <TabooPage /> },
       { path: 'games/draw', element: <DrawPage /> },
