@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PLAY_ACTIONS, POSES, TAP_ACTIONS, idleDelayMs, isNight, pickIdle, pickOther, planFor, sleepAfterMs, type SpeciesMoves, EAT_FLIP } from './behavior'
+import { PLAY_ACTIONS, POSES, TAP_ACTIONS, idleDelayMs, isNight, pickIdle, pickOther, planFor, sleepAfterMs, type SpeciesMoves, EAT_FLIP, FIDGETS } from './behavior'
 
 const moves: SpeciesMoves = {
   play1: { motion: 'fly', overlay: 'none', ms: 1900 },
@@ -35,13 +35,15 @@ describe('pet behaviour', () => {
     expect(isNight(5)).toBe(true)
     expect(isNight(12)).toBe(false)
     expect(pickIdle(null, 23, seq([0]))).toBe('yawn')
-    expect(PLAY_ACTIONS).toContain(pickIdle('play1', 12, seq([5, 0])))
-    expect(pickIdle('play1', 12, seq([5, 0]))).not.toBe('play1')
+    expect(PLAY_ACTIONS).toContain(pickIdle('play1', 12, seq([15, 0])))
+    expect(pickIdle('play1', 12, seq([15, 0]))).not.toBe('play1')
+    expect(pickIdle(null, 12, seq([3]))).toBe('fidget')
+    expect(pickIdle(null, 12, seq([11]))).toBe('yawn')
   })
 
   it('waits a varied time and sleeps sooner at night', () => {
-    expect(idleDelayMs(() => 0)).toBe(9000)
-    expect(idleDelayMs((n) => n - 1)).toBe(20000)
+    expect(idleDelayMs(() => 0)).toBe(3500)
+    expect(idleDelayMs((n) => n - 1)).toBe(7000)
     expect(sleepAfterMs(23)).toBeLessThan(sleepAfterMs(14))
   })
 })
@@ -63,6 +65,7 @@ describe('pet motions', () => {
       const p = planFor(a, moves)
       if (p.motion !== 'none') expect(MOTIONS[p.motion].ms, a).toBeLessThanOrEqual(p.ms)
     }
+    for (const fid of FIDGETS) expect(MOTIONS[fid.motion].ms, fid.motion).toBeLessThanOrEqual(fid.ms)
   })
 })
 

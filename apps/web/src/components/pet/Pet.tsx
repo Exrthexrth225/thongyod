@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import {
   BLINK_MS,
   EAT_FLIP,
+  FIDGETS,
   LONG_PRESS_MS,
   POSES,
   TAP_ACTIONS,
@@ -69,6 +70,11 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
   const [asleep, setAsleep] = useState(false)
   const [paused, setPaused] = useState(false)
   const move = useRef<HTMLSpanElement>(null)
+  /** Hidden element that only carries the timing clocks, so cancelling the body's moves never cancels them (#113). */
+  const clockEl = useRef<HTMLSpanElement>(null)
+  /** The pending pose swap of the current move (cancelled when another move starts). */
+  const swapClock = useRef<Animation | null>(null)
+  const lastFidget = useRef<(typeof FIDGETS)[number] | null>(null)
   const shadow = useRef<HTMLSpanElement>(null)
   const timers = useRef<number[]>([])
   const idleTimer = useRef(0)
@@ -92,15 +98,16 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
    * the pose swap and the end of a move stay in step with the motion even if the browser slows or pauses animations.
    */
   const clocks = useRef<Animation[]>([])
-  const after = useCallback((ms: number, fn: () => void) => {
-    const el = move.current
+  const after = useCallback((ms: number, fn: () => void): Animation | null => {
+    const el = clockEl.current
     if (!el?.animate) {
       timers.current.push(window.setTimeout(fn, ms))
-      return
+      return null
     }
-    const clock = el.animate(null, { duration: ms })
+    const clock = el.animate([{ opacity: 0 }, { opacity: 0 }], { duration: ms })
     clocks.current.push(clock)
     clock.finished.then(fn).catch(() => {})
+    return clock
   }, [])
   const clearTimers = () => {
     setEatFrame(null)
@@ -121,11 +128,12 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
     const m = MOTIONS[motion]
     move.current?.getAnimations().forEach((a) => a.cancel())
     shadow.current?.getAnimations().forEach((a) => a.cancel())
-    clocks.current = []
+    swapClock.current?.cancel()
+    swapClock.current = null
     // Easing per key frame (linear overall), so each key frame lands exactly at its offset and the swap timer matches it.
     move.current?.animate(eased(m.frames), { duration: m.ms, easing: 'linear' })
     if (m.shadow) shadow.current?.animate(eased(m.shadow), { duration: m.ms, easing: 'linear' })
-    if (next !== poseRef.current) after(m.ms * m.swapAt, swap)
+    if (next !== poseRef.current) swapClock.current = after(m.ms * m.swapAt, swap)
   }, [after])
 
   // run() and the idle clock call each other, so both live in refs that are refreshed every render.
@@ -153,7 +161,12 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
         scheduleIdle()
         return
       }
-      const plan = planFor(act, spec.moves)
+      let plan = planFor(act, spec.moves)
+      if (act === 'fidget') {
+        const fid = pickOther(FIDGETS, lastFidget.current, rnd)
+        lastFidget.current = fid
+        plan = { pose: 'main', ...fid }
+      }
       busy.current = true
       // Eating: play Earth's frames (mouth opens, bites, chews twice, smiles) instead of one still drawing (#108).
       const frames = stage === 'adult' ? spec.eatFrames : undefined
@@ -351,6 +364,7 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
           </span>
         </span>
       </span>
+      <span ref={clockEl} aria-hidden="true" className="pointer-events-none absolute size-px opacity-0" />
     </button>
   )
 }

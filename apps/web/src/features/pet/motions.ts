@@ -109,5 +109,30 @@ export const MOTIONS: Record<Exclude<Motion, 'none'> | 'settle', MotionSpec> = {
     ],
     shadow: [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1].map((offset, i) => ({ offset, transform: i % 2 ? 'scale(0.88)' : 'scale(1)' })),
   },
+  // Fidgets (#113): body only, no pose change (swapAt only matters if a pose ever rides on them).
+  look: {
+    ms: 1700,
+    swapAt: 0.15,
+    frames: [f(0, rest), f(0.15, 'translate(-2%, 0) rotate(-6deg) scale(1, 1)'), f(0.45, 'translate(-2%, 0) rotate(-6deg) scale(1, 1)'), f(0.6, 'translate(2%, 0) rotate(6deg) scale(1, 1)'), f(0.85, 'translate(2%, 0) rotate(6deg) scale(1, 1)'), f(1, rest)],
+  },
+  wiggle: {
+    ms: 900,
+    swapAt: 0.2,
+    frames: [f(0, rest), f(0.2, 'translate(0, 0) rotate(-4deg) scale(1.05, 0.95)'), f(0.4, 'translate(0, 0) rotate(4deg) scale(0.97, 1.03)'), f(0.6, 'translate(0, 0) rotate(-3deg) scale(1.04, 0.96)'), f(0.8, 'translate(0, 0) rotate(2deg) scale(1, 1)'), f(1, rest)],
+  },
+  bounce: {
+    ms: 1000,
+    swapAt: 0.1,
+    frames: [
+      f(0, rest),
+      f(0.1, 'translate(0, 0) rotate(0deg) scale(1.07, 0.93)'),
+      f(0.28, 'translate(0, -6%) rotate(0deg) scale(0.97, 1.03)'),
+      f(0.45, 'translate(0, 0) rotate(0deg) scale(1.06, 0.94)'),
+      f(0.63, 'translate(0, -5%) rotate(0deg) scale(0.98, 1.02)'),
+      f(0.8, 'translate(0, 0) rotate(0deg) scale(1.04, 0.96)'),
+      f(1, rest),
+    ],
+    shadow: [{ transform: 'scale(1)', offset: 0 }, { transform: 'scale(0.9)', offset: 0.28 }, { transform: 'scale(1)', offset: 0.45 }, { transform: 'scale(0.92)', offset: 0.63 }, { transform: 'scale(1)', offset: 0.8 }, { transform: 'scale(1)', offset: 1 }],
+  },
   stretch: { ms: 1900, swapAt: 0.1, frames: [f(0, rest), f(0.1, SQUASH), f(0.4, 'translate(0, 0) rotate(0deg) scale(0.97, 1.07)'), f(0.7, 'translate(0, 0) rotate(0deg) scale(1.02, 0.98)'), f(1, rest)] },
 }
