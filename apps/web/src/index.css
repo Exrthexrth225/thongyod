@@ -329,6 +329,32 @@
         opacity: 0;
     }
 }
+/* A page opened from another slides in from the right (motion plan #5). Fill "backwards" only: once it lands the
+ * page has no transform left, so position:fixed bars inside work normally again. */
+.page-push {
+    animation: page-push 0.32s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes page-push {
+    from {
+        opacity: 0.4;
+        transform: translateX(36%);
+    }
+}
+/* Loading blocks: a soft light sweeps across (motion plan #8). */
+.skeleton-shimmer {
+    background-image: linear-gradient(100deg, transparent 30%, color-mix(in oklab, var(--background) 55%, transparent) 50%, transparent 70%);
+    background-size: 220% 100%;
+    background-repeat: no-repeat;
+    animation: shimmer 1.3s ease-in-out infinite;
+}
+@keyframes shimmer {
+    from {
+        background-position: 130% 0;
+    }
+    to {
+        background-position: -30% 0;
+    }
+}
 /* Grid children rise in one after another (tiles on Explore / เกม). */
 .stagger > * {
     animation: stagger-rise 0.36s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
@@ -348,6 +374,8 @@
     }
 }
 @media (prefers-reduced-motion: reduce) {
+    .page-push,
+    .skeleton-shimmer,
     .page-enter,
     .stagger > * {
         animation: none;

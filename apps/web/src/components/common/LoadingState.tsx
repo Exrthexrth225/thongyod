@@ -7,7 +7,7 @@ export function LoadingState({ rows = 3 }: { rows?: number }) {
   return (
     <div role="status" aria-label={t('common.loading')} className="flex flex-col gap-3 px-4">
       {Array.from({ length: rows }, (_, i) => (
-        <Skeleton key={i} className="h-16 w-full rounded-xl" />
+        <Skeleton key={i} className="h-16 w-full rounded-2xl" />
       ))}
     </div>
   )
