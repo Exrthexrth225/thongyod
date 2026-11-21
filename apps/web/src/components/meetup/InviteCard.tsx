@@ -25,7 +25,7 @@ export function InviteCard({ meetup, now, onHide, onOpen, tall }: InviteCardProp
   const countdown = formatTimeUntil(startsAt, now)
   const chip = 'inline-flex items-center gap-1.5 rounded-full bg-card px-2.5 py-0.5 text-sm font-semibold'
   return (
-    <div className="flex flex-1 flex-col gap-3 p-5">
+    <div className="flex flex-1 flex-col gap-3 p-5 pb-4">
       <div className="flex items-start justify-between gap-2">
         <span className="truncate rounded-full bg-card px-2.5 text-[13px] leading-6 font-semibold">{meetup.gangName}</span>
         {onOpen && (

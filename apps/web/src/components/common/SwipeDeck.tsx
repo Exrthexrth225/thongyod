@@ -33,6 +33,8 @@ type SwipeDeckProps<T> = {
   surface?: string
   /** Confetti from the card when it leaves this way (invite: right = ไป). */
   celebrate?: SwipeDir
+  /** Small extra line under the answer buttons, inside the card (e.g. "ซ่อนนัดนี้"). */
+  renderFooter?: (item: T) => ReactNode
 }
 
 /** Commit when dragged past this share of the card, or flung faster than this (px/ms). */
@@ -61,7 +63,7 @@ function rubber(d: number, limit: number): number {
 
 // A stack of cards answered by swiping or with the buttons below (UX_GUIDELINES §3, DECISIONS #57).
 // No library: pointer events + CSS transforms (transform/opacity only).
-export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOpen, label, tall, bare, surface = 'bg-card', celebrate }: SwipeDeckProps<T>) {
+export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOpen, label, tall, bare, surface = 'bg-card', celebrate, renderFooter }: SwipeDeckProps<T>) {
   const topCard = useRef<HTMLDivElement>(null)
   const [drag, setDrag] = useState({ x: 0, y: 0, active: false, w: 300, h: 300 })
   const [flying, setFlying] = useState<SwipeDir | null>(null)
@@ -89,7 +91,7 @@ export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOp
   function onPointerDown(e: PointerEvent<HTMLDivElement>) {
     if (flying || (e.target as HTMLElement).closest('a,button')) return
     e.currentTarget.setPointerCapture(e.pointerId)
-    start.current = { x: e.clientX, y: e.clientY, t: performance.now(), moved: 0 }
+    start.current = { x: e.clientX, y: e.clientY, t: e.timeStamp, moved: 0 }
     const box = e.currentTarget.getBoundingClientRect()
     setDrag({ x: 0, y: 0, active: true, w: box.width, h: box.height })
   }
@@ -104,9 +106,9 @@ export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOp
     setDrag((d) => ({ ...d, x: rubber(dx, d.w * FREE_SHARE), y }))
   }
 
-  function onPointerUp() {
+  function onPointerUp(e: PointerEvent<HTMLDivElement>) {
     if (!drag.active) return
-    const ms = Math.max(1, performance.now() - start.current.t)
+    const ms = Math.max(1, e.timeStamp - start.current.t)
     if (onOpen && top && ms < TAP_MS && start.current.moved < TAP_PX) {
       setDrag((d) => ({ ...d, x: 0, y: 0, active: false }))
       onOpen(top)
@@ -135,6 +137,30 @@ export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOp
   }
 
   if (!top) return null
+
+  // Answer buttons (#97): labelled pills, the "yes" one dark and widest. Inside the card when the deck draws the
+  // surface, so it is clear they answer this card and they fly away with it (Earth, 2026-11-22); under it for bare decks.
+  const buttons = (
+    <div className={cn('grid gap-2', bare && 'mx-4')} style={{ gridTemplateColumns: actions.length === 2 ? '1fr 1.35fr' : '1fr 1fr 1.35fr' }}>
+      {actions
+        .slice()
+        .sort((a, b) => ({ left: 0, up: 1, right: 2 })[a.dir] - ({ left: 0, up: 1, right: 2 })[b.dir])
+        .map(({ dir, label: text, icon: Icon }) => (
+          <button
+            key={dir}
+            type="button"
+            onClick={() => commit(dir)}
+            className={cn(
+              'pressable flex h-13 items-center justify-center gap-1.5 rounded-2xl text-[15px] font-semibold',
+              dir === 'right' ? 'bg-ink text-ink-foreground' : 'bg-card text-foreground',
+            )}
+          >
+            <Icon className="size-5" strokeWidth={2.4} aria-hidden="true" />
+            {text}
+          </button>
+        ))}
+    </div>
+  )
 
   // Which stamp shows while dragging, and how strongly (0..1).
   const upward = -drag.y > Math.abs(drag.x)
@@ -179,7 +205,8 @@ export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOp
                   transition: animate ? `transform ${FLY_MS}ms ease-out, opacity ${FLY_MS}ms ease-out` : 'none',
                 }}
               >
-                {renderCard(item)}
+                {/* Only the surface shows behind: their text would peek out under the top card. */}
+                <div className="invisible flex flex-1 flex-col">{renderCard(item)}</div>
               </div>
             )
           })
@@ -199,6 +226,12 @@ export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOp
           }}
         >
           {renderCard(top)}
+          {!bare && (
+            <div className="flex flex-col items-center gap-1 px-5 pb-4 [&>*:first-child]:w-full">
+              {buttons}
+              {renderFooter?.(top)}
+            </div>
+          )}
           {actions.map((a) => (
             <span
               key={a.dir}
@@ -217,27 +250,7 @@ export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOp
           ))}
         </div>
       </div>
-
-      {/* Answer buttons: labelled pills, the "yes" one dark and widest (#97). */}
-      <div className="mx-4 grid grid-cols-[1fr_1fr_1.35fr] gap-2" style={{ gridTemplateColumns: actions.length === 2 ? '1fr 1.35fr' : undefined }}>
-        {actions
-          .slice()
-          .sort((a, b) => ({ left: 0, up: 1, right: 2 })[a.dir] - ({ left: 0, up: 1, right: 2 })[b.dir])
-          .map(({ dir, label: text, icon: Icon }) => (
-            <button
-              key={dir}
-              type="button"
-              onClick={() => commit(dir)}
-              className={cn(
-                'pressable flex h-13 items-center justify-center gap-1.5 rounded-2xl text-[15px] font-semibold',
-                dir === 'right' ? 'bg-ink text-ink-foreground' : 'bg-card text-foreground',
-              )}
-            >
-              <Icon className="size-5" strokeWidth={2.4} aria-hidden="true" />
-              {text}
-            </button>
-          ))}
-      </div>
+      {bare && buttons}
     </div>
   )
 }

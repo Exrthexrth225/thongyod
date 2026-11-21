@@ -23,6 +23,7 @@ import { QuickTools } from '@/components/home/QuickTools'
 import { WeekStrip } from '@/components/home/WeekStrip'
 import { MeetupRow } from '@/components/meetup/MeetupRow'
 import { InviteCard } from '@/components/meetup/InviteCard'
+import { HideMeetupButton } from '@/components/meetup/HideMeetupButton'
 import { Card } from '@/components/ui/card'
 import type { HomeSectionId } from '@/config/home'
 import { canHide, isLocked } from '@/features/meetups/derive'
@@ -105,9 +106,9 @@ export function HomePage() {
                   meetup={m}
                   now={now}
                   onOpen={() => openInvite(m.id)}
-                  onHide={canHide(m, me.data?.userId) ? () => actions.hide(m, true) : undefined}
                 />
               )}
+              renderFooter={(m) => (canHide(m, me.data?.userId) ? <HideMeetupButton onClick={() => actions.hide(m, true)} /> : null)}
             />
             {swipeHint && <p className="pt-1 text-center text-xs text-muted-foreground">{t('home.swipeHint')}</p>}
           </div>

@@ -7,6 +7,7 @@ import { LoadingState } from '@/components/common/LoadingState'
 import { SwipeDeck } from '@/components/common/SwipeDeck'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { InviteCard } from '@/components/meetup/InviteCard'
+import { HideMeetupButton } from '@/components/meetup/HideMeetupButton'
 import { buttonVariants } from '@/components/ui/button'
 import { canHide } from '@/features/meetups/derive'
 import { SWIPE_TO_RESPONSE, useInviteActions } from '@/features/meetups/useInviteActions'
@@ -52,6 +53,8 @@ export function InvitesPage() {
             getKey={(m) => m.id}
             label={t('home.deckLabel')}
             actions={swipeActions}
+            surface="bg-tangerine on-slab"
+            celebrate="right"
             onSwipe={(m, dir) => actions.answer(m, SWIPE_TO_RESPONSE[dir])}
             onOpen={(m) => open(m.id)}
             renderCard={(m) => (
@@ -60,9 +63,9 @@ export function InvitesPage() {
                 meetup={m}
                 now={now}
                 onOpen={() => open(m.id)}
-                onHide={canHide(m, me.data?.userId) ? () => actions.hide(m, true) : undefined}
               />
             )}
+            renderFooter={(m) => (canHide(m, me.data?.userId) ? <HideMeetupButton onClick={() => actions.hide(m, true)} /> : null)}
           />
         </div>
       )}
