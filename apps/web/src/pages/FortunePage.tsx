@@ -112,7 +112,7 @@ export function FortunePage() {
       <div className="flex flex-col items-center gap-5 px-4 pb-8">
         {phase !== 'card' ? (
           <>
-            <button type="button" onClick={shake} aria-label={t('fortune.cylinder')} className="mt-4 touch-manipulation">
+            <button type="button" onClick={shake} aria-label={t('fortune.cylinder')} className="mt-10 touch-manipulation">
               <FortuneCup state={phase === 'shaking' ? 'shaking' : phase === 'stick' ? 'out' : 'idle'} stick={draw?.stick} />
             </button>
             <Button size="lg" className="w-full" onClick={shake}>
