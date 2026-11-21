@@ -36,7 +36,6 @@ export function DiceBottleGame() {
   const [settings, setSettings] = useGameSettings<Settings>('dice', DEFAULTS, fix)
   const [faces, setFaces] = useState<Face[]>(() => Array.from({ length: settings.dice }, () => 1 as Face))
   const [rots, setRots] = useState(() => Array.from({ length: 3 }, () => ({ x: -20, y: 25 })))
-  const [rollKey, setRollKey] = useState(0)
   const [busy, setBusy] = useState(false)
   const [shown, setShown] = useState(false)
   const [bottle, setBottle] = useState(0)
@@ -52,7 +51,6 @@ export function DiceBottleGame() {
     const next = rollDice(settings.dice)
     setFaces(next)
     setRots((r) => r.map((rot, i) => (i < next.length ? tumble(rot, next[i], 2 + i) : rot)))
-    setRollKey((k) => k + 1)
     setShown(false)
     setBusy(true)
     if (sound) playSound('roll')
@@ -94,6 +92,7 @@ export function DiceBottleGame() {
       <SegmentedChoice<Mode>
         label={t('games.dice.modeLabel')}
         value={settings.mode}
+        disabled={busy}
         onChange={(mode) => {
           set({ mode })
           setShown(false)
@@ -109,12 +108,14 @@ export function DiceBottleGame() {
           <button
             type="button"
             onClick={roll}
+            disabled={busy}
+            aria-busy={busy}
             aria-label={t('games.dice.roll')}
             className={cn('relative flex min-h-[42dvh] flex-col items-center justify-center gap-6 rounded-3xl p-6', tintClass(4))}
           >
             <div className="flex flex-wrap items-center justify-center gap-6">
               {faces.map((_, i) => (
-                <Die key={i} rollKey={rollKey} rotation={rots[i]} faceClass={cn('bg-card', i === 0 ? 'text-foreground' : tintClass(DIE_TINTS[i]).split(' ')[1])} />
+                <Die key={i} rolling={busy} rotation={rots[i]} faceClass={cn('bg-card', i === 0 ? 'text-foreground' : tintClass(DIE_TINTS[i]).split(' ')[1])} />
               ))}
             </div>
             <span className="min-h-12 text-center" role="status" aria-live="polite">
@@ -133,6 +134,7 @@ export function DiceBottleGame() {
               value={settings.dice}
               min={1}
               max={3}
+              disabled={busy}
               onChange={(dice) => {
                 set({ dice })
                 setFaces(Array.from({ length: dice }, (_, i) => faces[i] ?? (1 as Face)))
@@ -146,6 +148,8 @@ export function DiceBottleGame() {
           <button
             type="button"
             onClick={spin}
+            disabled={busy}
+            aria-busy={busy}
             aria-label={t('games.dice.spin')}
             className={cn('relative mx-auto grid aspect-square w-full max-w-[22rem] place-items-center rounded-full', tintClass(2))}
           >
@@ -180,7 +184,7 @@ export function DiceBottleGame() {
               <span className="block font-medium">{t('games.dice.seats')}</span>
               <span className="block text-xs text-muted-foreground">{t('games.dice.seatsHint')}</span>
             </span>
-            <NumberStepper label={t('games.dice.seats')} value={settings.seats} min={0} max={12} onChange={(seats) => set({ seats: seats === 1 ? (settings.seats === 0 ? 2 : 0) : seats })} />
+            <NumberStepper label={t('games.dice.seats')} value={settings.seats} min={0} max={12} disabled={busy} onChange={(seats) => set({ seats: seats === 1 ? (settings.seats === 0 ? 2 : 0) : seats })} />
           </div>
         </>
       )}

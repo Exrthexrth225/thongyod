@@ -112,8 +112,9 @@
   display: grid;
   grid-template: repeat(3, 1fr) / repeat(3, 1fr);
   padding: 14%;
-  border-radius: 22%;
+  border-radius: 0;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   box-shadow: inset 0 0 0 2px color-mix(in oklab, currentColor 12%, transparent);
 }
 .die-face[data-f='1'] { transform: translateZ(calc(var(--die) / 2)); }

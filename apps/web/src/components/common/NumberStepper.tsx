@@ -7,12 +7,13 @@ type NumberStepperProps = {
   onChange: (value: number) => void
   min: number
   max: number
+  disabled?: boolean
   /** Accessible name, e.g. "จำนวนคน". */
   label: string
 }
 
 // − value + control for small whole numbers (people count, quantity).
-export function NumberStepper({ value, onChange, min, max, label }: NumberStepperProps) {
+export function NumberStepper({ value, onChange, min, max, label, disabled = false }: NumberStepperProps) {
   const { t } = useTranslation()
   return (
     <div className="flex items-center gap-3" role="group" aria-label={label}>
@@ -20,7 +21,7 @@ export function NumberStepper({ value, onChange, min, max, label }: NumberSteppe
         variant="outline"
         size="icon"
         aria-label={t('common.decrease')}
-        disabled={value <= min}
+        disabled={disabled || value <= min}
         onClick={() => onChange(Math.max(min, value - 1))}
       >
         <Minus />
@@ -32,7 +33,7 @@ export function NumberStepper({ value, onChange, min, max, label }: NumberSteppe
         variant="outline"
         size="icon"
         aria-label={t('common.increase')}
-        disabled={value >= max}
+        disabled={disabled || value >= max}
         onClick={() => onChange(Math.min(max, value + 1))}
       >
         <Plus />

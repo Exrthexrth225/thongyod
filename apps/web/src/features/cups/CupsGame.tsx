@@ -47,7 +47,9 @@ export function CupsGame() {
     const start = Array.from({ length: n }, (_, i) => i)
     const hidden = secureRandomInt(n)
     const swaps = makeSwaps(n, swapCount(lv))
-    const ms = stepMs(lv)
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    // Horizontal swaps are essential to the game; slow them down and omit the extra arcs.
+    const ms = reduced ? Math.max(700, stepMs(lv)) : stepMs(lv)
     setCups(n)
     setSlots(start)
     setCandy(hidden)
@@ -67,7 +69,7 @@ export function CupsGame() {
       const after = current
       later(at, () => {
         // The two moving cups pass each other: one arcs forward, one back.
-        setArc({ [before[swap[0]]]: 18, [before[swap[1]]]: -18 })
+        setArc(reduced ? {} : { [before[swap[0]]]: 18, [before[swap[1]]]: -18 })
         setSlots(after)
         if (sound) playSound('tick', 0.8)
       })
@@ -116,7 +118,7 @@ export function CupsGame() {
           return (
             <div key={cupId} className="absolute bottom-12 transition-[left] ease-in-out" style={{ left: `${slot * width}%`, width: `${width}%`, transitionDuration: `${speed}ms` }}>
               {/* Candy sits on the table under its cup. */}
-              {cupId === candy && (
+              {cupId === candy && (phase === 'show' || phase === 'win' || phase === 'lose') && (
                 <span className="absolute bottom-0 left-1/2 grid -translate-x-1/2 place-items-center">
                   <Candy className={cn('size-10', (phase === 'win' || phase === 'show') && 'game-pop', 'text-tint-3-foreground')} aria-hidden="true" />
                 </span>
@@ -126,14 +128,14 @@ export function CupsGame() {
                 disabled={phase !== 'pick'}
                 onClick={() => pick(cupId)}
                 aria-label={t('games.cups.cup', { n: slot + 1 })}
-                className="relative mx-auto block w-[86%] max-w-28 transition-transform ease-out disabled:cursor-default"
+                className="relative mx-auto block w-[86%] max-w-28 transition-transform ease-out disabled:cursor-default motion-reduce:transition-none"
                 style={{ transform: `translate(${(arc[cupId] ?? 0) * 0.4}px, ${up ? LIFT : (arc[cupId] ?? 0)}px)`, transitionDuration: up ? '380ms' : `${speed * 0.5}ms` }}
               >
                 <svg viewBox="0 0 100 110" className={cn('w-full drop-shadow-sm', phase === 'pick' && 'active:scale-95')} aria-hidden="true">
-                  <path d="M14 8 h72 l-10 96 a6 6 0 0 1 -6 5 h-40 a6 6 0 0 1 -6 -5 z" className="fill-tint-1-foreground" />
-                  <path d="M10 4 h80 a4 4 0 0 1 0 8 h-80 a4 4 0 0 1 0 -8 z" className="fill-tint-1-foreground opacity-80" />
-                  <path d="M22 30 h56" className="stroke-background opacity-40" strokeWidth="6" strokeLinecap="round" />
-                  <path d="M25 50 h50" className="stroke-background opacity-25" strokeWidth="4" strokeLinecap="round" />
+                  <path d="M28 10 h44 l16 88 H12 Z" className="fill-tint-1 stroke-tint-1-foreground" strokeWidth="2" strokeLinejoin="round" />
+                  <ellipse cx="50" cy="10" rx="22" ry="6" className="fill-tint-1 stroke-tint-1-foreground" strokeWidth="2" />
+                  <path d="M38 25 29 85 M62 25 71 85" className="stroke-tint-1-foreground opacity-25" strokeWidth="4" strokeLinecap="round" />
+                  <rect x="9" y="96" width="82" height="9" rx="4.5" className="fill-tint-1 stroke-tint-1-foreground" strokeWidth="2" />
                 </svg>
               </button>
             </div>

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { DoorOpen, Users } from 'lucide-react'
 import { ApiError } from '@/api/client'
 import { useMe } from '@/api/profile'
-import { useJoinRoom, useLeaveRoom, useRoom } from '@/api/rooms'
+import { isRoomCode, useJoinRoom, useLeaveRoom, useRoom } from '@/api/rooms'
 import { Avatar } from '@/components/common/Avatar'
 import { EmptyState } from '@/components/common/EmptyState'
 import { ErrorState } from '@/components/common/ErrorState'
@@ -32,7 +32,9 @@ export function RoomPage() {
   const onLeave = () => leave.mutate(undefined, { onSuccess: () => void navigate('/games/rooms', { replace: true }), onError: () => showErrorToast(t('common.saveError')) })
   const title = t('rooms.roomTitle', { code })
   let body
-  if (room.isPending) body = <LoadingState rows={4} />
+  if (!isRoomCode(code)) {
+    body = <EmptyState pet="shy" title={t('rooms.errors.notFound')} hint={t('rooms.errors.notFoundHint')} action={<Button onClick={() => void navigate('/games/rooms')}>{t('rooms.zoneTitle')}</Button>} />
+  } else if (room.isPending) body = <LoadingState rows={4} />
   else if (room.isError && !room.data) {
     body =
       room.error instanceof ApiError && room.error.status === 404 ? (
@@ -71,6 +73,8 @@ export function RoomPage() {
         </Button>
       </div>
     )
+  } else if (me.isError && !me.data) {
+    body = <ErrorState onRetry={() => void me.refetch()} />
   } else if (room.data && me.data) {
     body = (
       room.data.game === 'spy' ? <SpyRoom room={room.data} meId={me.data.userId} onLeave={onLeave} /> : <PartyRoom room={room.data} meId={me.data.userId} onLeave={onLeave} />

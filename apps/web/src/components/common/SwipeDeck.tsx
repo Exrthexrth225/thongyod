@@ -123,6 +123,10 @@ export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOp
     setDrag((d) => ({ ...d, x: 0, y: 0, active: false })) // spring back
   }
 
+  function cancelDrag() {
+    if (!flying) setDrag((d) => ({ ...d, x: 0, y: 0, active: false }))
+  }
+
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     if (e.key === 'Enter' && onOpen && top) {
       e.preventDefault()
@@ -217,7 +221,8 @@ export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOp
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
+          onPointerCancel={cancelDrag}
+          onLostPointerCapture={cancelDrag}
           className={cn('relative z-10 flex touch-none flex-col rounded-3xl select-none', !bare && surface, onOpen && 'cursor-pointer', tall && 'min-h-[58dvh]')}
           style={{
             transform,
