@@ -689,3 +689,7 @@ Many phones in one game. Only the server knows everyone's role; each phone gets 
 - One QR scanner for everything (#82): `components/scan/AppScanner` + `features/scan/route.ts`; scan button on Home next to the bell.
 - Home in 4 zones (#83), ทำอะไรดี as lists (#84), calm game cards (#85), grey see-all links (#86), คำต้องห้าม parts rule (#87).
 - Still to test on a real iPhone: the scanner camera in the dialog (Safari needs https — the demo site is https).
+
+### Board-game style games (2026-11-21, #89–#92)
+- Done, one phone: คนวงใน (`features/insider`), คลื่นความคิด (`features/spectrum`, `SpectrumDial`), ทีมคำใบ้ (`features/codewords`). /games grouped into ปาร์ตี้ / บอร์ดเกม / ของเล่น.
+- Next, after real rooms exist (Codex): คิดตรงกัน, วาดต่อกัน, เต๋าโกหก, หมาป่า (roles หมาป่า / หมอ / ผู้หยั่งรู้ / ชาวบ้าน, soft wording like "โดนหมาป่าคาบไป"). Agree the rules with Earth per game before building.

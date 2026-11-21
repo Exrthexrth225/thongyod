@@ -1090,6 +1090,7 @@ export const en: Messages = {
         how: { hands: 'Everyone holds up 5 fingers', fold: 'Read the card; if you have done it, fold a finger', out: 'Out of fingers first loses' },
       },
     },
+    kinds: { party: 'Party', board: 'Board games', toy: 'Toys & luck' },
     list: {
       headsUp: { title: 'Forehead guess', desc: 'Phone on your forehead, friends give clues' },
       spy: { title: 'Spy', desc: 'Everyone knows the place except the spy' },

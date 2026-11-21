@@ -4,14 +4,14 @@ import { ChevronRight, Wifi } from 'lucide-react'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { GameTile } from '@/components/games/GameTile'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { GAMES, type GameMode } from '@/config/games'
+import { GAMES, type GameKind } from '@/config/games'
 import { SHOW_BACK } from '@/lib/nav'
 import { tintClass } from '@/lib/tones'
 import { cn } from '@/lib/utils'
 
-const SECTIONS: GameMode[] = ['onePhone', 'solo']
+const SECTIONS: GameKind[] = ['party', 'board', 'toy']
 
-// /games — every game, by how it is played. Ready games first in each section.
+// /games — every game in three sections (#92): party, board-game style, toys & luck. Ready games first.
 export function GamesPage() {
   const { t } = useTranslation()
   return (
@@ -27,11 +27,11 @@ export function GamesPage() {
         </span>
         <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
       </Link>
-      {SECTIONS.map((mode) => {
-        const list = GAMES.filter((g) => g.mode === mode).sort((a, b) => Number(a.status === 'soon') - Number(b.status === 'soon'))
+      {SECTIONS.map((kind) => {
+        const list = GAMES.filter((g) => g.kind === kind).sort((a, b) => Number(a.status === 'soon') - Number(b.status === 'soon'))
         return (
-          <section key={mode}>
-            <SectionHeader title={t(`games.modes.${mode}`)} />
+          <section key={kind}>
+            <SectionHeader title={t(`games.kinds.${kind}`)} />
             <div className="stagger grid grid-cols-2 gap-2 px-3">
               {list.map((g) => (
                 <GameTile key={g.id} game={g} />
