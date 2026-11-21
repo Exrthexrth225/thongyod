@@ -204,7 +204,7 @@ export function DrawGame() {
             >
               <Brush className="game-breathe size-20" aria-hidden="true" />
               <span className="text-2xl font-medium">{t('games.draw.tapToSee')}</span>
-              <span className="text-sm opacity-80">{t('games.spy.hideScreen')}</span>
+              <span className="text-sm opacity-80">{t('games.reveal.hide')}</span>
             </button>
           }
           back={

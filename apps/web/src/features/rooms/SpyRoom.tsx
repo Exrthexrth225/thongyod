@@ -110,8 +110,8 @@ export function SpyRoom({ room, meId, onLeave }: Props) {
               className={cn('flex size-full flex-col items-center justify-center gap-4 rounded-3xl p-6 text-center', tintClass(6))}
             >
               <VenetianMask className="game-breathe size-16" aria-hidden="true" />
-              <span className="text-2xl font-medium">{t('games.spy.tapToSee')}</span>
-              <span className="text-sm opacity-80">{t('games.spy.hideScreen')}</span>
+              <span className="text-2xl font-medium">{t('games.reveal.tap')}</span>
+              <span className="text-sm opacity-80">{t('games.reveal.hide')}</span>
             </button>
           }
           back={
@@ -124,7 +124,7 @@ export function SpyRoom({ room, meId, onLeave }: Props) {
         />
         <Button variant="outline" onClick={() => setOpen((o) => !o)}>
           {open ? <EyeOff data-icon="inline-start" /> : <Eye data-icon="inline-start" />}
-          {open ? t('rooms.hideCard') : t('games.spy.tapToSee')}
+          {open ? t('rooms.hideCard') : t('games.reveal.tap')}
         </Button>
         <p className={cn('rounded-2xl p-4 text-center', left === 0 ? 'game-shake ' + tintClass(1) : 'bg-muted')}>
           {left === 0 ? t('games.spy.voteNow') : t('rooms.firstAsks', { name: name(round.firstPlayerId) })}

@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Eye, EyeOff, List, MapPin, Play, RotateCcw, Settings2, VenetianMask } from 'lucide-react'
+import { List, MapPin, Play, RotateCcw, Settings2, VenetianMask } from 'lucide-react'
 import { NumberStepper } from '@/components/common/NumberStepper'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { SegmentedChoice } from '@/components/common/SegmentedChoice'
 import { BottomAction } from '@/components/games/BottomAction'
-import { FlipCard } from '@/components/games/FlipCard'
 import { PackPicker } from '@/components/games/PackPicker'
 import { PassPhone } from '@/components/games/PassPhone'
+import { RoleCardBack, RoleReveal } from '@/components/games/RoleReveal'
 import { TimerBar } from '@/components/games/TimerBar'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
@@ -171,46 +171,29 @@ export function SpyGame() {
     const isSpy = round.spies[stage.player]
     // Pairs mode: everyone just sees a word (the spy does not know). Places mode: the spy is told.
     const placesMode = settings.mode === 'places'
-    const backText = placesMode ? (isSpy ? t('games.spy.youAreSpy') : round.secret) : isSpy ? (round.spyWord ?? '') : round.secret
-    const backLabel = placesMode ? (isSpy ? t('games.spy.spyHint') : t('games.spy.thePlace')) : t('games.spy.yourWord')
+    const spyCard = placesMode && isSpy
     return (
-      <div className="flex flex-col gap-4 px-4 pb-8">
-        <p className="text-center text-sm text-muted-foreground">{player(stage.player)}</p>
-        <FlipCard
-          flipped={stage.open}
-          className="h-[min(56dvh,32rem)] w-full"
-          front={
-            <button
-              type="button"
-              onClick={() => {
-                setStage({ ...stage, open: true })
-                if (sound) playSound('flip')
-              }}
-              className={cn('flex size-full flex-col items-center justify-center gap-4 rounded-3xl p-6 text-center', tintClass(6))}
-            >
-              <VenetianMask className="game-breathe size-20" aria-hidden="true" />
-              <span className="text-2xl font-medium">{t('games.spy.tapToSee')}</span>
-              <span className="text-sm opacity-80">{t('games.spy.hideScreen')}</span>
-            </button>
-          }
-          back={
-            <div className={cn('flex size-full flex-col items-center justify-center gap-3 rounded-3xl p-6 text-center', placesMode && isSpy ? 'bg-foreground text-background' : tintClass(5))}>
-              {placesMode && isSpy ? <VenetianMask className="size-16" aria-hidden="true" /> : <MapPin className="size-10" aria-hidden="true" />}
-              <span className="text-sm opacity-80">{backLabel}</span>
-              <span className="text-4xl leading-tight font-medium">{backText}</span>
-              {!placesMode && <span className="mt-2 text-xs opacity-70">{t('games.spy.pairsSecret')}</span>}
-            </div>
-          }
-        />
-        <Button
-          size="lg"
-          variant={stage.open ? 'default' : 'outline'}
-          onClick={() => (stage.open ? nextAfterLook(stage.player) : setStage({ ...stage, open: true }))}
-        >
-          {stage.open ? <EyeOff data-icon="inline-start" /> : <Eye data-icon="inline-start" />}
-          {stage.open ? (stage.player + 1 < settings.players ? t('games.spy.hideAndPass') : t('games.spy.startTalking')) : t('games.spy.tapToSee')}
-        </Button>
-      </div>
+      <RoleReveal
+        playerLabel={player(stage.player)}
+        open={stage.open}
+        onOpen={() => {
+          setStage({ ...stage, open: true })
+          if (sound) playSound('flip')
+        }}
+        onDone={() => nextAfterLook(stage.player)}
+        doneLabel={stage.player + 1 < settings.players ? t('games.spy.hideAndPass') : t('games.spy.startTalking')}
+        icon={VenetianMask}
+        tint={6}
+        back={
+          <RoleCardBack
+            icon={spyCard ? VenetianMask : MapPin}
+            className={spyCard ? 'bg-foreground text-background' : tintClass(5)}
+            label={placesMode ? (isSpy ? t('games.spy.spyHint') : t('games.spy.thePlace')) : t('games.spy.yourWord')}
+            text={placesMode ? (isSpy ? t('games.spy.youAreSpy') : round.secret) : isSpy ? (round.spyWord ?? '') : round.secret}
+            note={placesMode ? undefined : t('games.spy.pairsSecret')}
+          />
+        }
+      />
     )
   }
 
