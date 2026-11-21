@@ -22,4 +22,5 @@ export const HOW_TO: Record<GameId, LucideIcon[]> = {
   wheel: [ListChecks, RotateCw, HandCoins],
   fortune: [Smartphone, Sparkles, History],
   finger: [Fingerprint, Hand, Sparkles, RotateCw],
+  race: [Users, Trophy, Timer, Dices],
 }

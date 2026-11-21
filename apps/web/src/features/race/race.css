@@ -1,0 +1,18 @@
+/* สัตว์วิ่งแข่ง (#103). Runners are moved by JS (transform); here only the bobbing and the track. */
+.race-runner.is-running .race-body { animation: race-bob 0.26s ease-in-out infinite alternate; }
+.race-runner.is-running img { animation: race-bob 0.26s ease-in-out infinite alternate; }
+.race-leg { position: absolute; bottom: -3px; width: 9px; height: 12px; border-radius: 6px; box-shadow: 0 0 0 2px var(--ink); }
+.race-leg-a { left: 12px; }
+.race-leg-b { right: 12px; }
+.race-runner.is-running .race-leg-a { animation: race-kick 0.26s ease-in-out infinite alternate; }
+.race-runner.is-running .race-leg-b { animation: race-kick 0.26s ease-in-out infinite alternate-reverse; }
+@keyframes race-bob { from { transform: translateY(0) rotate(-4deg); } to { transform: translateY(-5px) rotate(4deg); } }
+@keyframes race-kick { from { transform: rotate(-35deg); } to { transform: rotate(35deg); } }
+.race-finish {
+  background: repeating-conic-gradient(var(--ink) 0 25%, var(--ink-foreground) 0 50%) 0 0 / 10px 10px;
+}
+.race-count { animation: race-count 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes race-count { from { transform: scale(2.2); opacity: 0; } 30% { opacity: 1; } to { transform: scale(0.9); opacity: 0.9; } }
+@media (prefers-reduced-motion: reduce) {
+  .race-runner.is-running .race-body, .race-runner.is-running img, .race-runner.is-running .race-leg-a, .race-runner.is-running .race-leg-b, .race-count { animation: none; }
+}

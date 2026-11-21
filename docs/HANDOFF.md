@@ -696,3 +696,7 @@ Many phones in one game. Only the server knows everyone's role; each phone gets 
 
 ## Remove before release
 - เซียมซี "เขย่าใหม่ (ปุ่มทดสอบ)" button under the fortune card (`FortunePage.tsx`, `forgetTodayForTesting` in `features/fortune/storage.ts`, i18n `fortune.testRedraw`). Earth asked for it on 2026-11-22 for testing; the real rule stays one stick per Bangkok day.
+
+## Waiting for Earth's art (2026-11-22)
+- Sticker sheet 1 (4×4): 16 game stickers → replace lucide icons on GameTile / featured game. Cut by grid.
+- Sticker sheet 2 (4×2): 8 running animals → `RACER_ART` in `features/race/RaceRunner.tsx`.
