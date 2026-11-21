@@ -17,6 +17,7 @@ import { PENDING_ICONS } from '@/config/pending'
 import { DailyMissions } from '@/components/home/DailyMissions'
 import { FeedRow } from '@/components/home/FeedRow'
 import { HomeZone } from '@/components/home/HomeZone'
+import { FirstRunCard } from '@/components/home/FirstRunCard'
 import { HomeGreeting } from '@/components/home/HomeGreeting'
 import { QuickTools } from '@/components/home/QuickTools'
 import { WeekStrip } from '@/components/home/WeekStrip'
@@ -169,6 +170,9 @@ export function HomePage() {
   return (
     <div className="flex flex-col gap-5 pb-8">
       <HomeGreeting name={me.data?.displayName ?? null} species={myPet?.species ?? null} streak={streakOf(daily, now)} onPetTap={() => markDone('pet')} now={now} />
+
+      {/* New users only; hides itself when done (#96). */}
+      <FirstRunCard />
 
       {/* Order and visibility come from Settings → หน้าหลัก. */}
       {layout.order

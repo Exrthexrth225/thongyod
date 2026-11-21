@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight, CircleHelp, Play, Target } from 'lucide-react'
 import { SoundToggle } from '@/components/common/SoundToggle'
@@ -8,6 +8,7 @@ import { gameById, type GameId } from '@/config/games'
 import { HOW_TO } from '@/config/howTo'
 import { tintClass } from '@/lib/tones'
 import { cn } from '@/lib/utils'
+import { markGameOpened } from '@/features/firstRun/firstRun'
 import './games.css'
 
 type SheetProps = { game: GameId; open: boolean; onOpenChange: (open: boolean) => void }
@@ -96,6 +97,8 @@ export function HowToButton({ game }: { game: GameId }) {
 
 /** Right side of every game's PageHeader: วิธีเล่น + sound. */
 export function GameHeaderActions({ game, sound = true }: { game: GameId; sound?: boolean }) {
+  // Every game page shows these actions, so this is where "tried a game" is noted for the first-run card (#96).
+  useEffect(markGameOpened, [])
   return (
     <span className="flex items-center">
       <HowToButton game={game} />

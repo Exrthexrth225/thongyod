@@ -83,6 +83,15 @@ export const en: Messages = {
     notFoundHint: 'It may have been deleted, or you are not in this gang.',
   },
   home: {
+    firstRun: {
+      title: 'Getting started {{done}}/{{total}}',
+      hide: 'Hide',
+      steps: {
+        friend: { title: 'Add your first friend', text: 'Scan a QR or send your link' },
+        game: { title: 'Try one game', text: 'Heads up, Spy and lots more' },
+        gang: { title: 'Create or join a gang', text: 'Keep your close friends together' },
+      },
+    },
     greeting: { morning: 'Good morning', afternoon: 'Good afternoon', evening: 'Good evening', night: "It's late" },
     streak: '{{count}}-day streak',
     streakHint: 'Days in a row with at least one mission. Missing a day just starts it again.',
