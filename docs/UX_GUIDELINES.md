@@ -202,7 +202,47 @@ NN/g found front-loaded tutorials did **not** improve success on simple apps and
 | Heads-up clones | result screen with swappable answers, pause, sound manager | our own word packs, tap fallback, sensor watchdog |
 | LINE | chat-list look for gangs, link sharing | we never replace chat |
 
-## 16. Links that need Earth (Claude cannot open them)
+## 16. Working and visual rules from Earth's design prompt (adapted 2026-11-22)
+
+Taken from the prompt Earth uses for client design work (CDG). Only the parts that fit a playful student app are kept; the parts for official websites (photography-led pages, formal Thai, client section lists, Figma versioning) are left out. **[agreed]** = in force now, **[proposal]** = waiting for Earth.
+
+**How we work**
+- **[agreed]** Discuss before building: 2–3 concrete options, a one-line trade-off each, say which one we recommend; build after Earth agrees.
+- **[agreed]** Research first (guidelines, real apps). Learn patterns, never copy a design.
+- **[agreed]** After every UI change: screenshot and check it ourselves before reporting: alignment, overlaps, cut-off text, **Thai line breaks**, both themes, small and large phones.
+- **[agreed]** Report briefly: what changed + what Earth must decide. Design rationale only when asked or when the design is final.
+- **[agreed]** If Earth says something looks wrong, ask what exactly (image, colour, place) instead of guessing again.
+- **[agreed]** Never invent facts (prices, rules, numbers): use "[รอยืนยัน]" and list it as a question.
+- **[agreed]** When art is needed, give Earth a detailed image prompt in English (subject, composition, empty space, light, palette, what to avoid); Earth generates it.
+
+**Colour — one job per colour**
+- **[agreed]** Accent (primary / orange) = things you can tap, the selected state, and progress you made. Not for plain status.
+- **[agreed]** Amber/warning tone = cautions and conditions (time running out, almost full). Red/danger = **only** real errors after something was checked, and destructive actions.
+- **[agreed]** The main action on a screen has the strongest contrast; secondary actions are outline/ghost.
+- **[agreed]** Text and UI meet WCAG AA contrast in every theme.
+- **[proposal]** Notification counts: red badge only on the bell; no count badge on the Home tab (same count twice).
+
+**Layout and components**
+- **[agreed]** Think of the whole screen first; reuse patterns already on the screen instead of inventing a new one per section.
+- **[agreed]** Don't add chips, badges or coloured callout boxes just to make something stand out; put the information into the existing row/card as plain text.
+- **[agreed]** One grid: one side margin for headers, cards and rows on every screen; right edges and centres line up.
+- **[agreed]** Cards in one row are the same size; labels and links line up across them.
+- **[agreed]** Links: a plain chevron ›, no arrows inside buttons.
+- **[agreed]** Carousels show part of the next item. Shortcuts sit next to the content they belong to.
+- **[agreed]** Time-sensitive things never sit at the bottom.
+- **[proposal]** Card edges: soft layered shadow instead of a 1 px border; separate sections by spacing (and background), not lines.
+
+**Typography and Thai**
+- **[agreed]** Thai and Latin glyphs must match (current: Anuphan). 3–4 weights max with a clear hierarchy.
+- **[agreed]** Control Thai line breaks: short copy, `text-wrap: balance` on headings, and no single short word left alone on a line.
+- **[agreed]** Rules and conditions must be clear on first read. Tone stays friendly and casual (this is a student app, not an official site).
+
+**UX**
+- **[agreed]** Don't make people think: what to do is obvious without reading instructions. Task first (what needs me now), background later.
+- **[agreed]** Show conditions before the button, not after. No dead ends: a full / not-allowed / empty state always offers a next step.
+- **[agreed]** Design the edge cases (empty, offline, full, expired), not just the happy path.
+
+## 17. Links that need Earth (Claude cannot open them)
 
 - **motion.dev docs pages** (drag, gestures examples) — blocked for Claude; open https://motion.dev/docs/react-drag and https://motion.dev/examples and paste the parts you like.
 - **Mobbin / Pageflows / Screensdesign full flows** — need login/paid; screenshots of Finch, Partiful, Forest, Duolingo, Kahoot flows are great references if you can capture them.
@@ -210,7 +250,7 @@ NN/g found front-loaded tutorials did **not** improve success on simple apps and
 - **App Store / Play Store preview videos** of "Heads Up!"-style games, Forest, Finch — to feel timing and sounds.
 - **MDN pages for Screen Orientation lock and Vibration** were blocked; data above came from caniuse / web-features instead.
 
-## 17. Sources
+## 18. Sources
 
 - NN/g — Mobile tutorials: https://www.nngroup.com/articles/mobile-tutorials/
 - NN/g — Skeleton screens: https://nngroup.com/articles/skeleton-screens/
