@@ -70,3 +70,13 @@ export const LONG_PRESS_MS = 480
 /** Blink every 2.5–6 s, eyes shut ~130 ms. */
 export const blinkDelayMs = (random: (n: number) => number) => 2500 + random(3501)
 export const BLINK_MS = 130
+
+/** Eating as a flipbook (#108): Earth's 4 frames (open → bite → chew → smile), chewing twice. ms from the start. */
+export const EAT_FLIP: { frame: 0 | 1 | 2 | 3; at: number }[] = [
+  { frame: 0, at: 0 },
+  { frame: 1, at: 380 },
+  { frame: 2, at: 700 },
+  { frame: 1, at: 960 },
+  { frame: 2, at: 1220 },
+  { frame: 3, at: 1500 },
+]

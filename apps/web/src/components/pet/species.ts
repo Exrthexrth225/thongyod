@@ -38,6 +38,26 @@ import dragonTeenHappy from '@/assets/pets/v2/dragon-teen/happy.webp'
 import dragonTeenEat from '@/assets/pets/v2/dragon-teen/eat.webp'
 import dragonTeenSleep from '@/assets/pets/v2/dragon-teen/sleep.webp'
 import dragonTeenShy from '@/assets/pets/v2/dragon-teen/shy.webp'
+import fishBabyMain from '@/assets/pets/v2/fish-baby/main.webp'
+import fishBabyBlink from '@/assets/pets/v2/fish-baby/blink.webp'
+import fishBabyHappy from '@/assets/pets/v2/fish-baby/happy.webp'
+import fishBabyEat from '@/assets/pets/v2/fish-baby/eat.webp'
+import fishBabySleep from '@/assets/pets/v2/fish-baby/sleep.webp'
+import fishBabyShy from '@/assets/pets/v2/fish-baby/shy.webp'
+import fishTeenMain from '@/assets/pets/v2/fish-teen/main.webp'
+import fishTeenBlink from '@/assets/pets/v2/fish-teen/blink.webp'
+import fishTeenHappy from '@/assets/pets/v2/fish-teen/happy.webp'
+import fishTeenEat from '@/assets/pets/v2/fish-teen/eat.webp'
+import fishTeenSleep from '@/assets/pets/v2/fish-teen/sleep.webp'
+import fishTeenShy from '@/assets/pets/v2/fish-teen/shy.webp'
+import dragonEat1 from '@/assets/pets/v2/dragon/eat1.webp'
+import dragonEat2 from '@/assets/pets/v2/dragon/eat2.webp'
+import dragonEat3 from '@/assets/pets/v2/dragon/eat3.webp'
+import dragonEat4 from '@/assets/pets/v2/dragon/eat4.webp'
+import fishEat1 from '@/assets/pets/v2/fish/eat1.webp'
+import fishEat2 from '@/assets/pets/v2/fish/eat2.webp'
+import fishEat3 from '@/assets/pets/v2/fish/eat3.webp'
+import fishEat4 from '@/assets/pets/v2/fish/eat4.webp'
 import type { PoseId, SpeciesMoves } from '@/features/pet/behavior'
 import type { Stage } from '@/features/pet/growth'
 
@@ -59,6 +79,8 @@ export type PetSpecies = {
   anchors: { mouth: At; head: At; /** Poses whose mouth is somewhere else (tilted drawings). */ mouthIn?: Partial<Record<PoseId, At>> }
   /** Younger stages (#105): 6 drawn poses on the adult canvas (tools/pet-art/stage.py); the rest reuse a close one. */
   stages?: Partial<Record<Exclude<Stage, 'adult'>, Record<PoseId, string>>>
+  /** Adult eating flipbook, 4 frames on the adult canvas (tools/pet-art/eat.py, #108). */
+  eatFrames?: [string, string, string, string]
 }
 
 type StagePoses = { main: string; blink: string; happy: string; eat: string; sleep: string; shy: string }
@@ -88,6 +110,7 @@ export const PET_SPECIES: Record<PetSpeciesId, PetSpecies> = {
       baby: fill({ main: dragonBabyMain, blink: dragonBabyBlink, happy: dragonBabyHappy, eat: dragonBabyEat, sleep: dragonBabySleep, shy: dragonBabyShy }),
       teen: fill({ main: dragonTeenMain, blink: dragonTeenBlink, happy: dragonTeenHappy, eat: dragonTeenEat, sleep: dragonTeenSleep, shy: dragonTeenShy }),
     },
+    eatFrames: [dragonEat1, dragonEat2, dragonEat3, dragonEat4],
   },
   fish: {
     id: 'fish',
@@ -100,5 +123,10 @@ export const PET_SPECIES: Record<PetSpeciesId, PetSpecies> = {
       play3: { motion: 'jump', overlay: 'bubbles', ms: 1600 },
     },
     anchors: { mouth: [0.32, 0.62], head: [0.48, 0.1], mouthIn: { play1: [0.22, 0.71], play3: [0.33, 0.35], eat: [0.33, 0.7] } },
+    stages: {
+      baby: fill({ main: fishBabyMain, blink: fishBabyBlink, happy: fishBabyHappy, eat: fishBabyEat, sleep: fishBabySleep, shy: fishBabyShy }),
+      teen: fill({ main: fishTeenMain, blink: fishTeenBlink, happy: fishTeenHappy, eat: fishTeenEat, sleep: fishTeenSleep, shy: fishTeenShy }),
+    },
+    eatFrames: [fishEat1, fishEat2, fishEat3, fishEat4],
   },
 }

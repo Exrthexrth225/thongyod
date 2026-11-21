@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PLAY_ACTIONS, POSES, TAP_ACTIONS, idleDelayMs, isNight, pickIdle, pickOther, planFor, sleepAfterMs, type SpeciesMoves } from './behavior'
+import { PLAY_ACTIONS, POSES, TAP_ACTIONS, idleDelayMs, isNight, pickIdle, pickOther, planFor, sleepAfterMs, type SpeciesMoves, EAT_FLIP } from './behavior'
 
 const moves: SpeciesMoves = {
   play1: { motion: 'fly', overlay: 'none', ms: 1900 },
@@ -63,5 +63,14 @@ describe('pet motions', () => {
       const p = planFor(a, moves)
       if (p.motion !== 'none') expect(MOTIONS[p.motion].ms, a).toBeLessThanOrEqual(p.ms)
     }
+  })
+})
+
+describe('EAT_FLIP', () => {
+  it('starts open-mouthed, ends on the smile, in order, inside the eat time', () => {
+    expect(EAT_FLIP[0]).toEqual({ frame: 0, at: 0 })
+    expect(EAT_FLIP[EAT_FLIP.length - 1].frame).toBe(3)
+    expect(EAT_FLIP.every((s, i) => i === 0 || s.at > EAT_FLIP[i - 1].at)).toBe(true)
+    expect(EAT_FLIP[EAT_FLIP.length - 1].at).toBeLessThan(planFor('eat', {} as never).ms)
   })
 })

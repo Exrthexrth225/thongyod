@@ -2,6 +2,7 @@ import { useCallback, useEffect, useImperativeHandle, useRef, useState, type CSS
 import { useTranslation } from 'react-i18next'
 import {
   BLINK_MS,
+  EAT_FLIP,
   LONG_PRESS_MS,
   POSES,
   TAP_ACTIONS,
@@ -63,6 +64,8 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
   const [pose, setPose] = useState<PoseId>('main')
   const [overlay, setOverlay] = useState<{ name: Overlay; key: number }>({ name: 'none', key: 0 })
   const [blink, setBlink] = useState(false)
+  /** Eating flipbook frame on screen (adult with Earth's 4 frames), or null. */
+  const [eatFrame, setEatFrame] = useState<number | null>(null)
   const [asleep, setAsleep] = useState(false)
   const [paused, setPaused] = useState(false)
   const move = useRef<HTMLSpanElement>(null)
@@ -100,6 +103,7 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
     clock.finished.then(fn).catch(() => {})
   }, [])
   const clearTimers = () => {
+    setEatFrame(null)
     timers.current.forEach((id) => window.clearTimeout(id))
     timers.current = []
     clocks.current.forEach((c) => c.cancel())
@@ -151,6 +155,12 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
       }
       const plan = planFor(act, spec.moves)
       busy.current = true
+      // Eating: play Earth's frames (mouth opens, bites, chews twice, smiles) instead of one still drawing (#108).
+      const frames = stage === 'adult' ? spec.eatFrames : undefined
+      if (act === 'eat' && frames && !reducedMotion()) {
+        for (const step of EAT_FLIP) after(step.at, () => setEatFrame(step.frame))
+        after(plan.ms, () => setEatFrame(null))
+      }
       setAsleep(act === 'sleep')
       moveTo(plan.pose, plan.motion)
       setOverlay({ name: plan.overlay, key: Date.now() })
@@ -166,7 +176,7 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
         window.clearTimeout(idleTimer.current)
       }
     },
-    [after, moveTo, scheduleIdle, spec.moves],
+    [after, moveTo, scheduleIdle, spec.moves, spec.eatFrames, stage],
   )
   useEffect(() => {
     runRef.current = run
@@ -200,12 +210,12 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
 
   // Decode every pose before it is needed, so the first switch is instant.
   useEffect(() => {
-    for (const p of POSES) {
+    for (const src of [...POSES.map((p) => poses[p]), ...(spec.eatFrames ?? [])]) {
       const img = new Image()
-      img.src = poses[p]
+      img.src = src
       img.decode?.().catch(() => {})
     }
-  }, [poses])
+  }, [poses, spec.eatFrames])
 
   // Blink now and then, only while resting on the main pose.
   useEffect(() => {
@@ -314,7 +324,18 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
                 draggable={false}
                 decoding="async"
                 className="pet-layer absolute inset-0 size-full"
-                style={{ opacity: p === pose ? 1 : 0, zIndex: p === pose ? 2 : 0 }}
+                style={{ opacity: p === pose && eatFrame === null ? 1 : 0, zIndex: p === pose ? 2 : 0 }}
+              />
+            ))}
+            {spec.eatFrames?.map((src, i) => (
+              <img
+                key={src}
+                src={src}
+                alt=""
+                draggable={false}
+                decoding="async"
+                className="pet-layer absolute inset-0 size-full"
+                style={{ opacity: eatFrame === i ? 1 : 0, zIndex: eatFrame === i ? 3 : 0 }}
               />
             ))}
             <img
