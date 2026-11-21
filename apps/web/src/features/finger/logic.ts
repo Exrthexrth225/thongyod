@@ -52,3 +52,59 @@ export function hops(count: number, winnerIndex: number, rounds = 3, fastMs = 70
 
 /** Colours given to fingers in touch order (slab colours; matched in the component). */
 export const FINGER_COLORS = 8
+
+/** One step of the knockout show: light a finger, or knock one out (indexes into the finger list). */
+export type Beat = { at: number; lit: number } | { at: number; out: number }
+
+/**
+ * "one" mode with 3+ fingers (#111): the light runs round and every time it stops, that finger is knocked out,
+ * until two are left; then it flicks between those two, slowing, rests on the loser a moment (near miss) and
+ * lands on the winner. Only a show: `winnerIndex` is already decided; the knock-out order is shuffled for variety.
+ */
+export function knockout(count: number, winnerIndex: number, random: (max: number) => number = secureRandomInt): Beat[] {
+  if (count < 2 || winnerIndex < 0 || winnerIndex >= count) throw new Error('bad knockout input')
+  const losers = shuffle(
+    Array.from({ length: count }, (_, i) => i).filter((i) => i !== winnerIndex),
+    random,
+  )
+  const left = Array.from({ length: count }, (_, i) => i)
+  const beats: Beat[] = []
+  let at = 0
+  let pos = 0 // index into `left` where the light is
+  // Many fingers: shorter rounds so the whole show stays under ~8 s.
+  const many = count > 6
+  const fast = many ? 50 : 70
+  const slow = many ? 200 : 300
+  while (left.length > 2) {
+    const target = losers.shift()!
+    const to = left.indexOf(target)
+    // Many fingers: the light only makes its last few hops, starting a few fingers before the target.
+    // At least 3 hops (go round once more if the target is right next to the light).
+    let steps = ((to - pos + left.length) % left.length) + 1
+    if (steps < 3) steps += left.length
+    steps = Math.min(steps, many ? 5 : Infinity)
+    pos = (to - steps + 1 + left.length * 2) % left.length
+    for (let k = 0; k < steps; k++) {
+      if (k > 0) pos = (pos + 1) % left.length
+      beats.push({ at: Math.round(at), lit: left[pos] })
+      const p = steps > 1 ? k / (steps - 1) : 1
+      at += fast + (slow - fast) * p * p
+    }
+    at += many ? 150 : 250 // hold on the unlucky one
+    beats.push({ at: Math.round(at), out: target })
+    at += many ? 300 : 450
+    left.splice(to, 1)
+    pos = pos % left.length
+  }
+  // Final duel: flick between the last two, slowing; the last two beats are loser (long rest) → winner.
+  const loser = left.find((i) => i !== winnerIndex)!
+  const gaps = [90, 100, 115, 135, 160, 195, 240, 300, 380, 700]
+  let who = gaps.length % 2 === 0 ? winnerIndex : loser // so the beat before the last is the loser
+  for (const gap of gaps) {
+    beats.push({ at: Math.round(at), lit: who })
+    at += gap
+    who = who === winnerIndex ? loser : winnerIndex
+  }
+  beats.push({ at: Math.round(at), lit: winnerIndex })
+  return beats
+}

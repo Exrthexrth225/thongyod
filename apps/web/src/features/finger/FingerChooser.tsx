@@ -7,7 +7,7 @@ import { playSound, unlockSound } from '@/lib/sound'
 import { useGameSound } from '@/lib/soundPrefs'
 import { cn } from '@/lib/utils'
 import './finger.css'
-import { MIN_FINGERS, SETTLE_MS, decide, hops, type FingerMode, type FingerResult } from './logic'
+import { MIN_FINGERS, SETTLE_MS, decide, hops, knockout, type FingerMode, type FingerResult } from './logic'
 
 /** Slab colours for fingers (by touch order) and for teams. Tokens, so they follow light/dark mode. */
 const COLORS = ['var(--yolk)', 'var(--mint)', 'var(--sky)', 'var(--tangerine)', 'var(--lilac)', 'var(--tint-7)', 'var(--tint-8)', 'var(--tint-6)']
@@ -18,7 +18,7 @@ type Phase = 'wait' | 'settle' | 'pick' | 'done'
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 // วางนิ้วสุ่ม (DECISIONS #102): everyone keeps one finger on the dark stage. When nobody adds or lifts a finger for
-// SETTLE_MS, the result is decided (secure random) and a highlight hops round the fingers, slowing down, onto it.
+// SETTLE_MS, the result is decided (secure random); then a knockout show (light stops on someone, they are out, last two duel).
 // Lifting or adding a finger before the end starts the wait again. After the result, lift everything to play again.
 export function FingerChooser() {
   const { t } = useTranslation()
@@ -28,6 +28,8 @@ export function FingerChooser() {
   const [fingers, setFingers] = useState<Finger[]>([])
   const [phase, setPhase] = useState<Phase>('wait')
   const [lit, setLit] = useState<number | null>(null)
+  /** Fingers knocked out during the "one" show (#111). */
+  const [out, setOut] = useState<number[]>([])
   const [result, setResult] = useState<FingerResult | null>(null)
   const stage = useRef<HTMLDivElement>(null)
   const timers = useRef<number[]>([])
@@ -49,12 +51,14 @@ export function FingerChooser() {
         setPhase('wait')
         setResult(null)
         setLit(null)
+        setOut([])
         nextColor.current = 0
       }
       return
     }
     clear()
     setLit(null)
+    setOut([])
     if (next.length < MIN_FINGERS) {
       setPhase('wait')
       return
@@ -82,9 +86,33 @@ export function FingerChooser() {
       if (sound) playSound('end')
     }
     if (reducedMotion()) return finish()
-    // "one": stop on the winner; teams / order: a quick round for suspense, then everything shows at once.
-    const target = decided.mode === 'one' ? now.findIndex((f) => f.id === decided.winner) : now.length - 1
-    const path = hops(now.length, target, decided.mode === 'one' ? 3 : 2)
+    if (decided.mode === 'one') {
+      // Knockout show: the light stops on someone, they're out, until the last two duel (#111).
+      const beats = knockout(
+        now.length,
+        now.findIndex((f) => f.id === decided.winner),
+      )
+      for (const b of beats) {
+        timers.current.push(
+          window.setTimeout(() => {
+            const id = now['lit' in b ? b.lit : b.out]?.id ?? null
+            if ('lit' in b) {
+              setLit(id)
+              if (sound) playSound('tick', 0.7)
+            } else if (id !== null) {
+              setLit(null)
+              setOut((o) => [...o, id])
+              navigator.vibrate?.(15)
+              if (sound) playSound('pop', 0.8)
+            }
+          }, b.at),
+        )
+      }
+      timers.current.push(window.setTimeout(finish, beats[beats.length - 1].at + 450))
+      return
+    }
+    // Teams / order: a quick round for suspense, then everything shows at once.
+    const path = hops(now.length, now.length - 1, 2)
     for (const h of path) {
       timers.current.push(
         window.setTimeout(() => {
@@ -187,12 +215,13 @@ export function FingerChooser() {
           const rank = result?.mode === 'order' ? result.rank[f.id] : undefined
           const color = COLORS[teamOf ?? f.color]
           const lost = result?.mode === 'one' && result.winner !== f.id
+          const knocked = out.includes(f.id)
           const won = result?.mode === 'one' && result.winner === f.id
           return (
             <span
               key={f.id}
               aria-hidden="true"
-              className={cn('finger-ring absolute grid size-26 place-items-center rounded-full', phase === 'settle' && 'is-settling', lit === f.id && 'is-lit', won && 'is-won', (teamOf !== undefined || rank !== undefined) && 'is-shown', lost && 'opacity-20')}
+              className={cn('finger-ring absolute grid size-26 place-items-center rounded-full', phase === 'settle' && 'is-settling', lit === f.id && 'is-lit', won && 'is-won', (teamOf !== undefined || rank !== undefined) && 'is-shown', knocked && 'is-out', lost && !knocked && 'opacity-20')}
               style={{ left: f.x, top: f.y, '--ring': color, '--settle': `${SETTLE_MS}ms` } as CSSProperties}
             >
               {teamOf !== undefined && <b className="font-heading text-xl text-on-slab">{t('finger.teamShort', { n: teamOf + 1 })}</b>}
