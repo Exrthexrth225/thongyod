@@ -71,7 +71,9 @@ Invoke-RestMethod http://127.0.0.1:3000/health/db
 
 ## Determinism and dates
 
-Generator version 1 uses fixed random seed 20261103 and namespace-based UUIDs. IDs, names, relations, distribution and friend-link test tokens stay stable. Dates are relative to an anchor instant; the default is the time the seed command runs. The same anchor gives byte-for-byte equivalent generated data. To replay exact timestamps set SEED_ANCHOR in ignored `.env` to a fixed ISO instant. Remove that setting when you want today/tomorrow to move with the real date. Local calendar calculations use Asia/Bangkok (+07:00); storage is UTC. The applied anchor/version are saved in seed_runs.
+Generator version 2 uses fixed random seed 20261103 and namespace-based UUIDs. User IDs, relations, distribution and friend-link test tokens retain their version-1 values. Every user now has a unique `<fixtureKey>_buu` handle; `fah` shares the name of `ton`, and `bow` shares the name of `beer` (38 distinct display names across 40 users). New handle-change timestamps and covers are null. Dates are relative to an anchor instant; the default is the time the seed command runs. The same anchor gives byte-for-byte equivalent generated data. To replay exact timestamps set SEED_ANCHOR in ignored `.env` to a fixed ISO instant. Remove that setting when you want today/tomorrow to move with the real date. Local calendar calculations use Asia/Bangkok (+07:00); storage is UTC. The applied anchor/version are saved in seed_runs.
+
+Migration `0001_user_handles` does not run this generator or reset data. Existing accounts receive distinct `user_<number>` handles ordered by user ID, with their original names and relationships preserved. Friendly fixture handles and duplicate names above appear only after an explicit seed run.
 
 No Math.random or network avatar images are used. Seed names are Thai, avatars are null (initial-based frontend fallback); these are fixture users, not real LINE identities. main_title_key holds sample title labels for UI testing, not evidence that the deferred rewards engine ran.
 

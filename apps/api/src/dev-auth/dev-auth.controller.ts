@@ -1,7 +1,7 @@
 import { BadRequestException, Body, CanActivate, Controller, ExecutionContext, Get, Header, HttpCode, Injectable, NotFoundException, Post, Req, Res, ServiceUnavailableException, UseGuards } from '@nestjs/common'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { DatabaseService } from '../db/database.service.js'
-import { SessionService } from '../auth/session.service.js'
+import { meColumns, SessionService } from '../auth/session.service.js'
 import { assertDevRequest } from '../auth/policy.js'
 import { sessionCookie } from '../auth/cookie.js'
 import { fixtureKeys } from '../db/seed-data.js'
@@ -46,7 +46,7 @@ export class DevAuthController {
     let me: Me | undefined
     try {
       const result = await this.database.connection.query<Me>(
-        `SELECT u.id AS "userId", u.display_name AS "displayName", u.avatar_url AS "avatarUrl", u.main_title_key AS title, u.bio
+        `SELECT ${meColumns}
          FROM users u WHERE u.fixture_key=$1 AND NOT EXISTS(SELECT 1 FROM auth_identities a WHERE a.user_id=u.id)`, [body.fixtureKey],
       )
       me = result.rows[0]

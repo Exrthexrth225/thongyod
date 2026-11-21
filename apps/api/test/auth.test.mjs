@@ -117,8 +117,8 @@ test('real dev HTTP sessions rotate, expire, revoke, and never expose stored/pri
   try {
     await migrateDatabase(pool)
     for (const [i, key] of ['earth', 'ton', 'beer'].entries()) {
-      await pool.query('INSERT INTO users(id,fixture_key,display_name,display_name_key,bio,main_title_key,birth_date,gender) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',
-        [ids[i], key, `Auth_Test_${i}`, `auth_test_${i}`, 'Test bio', i === 0 ? 'สายมู' : null, '2003-01-01', 'other'])
+      await pool.query('INSERT INTO users(id,fixture_key,display_name,display_name_key,bio,main_title_key,birth_date,gender,handle) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)',
+        [ids[i], key, `Auth_Test_${i}`, `auth_test_${i}`, 'Test bio', i === 0 ? 'สายมู' : null, '2003-01-01', 'other', `auth_test_${i}`])
     }
     await pool.query("INSERT INTO auth_identities(id,user_id,provider,provider_subject) VALUES($1,$2,'line',$3)", [randomUUID(), ids[2], randomUUID()])
     app = await NestFactory.create(createDevAppModule(), { logger: false })
@@ -140,12 +140,23 @@ test('real dev HTTP sessions rotate, expire, revoke, and never expose stored/pri
     const first = await login({fixtureKey:'earth'})
     assert.equal(first.status, 200)
     const me = await first.json()
-    assert.deepEqual(Object.keys(me).sort(), ['avatarUrl','bio','displayName','title','userId'])
+    assert.deepEqual(Object.keys(me).sort(), ['avatarUrl','bio','coverUrl','displayName','handle','handleChangeableAt','title','userId'])
     assert.equal(me.userId, ids[0]); assert.equal(me.bio, 'Test bio')
+    assert.equal(me.handle, 'auth_test_0'); assert.equal(me.coverUrl, null); assert.equal(me.handleChangeableAt, null)
     const firstCookie = first.headers.get('set-cookie').split(';')[0]
     const firstToken = firstCookie.split('=')[1]
     assert.equal(firstToken.length, 43)
-    assert.equal((await call('/me', {headers:{Cookie:firstCookie}})).status,200)
+    const current = await call('/me', {headers:{Cookie:firstCookie}})
+    assert.equal(current.status,200); assert.deepEqual(await current.json(), me)
+    const changedAt = new Date(Date.now() - 24 * 3600_000)
+    await pool.query('UPDATE users SET handle_changed_at=$1, cover_url=$2 WHERE id=$3', [changedAt, '/files/test-cover.webp', ids[0]])
+    const cooldown = await (await call('/me', {headers:{Cookie:firstCookie}})).json()
+    assert.equal(cooldown.handleChangeableAt, new Date(changedAt.getTime() + 30 * 24 * 3600_000).toISOString())
+    assert.equal(cooldown.coverUrl, '/files/test-cover.webp')
+    await pool.query("UPDATE users SET handle_changed_at=statement_timestamp()-interval '720 hours' WHERE id=$1", [ids[0]])
+    assert.equal((await (await call('/me', {headers:{Cookie:firstCookie}})).json()).handleChangeableAt, null)
+    await pool.query("UPDATE users SET handle_changed_at=statement_timestamp()-interval '31 days' WHERE id=$1", [ids[0]])
+    assert.equal((await (await call('/me', {headers:{Cookie:firstCookie}})).json()).handleChangeableAt, null)
     assert.equal((await login({fixtureKey:'not-a-fixture'},firstCookie)).status,404)
     assert.equal((await call('/me', {headers:{Cookie:firstCookie}})).status,200)
     const stored = await pool.query('SELECT token_hash, expires_at-created_at AS duration FROM auth_sessions WHERE user_id=$1', [ids[0]])

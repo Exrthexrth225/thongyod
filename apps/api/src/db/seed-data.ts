@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 
-export const SEED_VERSION = 1
+export const SEED_VERSION = 2
 export const fixtureKeys = ['earth', 'ton', 'beer', 'aom', 'ploy', 'mint', 'fern', 'bam', 'nam', 'fah', 'bow', 'may', 'ann', 'ice', 'new', 'bank', 'boss', 'game', 'golf', 'james', 'joe', 'kong', 'mark', 'max', 'mix', 'mook', 'nan', 'nice', 'nut', 'oil', 'pan', 'peach', 'pim', 'ping', 'pond', 'praew', 'pun', 'sky', 'view', 'win']
 const names = ['เอิร์ธ', 'ต้น', 'เบียร์', 'ออม', 'พลอย', 'มิ้นท์', 'เฟิร์น', 'แบม', 'น้ำ', 'ฟ้า', 'โบว์', 'เมย์', 'แอน', 'ไอซ์', 'นิว', 'แบงค์', 'บอส', 'เกมส์', 'กอล์ฟ', 'เจมส์', 'โจ', 'ก้อง', 'มาร์ค', 'แม็กซ์', 'มิกซ์', 'มุก', 'แนน', 'ไนซ์', 'นัท', 'ออย', 'ปัน', 'พีช', 'พิม', 'ปิง', 'ปอนด์', 'แพรว', 'ปุณ', 'สกาย', 'วิว', 'วิน']
 export const gangNames = ['แก๊งคอม 66', 'ทีมแบดวันพุธ', 'เพื่อนมัธยม', 'สายกินหลังเรียน', 'ทีมโปรเจกต์', 'ชมรมบอร์ดเกม', 'สายวิ่งเช้า', 'กลุ่มอ่านหนังสือ']
@@ -24,8 +24,9 @@ export function createSeedData(anchor: Date) {
     return new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate() + days, hour - 7, minute))
   }
   const users = fixtureKeys.map((key, i) => ({
-    id: fixtureId('user', key), fixtureKey: key, displayName: names[i],
-    displayNameKey: names[i].normalize('NFC').toLowerCase(), avatarUrl: null,
+    id: fixtureId('user', key), fixtureKey: key, displayName: names[i === 9 ? 1 : i === 10 ? 2 : i],
+    displayNameKey: names[i === 9 ? 1 : i === 10 ? 2 : i].normalize('NFC').toLowerCase(),
+    handle: `${key}_buu`, handleChangedAt: null, avatarUrl: null, coverUrl: null,
     birthDate: i % 3 === 0 ? `2003-${String(i % 12 + 1).padStart(2, '0')}-15` : null,
     gender: (['unspecified', 'male', 'female', 'other'] as const)[i % 4],
     bio: i % 2 === 0 ? 'ชอบนัดเพื่อนและลองร้านใหม่' : null,

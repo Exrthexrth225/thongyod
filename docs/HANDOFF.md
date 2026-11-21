@@ -713,3 +713,14 @@ Many phones in one game. Only the server knows everyone's role; each phone gets 
 - QR from a picture (#99); ทำอะไรดี games first (#100); wheel 4.5 s (#101); วางนิ้วสุ่ม (#102); สัตว์วิ่งแข่ง (#103); pet rapid taps (#104); pet growth baby→teen→adult (#105, dragon art done); away-life + souvenir book (#106); pet in empty pages (#107).
 - Earth to check on a real iPhone: วางนิ้วสุ่ม with real fingers (max 5), swipe deck with buttons inside the card, wheel feel, race on a small screen.
 - Art batch done the same night: fish stages + eating flipbook (#108), racers run/cheer (#109), souvenirs.
+
+## Backend handles migration — 2026-11-22
+
+- Decision #45 now has database support: `users.handle` is required, unique and lowercase, matching `^[a-z][a-z0-9._]{3,19}$`; display names may repeat. The normalized display-name column remains, without its old unique constraint. Added nullable `handle_changed_at` and `cover_url`.
+- Reviewed migration `0001_user_handles.sql` adds the handle as nullable, fills existing accounts with `user_1`, `user_2`, … in primary-key order, then adds NOT NULL/unique/format constraints. It preserves IDs, names, relationships, and sessions. These assigned handles can be changed later; migration leaves `handle_changed_at` null.
+- Shared `Me`, `GET /me`, and successful dev login now include `handle`, `coverUrl`, and `handleChangeableAt`. The latter is a UTC ISO instant 720 hours after a recent handle change, otherwise null. Raw change timestamps and session/private fields are not returned. Handle updates/cooldown enforcement still require the later `PATCH /me` endpoint.
+- Seed generator v2 keeps the same 40 user IDs and relation distributions, gives every fixture `<fixtureKey>_buu`, and includes two duplicate-name pairs (`ton`/`fah`, `beer`/`bow`). Existing dev data was not reseeded or renamed.
+- Validation: API development and production builds plus all 10 backend tests passed, with no skips. Tests cover old-schema upgrade with preserved user/session rows and a foreign key, repeat migrations, duplicate names, handle constraints, and `/me` cooldown/null boundaries. Frontend TypeScript check also passed.
+- Applied the migration to the local dev database after test validation. Compared counts and content fingerprints for all 14 app tables before/after, excluding only the three new user columns: all existing data matched; 40 users have 40 valid unique handles. No seed/reset ran.
+- Next: profile update API, then LINE start/callback/onboarding and the other backend areas. Real LINE testing still needs channel credentials, a registered callback URL, and APP_ORIGIN; these remain outside Git. Keep mocks for APIs that are not implemented.
+- Sources checked: [PostgreSQL 18 ALTER TABLE](https://www.postgresql.org/docs/18/sql-altertable.html), [Drizzle migration generation](https://orm.drizzle.team/docs/drizzle-kit-generate).

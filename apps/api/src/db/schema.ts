@@ -12,8 +12,11 @@ export const users = pgTable('users', {
   id: uuid('id').primaryKey(),
   fixtureKey: text('fixture_key').unique(),
   displayName: text('display_name').notNull(),
-  displayNameKey: text('display_name_key').notNull().unique(),
+  displayNameKey: text('display_name_key').notNull(),
+  handle: text('handle').notNull().unique(),
+  handleChangedAt: instant('handle_changed_at'),
   avatarUrl: text('avatar_url'),
+  coverUrl: text('cover_url'),
   birthDate: date('birth_date'),
   gender: gender('gender').notNull().default('unspecified'),
   bio: text('bio'),
@@ -23,6 +26,7 @@ export const users = pgTable('users', {
   check('users_name_length', sql`char_length(${t.displayName}) between 2 and 20`),
   check('users_name_characters', sql`${t.displayName} ~ '^[A-Za-z0-9ก-๿ ._-]+$'`),
   check('users_name_normalized', sql`${t.displayName} = btrim(${t.displayName}) and ${t.displayNameKey} = lower(normalize(${t.displayName}, NFC))`),
+  check('users_handle_format', sql`${t.handle} COLLATE "C" ~ '^[a-z][a-z0-9._]{3,19}$'`),
 ])
 
 export const authIdentities = pgTable('auth_identities', {

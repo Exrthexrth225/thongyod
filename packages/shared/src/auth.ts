@@ -2,7 +2,11 @@
 export interface Me {
   userId: string
   displayName: string
+  handle: string
+  /** ISO instant when the 30-day cooldown ends; null when a change is allowed now. */
+  handleChangeableAt: string | null
   avatarUrl: string | null
+  coverUrl: string | null
   title: string | null
   bio: string | null
 }

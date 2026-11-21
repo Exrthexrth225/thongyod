@@ -6,7 +6,11 @@ import { ALLOW_DEV_SESSIONS, assertDevRequest, devLoginEnabled } from './policy.
 import { readSessionCookie, sessionHash } from './cookie.js'
 import type { Me } from '@thongyod/shared'
 
-const meColumns = 'u.id AS "userId", u.display_name AS "displayName", u.avatar_url AS "avatarUrl", u.main_title_key AS title, u.bio'
+export const meColumns = `u.id AS "userId", u.display_name AS "displayName", u.handle,
+  u.avatar_url AS "avatarUrl", u.cover_url AS "coverUrl", u.main_title_key AS title, u.bio,
+  CASE WHEN u.handle_changed_at + interval '720 hours' > statement_timestamp()
+    THEN to_char((u.handle_changed_at + interval '720 hours') AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
+    ELSE NULL END AS "handleChangeableAt"`
 
 @Injectable()
 export class SessionService {
@@ -30,7 +34,8 @@ export class SessionService {
       throw new UnauthorizedException({ error: { code: 'UNAUTHENTICATED' } })
     }
     if (row.source === 'local_dev') assertDevRequest(request)
-    return { userId: row.userId, displayName: row.displayName, avatarUrl: row.avatarUrl, title: row.title, bio: row.bio }
+    return { userId: row.userId, displayName: row.displayName, handle: row.handle, handleChangeableAt: row.handleChangeableAt,
+      avatarUrl: row.avatarUrl, coverUrl: row.coverUrl, title: row.title, bio: row.bio }
   }
 
   async createDevSession(userId: string, request: IncomingMessage): Promise<{ token: string; expiresAt: Date }> {
