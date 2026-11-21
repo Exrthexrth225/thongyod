@@ -113,9 +113,12 @@ export function FortunePage() {
       <div className="flex flex-col items-center gap-5 px-4 pb-8">
         {phase !== 'card' ? (
           <>
-            <button type="button" onClick={shake} aria-label={t('fortune.cylinder')} className="mt-10 touch-manipulation">
-              <FortuneCup state={phase === 'shaking' ? 'shaking' : phase === 'stick' ? 'out' : 'idle'} stick={draw?.stick} />
-            </button>
+            {/* Night-temple block (#97 look). pt-20 = room for the stick's jump above the cup, so it is never cut off. */}
+            <div className="fortune-temple mt-1 flex w-full justify-center rounded-[32px] bg-ink pt-20">
+              <button type="button" onClick={shake} aria-label={t('fortune.cylinder')} className="touch-manipulation">
+                <FortuneCup state={phase === 'shaking' ? 'shaking' : phase === 'stick' ? 'out' : 'idle'} stick={draw?.stick} />
+              </button>
+            </div>
             <Button size="lg" className="w-full" onClick={shake}>
               <Vibrate data-icon="inline-start" />
               {t('fortune.shake')}

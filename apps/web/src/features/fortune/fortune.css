@@ -1,6 +1,12 @@
 /* เซียมซี with Earth's art (image/12-fortune.png → src/assets/fortune). DECISIONS #77.
    The cup shakes as one picture with smooth transforms; one stick slides out of the cup mouth and drops in front. */
 
+/* The cup sits in a dark block lit warmly from behind, like a temple at night. */
+.fortune-temple {
+  background:
+    radial-gradient(circle at 50% 62%, color-mix(in oklab, var(--yolk) 30%, transparent), transparent 58%),
+    var(--ink);
+}
 .fortune-stage {
   position: relative;
   width: 13rem;
