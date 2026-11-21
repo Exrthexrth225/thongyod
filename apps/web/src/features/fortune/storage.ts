@@ -36,3 +36,12 @@ export function saveDraw(draw: Draw): void {
     // Storage blocked: the fortune still shows, it just is not kept for the day.
   }
 }
+
+/** TEMPORARY (Earth's testing, 2026-11-22): forget today's stick so it can be drawn again. Remove with the test button. */
+export function forgetTodayForTesting(): void {
+  try {
+    localStorage.removeItem(KEY)
+  } catch {
+    // ignore
+  }
+}

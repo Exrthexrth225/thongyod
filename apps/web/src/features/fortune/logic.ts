@@ -66,3 +66,11 @@ export function createShakeDetector({ threshold = 18, jolts = 3, windowMs = 900,
     return true
   }
 }
+
+/** When the next stick can be drawn: the coming midnight in Thailand (UTC+7, no daylight saving). */
+export function nextDrawAt(now: Date): Date {
+  const BKK = 7 * 3_600_000
+  const local = now.getTime() + BKK
+  const nextLocalMidnight = Math.floor(local / 86_400_000 + 1) * 86_400_000
+  return new Date(nextLocalMidnight - BKK)
+}

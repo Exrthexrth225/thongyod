@@ -7,8 +7,9 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { FortuneCard } from '@/features/fortune/FortuneCard'
 import { FortuneCup } from '@/features/fortune/FortuneCup'
-import { bangkokDayKey, drawForToday, fortuneOf, levelOf, type Draw } from '@/features/fortune/logic'
-import { loadDraw, saveDraw } from '@/features/fortune/storage'
+import { bangkokDayKey, drawForToday, fortuneOf, levelOf, nextDrawAt, type Draw } from '@/features/fortune/logic'
+import { formatTimeUntil } from '@/lib/date'
+import { forgetTodayForTesting, loadDraw, saveDraw } from '@/features/fortune/storage'
 import { useShake } from '@/features/fortune/useShake'
 import { celebrate } from '@/lib/celebrate'
 import { SoundToggle } from '@/components/common/SoundToggle'
@@ -31,7 +32,7 @@ export function FortunePage() {
     return saved && saved.day === bangkokDayKey(new Date()) ? saved : null
   })
   const [phase, setPhase] = useState<Phase>(draw ? 'card' : 'ready')
-  const [alreadyToday] = useState(draw !== null)
+  const [alreadyToday, setAlreadyToday] = useState(draw !== null)
   const timers = useRef<number[]>([])
   const sound = useGameSound('fortune')
 
@@ -131,11 +132,11 @@ export function FortunePage() {
           draw && (
             <>
               <FortuneCup state="rest" stick={draw.stick} className="-my-12 scale-[0.6]" />
-              {alreadyToday && <p className="-mt-2 text-sm font-medium">{t('fortune.todayTitle')}</p>}
+              {alreadyToday && <p className="-mt-2 text-center text-sm font-medium text-pretty">{t('fortune.alreadyToday')}</p>}
               <div className="mt-3 w-full">
                 <FortuneCard stick={draw.stick} />
               </div>
-              <p className="text-sm text-muted-foreground">{t('fortune.comeBack')}</p>
+              <p className="text-center text-sm text-muted-foreground">{t('fortune.comeBack', { when: formatTimeUntil(nextDrawAt(new Date())) })}</p>
               <a href={lineShareUrl(shareText)} target="_blank" rel="noreferrer" className={cn(buttonVariants({ size: 'lg' }), 'w-full')}>
                 <Share2 data-icon="inline-start" />
                 {t('fortune.share')}
@@ -149,6 +150,20 @@ export function FortunePage() {
                 <UserPlus data-icon="inline-start" />
                 {t('fortune.invite')}
               </a>
+              {/* TEMPORARY test button for Earth (2026-11-22). Remove before release: see HANDOFF "Remove before release". */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground"
+                onClick={() => {
+                  forgetTodayForTesting()
+                  setDraw(null)
+                  setAlreadyToday(false)
+                  setPhase('ready')
+                }}
+              >
+                {t('fortune.testRedraw')}
+              </Button>
             </>
           )
         )}

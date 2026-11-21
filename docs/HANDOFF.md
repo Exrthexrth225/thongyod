@@ -693,3 +693,6 @@ Many phones in one game. Only the server knows everyone's role; each phone gets 
 ### Board-game style games (2026-11-21, #89–#92)
 - Done, one phone: คนวงใน (`features/insider`), คลื่นความคิด (`features/spectrum`, `SpectrumDial`), ทีมคำใบ้ (`features/codewords`). /games grouped into ปาร์ตี้ / บอร์ดเกม / ของเล่น.
 - Next, after real rooms exist (Codex): คิดตรงกัน, วาดต่อกัน, เต๋าโกหก, หมาป่า (roles หมาป่า / หมอ / ผู้หยั่งรู้ / ชาวบ้าน, soft wording like "โดนหมาป่าคาบไป"). Agree the rules with Earth per game before building.
+
+## Remove before release
+- เซียมซี "เขย่าใหม่ (ปุ่มทดสอบ)" button under the fortune card (`FortunePage.tsx`, `forgetTodayForTesting` in `features/fortune/storage.ts`, i18n `fortune.testRedraw`). Earth asked for it on 2026-11-22 for testing; the real rule stays one stick per Bangkok day.
