@@ -162,7 +162,7 @@ export const en: Messages = {
     },
     souvenirs: {
       leaf: 'heart-shaped leaf', pebble: 'shiny pebble', shell: 'seashell', boat: 'paper boat', ticket: 'old ticket', mangoRice: 'mango sticky rice', bubbleTea: 'bubble tea', bell: 'little red bell',
-      clover: 'four-leaf clover', button: 'lost button', starCandy: 'star candy', lantern: 'tiny lantern', feather: 'feather', keychain: 'gold coin keychain', note: 'heart note', flower: 'blue flower',
+      clover: 'four-leaf clover', button: 'lost button', starCandy: 'star candy', lantern: 'tiny krathong', feather: 'feather', keychain: 'gold coin keychain', note: 'heart note', flower: 'blue flower',
     },
     grew: { teen: '{{name}} is a teen now!', adult: '{{name}} is all grown up!', hint: 'Thanks for coming by so often' },
     noPetTitle: 'No pet yet',

@@ -697,15 +697,15 @@ Many phones in one game. Only the server knows everyone's role; each phone gets 
 ## Remove before release
 - เซียมซี "เขย่าใหม่ (ปุ่มทดสอบ)" button under the fortune card (`FortunePage.tsx`, `forgetTodayForTesting` in `features/fortune/storage.ts`, i18n `fortune.testRedraw`). Earth asked for it on 2026-11-22 for testing; the real rule stays one stick per Bangkok day.
 
-## Waiting for Earth's art (2026-11-22)
-- Game stickers (image/17) and racers (image/18): DONE, cut with `tools/pet-art/grid.py` into assets/games, assets/racers.
-- Pet sheets A–D: dragon baby + teen DONE (image/15, 16 → assets/pets/v2/dragon-baby, dragon-teen). Fish baby + teen still waiting (fish uses the adult art, drawn smaller).
-- Pet sheets E–F (adult eating, 4 frames) → flipbook for the `eat` action.
-- Sheet G (16 souvenirs, 4×4, order = `SOUVENIRS` in features/pet/away.ts) → `SOUVENIR_ART` in config/souvenirs.ts.
+## Earth's art (2026-11-22) — all wired
+- Game stickers (image/17), racers (image/18), second run frame + win pose (image/23, 24): assets/games, assets/racers, racers-run2, racers-win (`tools/pet-art/grid.py`).
+- Pet baby/teen for dragon (image/15, 16) and fish (image/19, 20): assets/pets/v2/<species>-baby|teen (`stage.py`).
+- Adult eating flipbook (image/21, 22): <species>/eat1–4.webp (`eat.py`), #108.
+- 16 souvenirs (image/25): assets/souvenirs → `SOUVENIR_ART` in config/souvenirs.ts. Item `lantern` is now shown as กระทงจิ๋ว (that is what Earth drew; the id stays).
 
 ## 2026-11-22 night session (DECISIONS #97–#107)
 - New look for the whole app (#97): pop colour blocks, night-indigo dark mode, Kanit headings, floating dark tab bar; ค่าเริ่มต้น/น่ารัก themes removed. Colour-block scopes `.on-ink` / `.on-slab` re-colour everything inside.
 - Motion plan (#98): pressable, confetti, invite fly/drop/float, daily Home intro, tab hop, page push, shimmer skeletons, number pops.
 - QR from a picture (#99); ทำอะไรดี games first (#100); wheel 4.5 s (#101); วางนิ้วสุ่ม (#102); สัตว์วิ่งแข่ง (#103); pet rapid taps (#104); pet growth baby→teen→adult (#105, dragon art done); away-life + souvenir book (#106); pet in empty pages (#107).
 - Earth to check on a real iPhone: วางนิ้วสุ่ม with real fingers (max 5), swipe deck with buttons inside the card, wheel feel, race on a small screen.
-- Still waiting for art: fish baby/teen, adult eating 4-frame sheets (dragon, fish), souvenir sheet (16).
+- Art batch done the same night: fish stages + eating flipbook (#108), racers run/cheer (#109), souvenirs.
