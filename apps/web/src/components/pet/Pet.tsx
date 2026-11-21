@@ -17,6 +17,7 @@ import {
 } from '@/features/pet/behavior'
 import { CELEBRATE_EVENT, CHEER_EVENT, celebrationDue, markCelebrated } from '@/features/pet/celebrate'
 import { MOTIONS } from '@/features/pet/motions'
+import { initialTaps, tap } from '@/features/pet/taps'
 import { cn } from '@/lib/utils'
 import { PET_SPECIES, type PetSpeciesId } from './species'
 import './pet.css'
@@ -70,6 +71,13 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
   const pressTimer = useRef(0)
   const longPressed = useRef(false)
   const poseRef = useRef<PoseId>('main')
+  const taps = useRef(initialTaps)
+  /** Until when a reaction to a tap (or hug) is playing. Idle moves can be interrupted by a tap, reactions cannot. */
+  const reactingUntil = useRef(0)
+  const react = (act: PetAction) => {
+    reactingUntil.current = Date.now() + planFor(act, spec.moves).ms
+    run(act)
+  }
 
   /**
    * Run `fn` after `ms` on the animation clock (an empty Web Animation), not on setTimeout:
@@ -233,7 +241,7 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
     pressTimer.current = window.setTimeout(() => {
       longPressed.current = true
       navigator.vibrate?.(20)
-      run('love')
+      react('love')
     }, LONG_PRESS_MS)
   }
   const cancelPress = () => window.clearTimeout(pressTimer.current)
@@ -244,10 +252,15 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
       return
     }
     touched()
+    onTapProp?.()
+    // A playing reaction is never cut off; a burst of taps makes the pet shy away for a moment (#104).
+    const r = tap(taps.current, Date.now(), Date.now() < reactingUntil.current)
+    taps.current = r.state
+    if (r.outcome === 'annoyed') return react('shy')
+    if (r.outcome === 'ignore') return
     const next = pickOther(TAP_ACTIONS, lastTap.current as (typeof TAP_ACTIONS)[number] | null, rnd)
     lastTap.current = next
-    run(next)
-    onTapProp?.()
+    react(next)
   }
 
   const [mx, my] = spec.anchors.mouthIn?.[pose] ?? spec.anchors.mouth
