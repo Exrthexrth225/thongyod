@@ -31,7 +31,7 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
   return (
     <div className="flex flex-col gap-3 pb-6">
       {/* Cover: uploaded photo, or the theme color. */}
-      <div className="mx-4 h-28 overflow-hidden rounded-2xl bg-gradient-to-br from-primary/70 to-accent" aria-hidden="true">
+      <div className="mx-4 h-28 overflow-hidden rounded-3xl bg-lilac" aria-hidden="true">
         {profile.coverUrl && <img src={profile.coverUrl} alt="" className="size-full object-cover" />}
       </div>
       <div className="-mt-12 flex flex-col items-center gap-1 px-4 text-center">

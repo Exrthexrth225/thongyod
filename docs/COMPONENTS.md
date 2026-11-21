@@ -146,3 +146,5 @@
 | FirstRunCard | `src/components/home/FirstRunCard.tsx` | ours | "เริ่มต้นใช้ทองหยอด" zone for new users: 3 steps with ticks, hide button; logic in `features/firstRun/firstRun.ts` | — | Home only (#96). |
 | FingerChooser | `src/features/finger/FingerChooser.tsx` | ours (pointer events) | วางนิ้วสุ่ม game: multi-touch stage, settle ring, hopping highlight, flood | — | Logic: decide(), hops() in features/finger/logic.ts |
 | RaceGame / RaceRunner | `src/features/race/{RaceGame,RaceRunner}.tsx` | ours | สัตว์วิ่งแข่ง: setup, countdown, rAF race (transform only), result; RaceRunner = animal art or numbered placeholder | racer, initial, running | Put Earth's art in `RACER_ART` |
+| SouvenirIcon | `src/components/pet/SouvenirIcon.tsx` | ours | One souvenir: Earth's sticker or its icon on a colour block | id, className | Album /pet/album (#106) |
+| PetGrowthToast | `src/components/pet/PetGrowthToast.tsx` | ours | Toast + confetti when the pet reaches a new stage (#105), mounted once in AppShell | — | |
