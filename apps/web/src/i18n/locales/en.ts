@@ -876,6 +876,14 @@ export const en: Messages = {
         s3: { title: 'Argue and turn', text: 'The team turns the needle. Centre = 4 points, close = 3 and 2' },
         s4: { title: 'Take turns', text: 'Swap clue givers each round, then see how in sync you are' },
       },
+      codewords: {
+        goal: 'Open all your team’s words before the other team — and never the bomb',
+        s1: { title: 'Two teams', text: 'Each team picks a leader. Put the phone in the middle; everyone sees 20 words' },
+        s2: { title: 'Leaders peek', text: 'On your turn your leader holds "peek" while others look away, and sees whose word is whose' },
+        s3: { title: 'One word + a number', text: 'The leader says one word and a number, e.g. "sea 2" = two of our words go with sea' },
+        s4: { title: 'Tap twice to open', text: 'Your own word: keep going. Neutral or theirs: turn over. Or tap "end turn"' },
+        s5: { title: 'Mind the bomb', text: 'One word is the bomb. Open it and your team loses' },
+      },
       taboo: {
         goal: 'The team with the most correct guesses wins',
         s1: { title: 'Make teams', text: 'Split into 2–4 teams that take turns' },
@@ -969,6 +977,24 @@ export const en: Messages = {
         good: { title: 'In sync', text: 'You really get each other' },
         great: { title: 'Telepathy!', text: 'No words needed' },
       },
+    },
+    codewords: {
+      how: {
+        teams: 'Two teams, each with a leader. Put the phone in the middle',
+        clue: 'The leader holds peek (others look away), then says one word + a number, e.g. "sea 2"',
+        open: 'Tap a word twice to open it. Open the bomb and you lose',
+      },
+      teams: { a: 'Team 1', b: 'Team 2' },
+      left: '{{count}} left',
+      turn: '{{team}}’s turn',
+      tapTwice: 'tap a word twice to open',
+      board: 'Word board',
+      holdToPeek: 'Leader: hold to peek',
+      peeking: 'Peeking — let go to hide',
+      endTurn: 'End {{team}}’s turn',
+      wins: '{{team}} wins!',
+      byBomb: '{{team}} opened the bomb',
+      byCleared: 'All their words are open',
     },
     insider: {
       how: {
@@ -1069,6 +1095,7 @@ export const en: Messages = {
       spy: { title: 'Spy', desc: 'Everyone knows the place except the spy' },
       insider: { title: 'Insider', desc: 'Find the word, then catch who already knew' },
       spectrum: { title: 'Mind Waves', desc: 'One clue, the team turns the needle to the target' },
+      codewords: { title: 'Team Clues', desc: 'One-word clues, find all your team’s words' },
       taboo: { title: 'Taboo words', desc: 'Give clues without the forbidden words' },
       draw: { title: 'Draw & guess', desc: 'Draw on the screen, friends guess' },
       bomb: { title: 'Time bomb', desc: 'Answer and pass it on before it pops' },

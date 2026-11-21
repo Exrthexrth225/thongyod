@@ -1,8 +1,8 @@
 // Every game, shown in the "เกม" section on Explore and on /games (DECISIONS #73).
 // To add a game: one entry here + `games.list.<id>.title/.desc` in th.ts and en.ts.
-import { Bomb, Brush, CupSoda, Dices, Eye, Gauge, Hand, LoaderPinwheel, MessageSquareOff, Pointer, Smartphone, Sparkles, VenetianMask, type LucideIcon } from 'lucide-react'
+import { Bomb, Brush, CupSoda, Dices, Eye, Gauge, Grid3x3, Hand, LoaderPinwheel, MessageSquareOff, Pointer, Smartphone, Sparkles, VenetianMask, type LucideIcon } from 'lucide-react'
 
-export type GameId = 'headsUp' | 'spy' | 'insider' | 'spectrum' | 'taboo' | 'draw' | 'bomb' | 'mostLikely' | 'neverHave' | 'dice' | 'cups' | 'wheel' | 'fortune'
+export type GameId = 'headsUp' | 'spy' | 'insider' | 'spectrum' | 'codewords' | 'taboo' | 'draw' | 'bomb' | 'mostLikely' | 'neverHave' | 'dice' | 'cups' | 'wheel' | 'fortune'
 
 /** How it is played: one phone passed around the group, alone, or each friend on their own phone (rooms). */
 export type GameMode = 'onePhone' | 'solo' | 'rooms'
@@ -25,6 +25,7 @@ export const GAMES: Game[] = [
   { id: 'spy', icon: VenetianMask, tint: 6, mode: 'onePhone', rooms: true, players: [3, 12], status: 'ready', to: '/games/spy' },
   { id: 'insider', icon: Eye, tint: 7, mode: 'onePhone', players: [4, 12], status: 'ready', to: '/games/insider' },
   { id: 'spectrum', icon: Gauge, tint: 8, mode: 'onePhone', players: [2, 12], status: 'ready', to: '/games/spectrum' },
+  { id: 'codewords', icon: Grid3x3, tint: 2, mode: 'onePhone', players: [4, 12], status: 'ready', to: '/games/codewords' },
   { id: 'taboo', icon: MessageSquareOff, tint: 1, mode: 'onePhone', players: [4, 20], status: 'ready', to: '/games/taboo' },
   { id: 'draw', icon: Brush, tint: 2, mode: 'onePhone', players: [2, 20], status: 'ready', to: '/games/draw' },
   { id: 'bomb', icon: Bomb, tint: 3, mode: 'onePhone', players: [2, 20], status: 'ready', to: '/games/bomb' },

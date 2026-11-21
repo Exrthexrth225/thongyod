@@ -11,6 +11,7 @@ export const HOW_TO: Record<GameId, LucideIcon[]> = {
   spy: [Users, VenetianMask, MessageCircle, Vote, Crown],
   insider: [Crown, Eye, MessageCircle, Timer, Pointer],
   spectrum: [Eye, MessageCircle, Gauge, Trophy],
+  codewords: [Users, Eye, MessageCircle, Pointer, Bomb],
   taboo: [Users, Ban, Timer, Check, Trophy],
   draw: [Eye, Brush, MessageCircle, Check, Trophy],
   bomb: [ListChecks, MessageCircle, Hand, Bomb],
