@@ -181,9 +181,10 @@ export const en: Messages = {
     },
   },
   explore: {
-    gamesRow: 'All {{count}} games',
-    gamesRowHint: '{{names}} and more',
-    withFriends: 'With friends',
+    featuredTag: 'Easiest to start',
+    playNow: 'Play now',
+    allGames: 'All {{count}} games',
+    withFriends: 'Meet up',
     solo: 'On your own',
     soon: 'Coming soon',
     lockedSuffix: ' (coming soon)',
@@ -1356,7 +1357,7 @@ export const en: Messages = {
     gangs: { title: 'Gangs', placeholder: 'Your gangs will be here (M1)' },
     explore: {
       title: 'Explore',
-      subtitle: 'Things to do with friends or on your own',
+      subtitle: "Everyone's here. What shall we play?",
     },
     pet: { title: 'Pet', placeholder: 'Maew Gon’s room (M5)' },
     me: {

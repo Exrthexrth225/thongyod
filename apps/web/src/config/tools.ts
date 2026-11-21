@@ -39,18 +39,20 @@ export type Tool = {
   to?: string
   /** Shown as the big highlighted card at the top of its group. */
   featured?: boolean
+  /** Colour block of its icon (lib/tones tint 1–8, #97). */
+  tint: number
 }
 
 export const TOOLS: Tool[] = [
-  { id: 'createMeetup', icon: CalendarPlus, group: 'friends', status: 'ready', to: '/meetups/new', featured: true },
-  { id: 'quickVote', icon: CheckSquare, group: 'friends', status: 'ready', to: '/quick-vote' },
-  { id: 'restaurantVote', icon: ThumbsUp, group: 'friends', status: 'ready', to: '/restaurant-vote' },
-  { id: 'splitBill', icon: Receipt, group: 'friends', status: 'ready', to: '/bills' },
-  { id: 'randomRestaurant', icon: Shuffle, group: 'solo', status: 'ready', to: '/random-restaurant' },
-  { id: 'playPet', icon: PawPrint, group: 'solo', status: 'ready', to: '/pet' },
-  { id: 'luckyColor', icon: Palette, group: 'solo', status: 'ready', to: '/lucky-color' },
-  { id: 'myMeetups', icon: CalendarDays, group: 'solo', status: 'ready', to: '/meetups' },
-  { id: 'gradeCalculator', icon: Calculator, group: 'solo', status: 'soon' },
-  { id: 'focusTimer', icon: Timer, group: 'solo', status: 'soon' },
-  { id: 'flashcards', icon: Layers, group: 'solo', status: 'ready', to: '/flashcards' },
+  { id: 'createMeetup', icon: CalendarPlus, group: 'friends', status: 'ready', to: '/meetups/new', featured: true, tint: 3 },
+  { id: 'quickVote', icon: CheckSquare, group: 'friends', status: 'ready', to: '/quick-vote', tint: 5 },
+  { id: 'restaurantVote', icon: ThumbsUp, group: 'friends', status: 'ready', to: '/restaurant-vote', tint: 2 },
+  { id: 'splitBill', icon: Receipt, group: 'friends', status: 'ready', to: '/bills', tint: 1 },
+  { id: 'randomRestaurant', icon: Shuffle, group: 'solo', status: 'ready', to: '/random-restaurant', tint: 2 },
+  { id: 'playPet', icon: PawPrint, group: 'solo', status: 'ready', to: '/pet', tint: 1 },
+  { id: 'luckyColor', icon: Palette, group: 'solo', status: 'ready', to: '/lucky-color', tint: 4 },
+  { id: 'myMeetups', icon: CalendarDays, group: 'solo', status: 'ready', to: '/meetups', tint: 5 },
+  { id: 'gradeCalculator', icon: Calculator, group: 'solo', status: 'soon', tint: 3 },
+  { id: 'focusTimer', icon: Timer, group: 'solo', status: 'soon', tint: 6 },
+  { id: 'flashcards', icon: Layers, group: 'solo', status: 'ready', to: '/flashcards', tint: 8 },
 ]

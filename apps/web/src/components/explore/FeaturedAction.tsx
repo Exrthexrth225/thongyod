@@ -4,25 +4,18 @@ import { ChevronRight } from 'lucide-react'
 import type { Tool } from '@/config/tools'
 import { SHOW_BACK } from '@/lib/nav'
 
-// Big highlighted card for the main action of a group (e.g. "ชวนนัด").
+// Big yolk block for the main action of a group (e.g. "ชวนนัด", #97).
 export function FeaturedAction({ tool }: { tool: Tool }) {
   const { t } = useTranslation()
   if (!tool.to) return null
   return (
-    <Link
-      to={tool.to}
-      state={SHOW_BACK}
-      className="flex items-center gap-3 rounded-xl border border-brand bg-accent p-3 text-accent-foreground transition-transform active:scale-[0.98]"
-    >
-      <span
-        aria-hidden="true"
-        className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground"
-      >
-        <tool.icon className="size-6" />
+    <Link to={tool.to} state={SHOW_BACK} className="on-slab pressable flex items-center gap-3 rounded-3xl bg-yolk p-4">
+      <span aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-ink text-yolk">
+        <tool.icon className="size-6" strokeWidth={2.2} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-base font-medium">{t(`tools.${tool.id}.title`)}</span>
-        <span className="block text-xs">{t(`tools.${tool.id}.desc`)}</span>
+        <span className="block font-heading text-xl leading-snug font-bold">{t(`tools.${tool.id}.title`)}</span>
+        <span className="block text-[13px] text-muted-foreground">{t(`tools.${tool.id}.desc`)}</span>
       </span>
       <ChevronRight className="size-5 shrink-0" aria-hidden="true" />
     </Link>

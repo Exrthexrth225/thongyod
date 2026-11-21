@@ -182,10 +182,11 @@ export const th = {
     },
   },
   explore: {
-    gamesRow: 'เกมทั้งหมด {{count}} เกม',
-    gamesRowHint: '{{names}} และอื่นๆ',
-    withFriends: 'กับเพื่อน',
-    solo: 'คนเดียว',
+    featuredTag: 'เริ่มง่ายสุด',
+    playNow: 'เล่นเลย',
+    allGames: 'ดูเกมทั้ง {{count}} เกม',
+    withFriends: 'นัดเพื่อน',
+    solo: 'คนเดียวก็ได้',
     soon: 'เร็วๆ นี้',
     lockedSuffix: ' (เร็วๆ นี้)',
   },
@@ -1357,7 +1358,7 @@ export const th = {
     gangs: { title: 'แก๊ง', placeholder: 'รายชื่อแก๊งจะอยู่ตรงนี้ (M1)' },
     explore: {
       title: 'ทำอะไรดี',
-      subtitle: 'เลือกได้ทั้งทำกับเพื่อนและทำคนเดียว',
+      subtitle: 'เพื่อนมาครบแล้ว เล่นอะไรกันดี',
     },
     pet: { title: 'สัตว์เลี้ยง', placeholder: 'ห้องของแมวก้อน (M5)' },
     me: {

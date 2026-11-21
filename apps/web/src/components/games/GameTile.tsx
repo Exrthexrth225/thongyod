@@ -19,7 +19,7 @@ function gameTags(game: Game): Tag[] {
   return game.rooms ? ['onePhone', 'rooms'] : ['onePhone']
 }
 
-// One game card (#85): white card, colour only on the icon, name, one line, players, and a หลายเครื่อง tag
+// One game card: a full colour block since #97 (was white with a coloured icon, #85), name, one line, players, and a หลายเครื่อง tag
 // when the game can also be played on several phones (the section heading already says เครื่องเดียว / คนเดียว).
 // A game with both ways opens a sheet to choose; "เร็วๆ นี้" games are shown but not tappable.
 export function GameTile({ game, className }: { game: Game; className?: string }) {
@@ -32,18 +32,18 @@ export function GameTile({ game, className }: { game: Game; className?: string }
   const tags = gameTags(game)
   const body = (
     <>
-      <span className={cn('grid size-11 place-items-center rounded-xl', tintClass(game.tint))}>
-        <game.icon className="size-6" aria-hidden="true" />
+      <span className="grid size-11 place-items-center rounded-2xl bg-background/25">
+        <game.icon className="size-6" strokeWidth={2.2} aria-hidden="true" />
       </span>
-      <span className="mt-1.5 text-sm font-medium">{t(`games.list.${game.id}.title`)}</span>
-      <span className="line-clamp-2 text-xs text-muted-foreground">{t(`games.list.${game.id}.desc`)}</span>
-      <span className="mt-auto flex w-full flex-wrap items-center gap-x-2 gap-y-1 pt-2 text-[11px] text-muted-foreground">
+      <span className="mt-2.5 font-heading text-lg leading-snug font-bold">{t(`games.list.${game.id}.title`)}</span>
+      <span className="line-clamp-2 text-[13px] leading-snug opacity-85">{t(`games.list.${game.id}.desc`)}</span>
+      <span className="mt-auto flex w-full flex-wrap items-center gap-x-2 gap-y-1 pt-2 text-xs opacity-85">
         <span className="flex items-center gap-1">
           <Users className="size-3" aria-hidden="true" />
           {game.status === 'soon' ? t('explore.soon') : players}
         </span>
         {tags.includes('rooms') && (
-          <span className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 font-medium text-foreground">
+          <span className="flex items-center gap-1 rounded-full bg-background/30 px-2 py-0.5 font-semibold">
             <Wifi className="size-3" aria-hidden="true" />
             {t('games.tags.rooms')}
           </span>
@@ -51,7 +51,7 @@ export function GameTile({ game, className }: { game: Game; className?: string }
       </span>
     </>
   )
-  const classes = cn('flex min-h-40 flex-col items-start gap-0.5 rounded-2xl border bg-card p-3 text-left text-card-foreground', className)
+  const classes = cn('flex min-h-40 flex-col items-start gap-0.5 rounded-3xl p-3.5 text-left', tintClass(game.tint), className)
 
   if (game.status !== 'ready') {
     return (
@@ -62,7 +62,7 @@ export function GameTile({ game, className }: { game: Game; className?: string }
   }
   if (!tags.includes('rooms')) {
     return (
-      <Link to={game.to} state={SHOW_BACK} className={cn(classes, 'transition-transform active:scale-[0.97]')}>
+      <Link to={game.to} state={SHOW_BACK} className={cn(classes, 'pressable')}>
         {body}
       </Link>
     )
@@ -74,7 +74,7 @@ export function GameTile({ game, className }: { game: Game; className?: string }
   }
   return (
     <>
-      <button type="button" onClick={() => setChoose(true)} aria-haspopup="dialog" className={cn(classes, 'transition-transform active:scale-[0.97]')}>
+      <button type="button" onClick={() => setChoose(true)} aria-haspopup="dialog" className={cn(classes, 'pressable')}>
         {body}
       </button>
       <BottomSheet open={choose} onOpenChange={setChoose} title={t('games.chooseHow', { game: t(`games.list.${game.id}.title`) })}>
@@ -87,7 +87,7 @@ export function GameTile({ game, className }: { game: Game; className?: string }
           ).map(({ tag, to }) => {
             const Icon = TAG_ICON[tag]
             return (
-              <button key={tag} type="button" onClick={() => go(to)} className="flex items-center gap-3 rounded-2xl border bg-card p-4 text-left active:scale-[0.99]">
+              <button key={tag} type="button" onClick={() => go(to)} className="pressable flex items-center gap-3 rounded-3xl bg-card p-4 text-left">
                 <span className={cn('grid size-12 shrink-0 place-items-center rounded-2xl', tintClass(tag === 'rooms' ? 5 : game.tint))}>
                   <Icon className="size-6" aria-hidden="true" />
                 </span>
