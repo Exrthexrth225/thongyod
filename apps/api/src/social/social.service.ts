@@ -1,0 +1,117 @@
+import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common'
+import type { CursorPage, Friend, FriendRequests, GangSummary, PersonCard, UserCard } from '@thongyod/shared'
+import { DatabaseService } from '../db/database.service.js'
+
+const edges = `WITH edges AS (
+  SELECT requester_id AS a, recipient_id AS b FROM friendships WHERE status='accepted'
+  UNION ALL SELECT recipient_id, requester_id FROM friendships WHERE status='accepted'
+)`
+const person = 'u.id AS "userId", u.display_name AS "displayName", u.handle, u.avatar_url AS "avatarUrl"'
+const visible = `NOT EXISTS (SELECT 1 FROM user_blocks b WHERE
+  (b.blocker_id=$1 AND b.blocked_id=u.id) OR (b.blocked_id=$1 AND b.blocker_id=u.id))`
+const mutual = `CASE WHEN u.id=$1 THEN 0 ELSE (SELECT count(*)::int FROM edges x JOIN edges y ON x.b=y.b
+  WHERE x.a=$1 AND y.a=u.id AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE
+    (b.blocker_id=$1 AND b.blocked_id=x.b) OR (b.blocked_id=$1 AND b.blocker_id=x.b))) END`
+const uuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+type Query = { q?: unknown; limit?: unknown; cursor?: unknown }
+
+function pagination(query: Query, scope: string) {
+  const limit = query.limit === undefined ? 20 : Number(query.limit)
+  if ((query.limit !== undefined && (typeof query.limit !== 'string' || !/^\d+$/.test(query.limit)))
+    || !Number.isInteger(limit) || limit < 1 || limit > 50 || (query.q !== undefined && typeof query.q !== 'string')) {
+    throw new BadRequestException({ error: { code: 'INVALID_REQUEST' } })
+  }
+  const q = typeof query.q === 'string' ? query.q.trim().toLowerCase().replace(/^@/, '') : ''
+  const key = JSON.stringify([scope, q])
+  let name: string | null = null, id: string | null = null
+  if (query.cursor !== undefined) {
+    try {
+      if (typeof query.cursor !== 'string' || query.cursor.length > 2048 || !/^[A-Za-z0-9_-]+$/.test(query.cursor)) throw new Error()
+      const value: unknown = JSON.parse(Buffer.from(query.cursor, 'base64url').toString('utf8'))
+      if (!Array.isArray(value) || value.length !== 3 || value[0] !== key || typeof value[1] !== 'string' || typeof value[2] !== 'string' || !uuid(value[2])) throw new Error()
+      ;[, name, id] = value
+    } catch { throw new BadRequestException({ error: { code: 'INVALID_REQUEST' } }) }
+  }
+  return { limit, q, key, name, id }
+}
+
+function page<T>(rows: T[], p: ReturnType<typeof pagination>, position: (item: T) => [string, string]): CursorPage<T> {
+  const items = rows.slice(0, p.limit)
+  return { items, nextCursor: rows.length > p.limit
+    ? Buffer.from(JSON.stringify([p.key, ...position(items[items.length - 1])])).toString('base64url') : null }
+}
+
+@Injectable()
+export class SocialService {
+  constructor(private readonly database: DatabaseService) {}
+
+  private async rows<T extends Record<string, unknown>>(sql: string, values: unknown[]): Promise<T[]> {
+    try { return (await this.database.connection.query<T>(sql, values)).rows }
+    catch { throw new ServiceUnavailableException({ error: { code: 'SOCIAL_UNAVAILABLE' } }) }
+  }
+
+  async friends(viewer: string, query: Query): Promise<CursorPage<Friend>> {
+    const p = pagination(query, `friends:${viewer}`)
+    const rows = await this.rows<Friend & Record<string, unknown>>(`${edges}
+      SELECT ${person}, u.main_title_key AS title FROM users u JOIN edges e ON e.b=u.id
+      WHERE e.a=$1 AND ${visible}
+        AND (strpos(lower(u.display_name),$2)>0 OR strpos(u.handle,$2)>0)
+        AND ($3::text IS NULL OR (u.display_name COLLATE "C",u.id)>($3::text COLLATE "C",$4::uuid))
+      ORDER BY u.display_name COLLATE "C",u.id LIMIT $5`, [viewer,p.q,p.name,p.id,p.limit+1])
+    return page(rows, p, u => [u.displayName,u.userId])
+  }
+
+  async requests(viewer: string): Promise<FriendRequests> {
+    const rows = await this.rows<Record<string, unknown> & { direction: 'incoming' | 'outgoing'; id: string; user: PersonCard; mutualFriends: number; createdAt: string }>(`${edges}
+      SELECT f.id, CASE WHEN f.recipient_id=$1 THEN 'incoming' ELSE 'outgoing' END AS direction,
+        json_build_object('userId',u.id,'displayName',u.display_name,'handle',u.handle,'avatarUrl',u.avatar_url) AS "user",
+        ${mutual} AS "mutualFriends",
+        to_char(f.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "createdAt"
+      FROM friendships f JOIN users u ON u.id=CASE WHEN f.requester_id=$1 THEN f.recipient_id ELSE f.requester_id END
+      WHERE f.status='pending' AND (f.requester_id=$1 OR f.recipient_id=$1) AND ${visible}
+      ORDER BY f.created_at DESC,f.id`, [viewer])
+    const result: FriendRequests = { incoming: [], outgoing: [] }
+    for (const { direction, ...request } of rows) result[direction].push(request)
+    return result
+  }
+
+  async search(viewer: string, raw: unknown): Promise<UserCard> {
+    if (typeof raw !== 'string') throw new BadRequestException({ error: { code: 'INVALID_REQUEST' } })
+    const handle = raw.trim().toLowerCase().replace(/^@/, '')
+    const rows = await this.rows<UserCard & Record<string, unknown>>(`${edges}
+      SELECT ${person},u.main_title_key AS title, ${mutual} AS "mutualFriends",
+        CASE WHEN u.id=$1 THEN 'self' WHEN f.status='accepted' THEN 'friend'
+          WHEN f.status='pending' AND f.requester_id=$1 THEN 'request_sent'
+          WHEN f.status='pending' THEN 'request_received' ELSE 'none' END AS relationship,
+        CASE WHEN f.status='pending' THEN f.id ELSE NULL END AS "requestId"
+      FROM users u LEFT JOIN friendships f ON ((f.requester_id=$1 AND f.recipient_id=u.id)
+        OR (f.recipient_id=$1 AND f.requester_id=u.id)) AND f.status IN ('accepted','pending')
+      WHERE u.handle=$2 AND ${visible}`, [viewer,handle])
+    if (!rows[0]) throw new NotFoundException({ error: { code: 'USER_NOT_FOUND' } })
+    return rows[0]
+  }
+
+  async mutualFriends(viewer: string, target: string, query: Query): Promise<CursorPage<PersonCard>> {
+    if (!uuid(target)) throw new NotFoundException({ error: { code: 'USER_NOT_FOUND' } })
+    const p = pagination(query, `mutual:${viewer}:${target}`)
+    const targetRows = await this.rows(`SELECT u.id FROM users u WHERE u.id=$2 AND ${visible}`, [viewer,target])
+    if (!targetRows.length) throw new NotFoundException({ error: { code: 'USER_NOT_FOUND' } })
+    const rows = await this.rows<PersonCard & Record<string, unknown>>(`${edges}
+      SELECT ${person} FROM users u JOIN edges x ON x.b=u.id JOIN edges y ON y.b=u.id
+      WHERE x.a=$1 AND y.a=$2 AND ${visible}
+        AND ($3::text IS NULL OR (u.display_name COLLATE "C",u.id)>($3::text COLLATE "C",$4::uuid))
+      ORDER BY u.display_name COLLATE "C",u.id LIMIT $5`, [viewer,target,p.name,p.id,p.limit+1])
+    return page(rows, p, u => [u.displayName,u.userId])
+  }
+
+  async gangs(viewer: string, query: Query): Promise<CursorPage<GangSummary>> {
+    const p = pagination(query, `gangs:${viewer}`)
+    const rows = await this.rows<GangSummary & Record<string, unknown>>(`SELECT s.gang_id AS id,s.name,
+        (SELECT count(*)::int FROM gang_members members WHERE members.gang_id=s.gang_id AND members.left_at IS NULL) AS "memberCount"
+      FROM gang_settings s JOIN gang_members mine ON mine.gang_id=s.gang_id AND mine.user_id=$1 AND mine.left_at IS NULL
+      WHERE strpos(lower(s.name),$2)>0
+        AND ($3::text IS NULL OR (s.name COLLATE "C",s.gang_id)>($3::text COLLATE "C",$4::uuid))
+      ORDER BY s.name COLLATE "C",s.gang_id LIMIT $5`, [viewer,p.q,p.name,p.id,p.limit+1])
+    return page(rows, p, g => [g.name,g.id])
+  }
+}

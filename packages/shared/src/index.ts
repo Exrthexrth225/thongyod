@@ -1,3 +1,4 @@
+export type { PersonCard, Friend, UserCard, FriendRequest, FriendRequests, GangSummary, CursorPage } from './social.js'
 export type {
   Me,
   UpdateMeRequest,
