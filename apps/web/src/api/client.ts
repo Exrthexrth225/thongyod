@@ -14,6 +14,8 @@ export class ApiError extends Error {
   }
 }
 
+let redirectingToLogin = false
+
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const options: RequestInit = {
     ...init,
@@ -31,6 +33,13 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
       code = body.error?.code
     } catch {
       // Body is not JSON; keep code undefined.
+    }
+    if (response.status === 401 && import.meta.env.PROD && import.meta.env.VITE_DEPLOY_MOCKS !== 'true'
+      && !path.startsWith('/auth/') && !redirectingToLogin && window.location.pathname !== '/login' && window.location.pathname !== '/signup'
+      && typeof window.location.assign === 'function') {
+      redirectingToLogin = true
+      const returnTo = window.location.pathname + window.location.search + window.location.hash
+      window.location.assign('/login?returnTo=' + encodeURIComponent(returnTo))
     }
     throw new ApiError(response.status, code)
   }

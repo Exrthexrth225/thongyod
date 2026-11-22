@@ -90,6 +90,7 @@ export class SocialService {
         VALUES($1,$2,$3,'pending',clock_timestamp())`, [id,viewer,target])
       await client.query(`INSERT INTO friend_request_sends(request_id,requester_id,recipient_id,sent_at)
         SELECT id,requester_id,recipient_id,created_at FROM friendships WHERE id=$1`, [id])
+      await client.query("INSERT INTO app_notifications(id,user_id,actor_id,kind,friend_request_id) VALUES($1,$2,$3,'friend_request',$4)",[randomUUID(),target,viewer,id])
       const result = await client.query<FriendRequest>(`${edges} SELECT f.id,
         json_build_object('userId',u.id,'displayName',u.display_name,'handle',u.handle,'avatarUrl',u.avatar_url) AS "user",
         ${mutual} AS "mutualFriends",to_char(f.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "createdAt"
@@ -116,6 +117,7 @@ export class SocialService {
             (b.blocker_id=f.requester_id AND b.blocked_id=f.recipient_id)
             OR (b.blocker_id=f.recipient_id AND b.blocked_id=f.requester_id))`, [viewer, id, accept])
       if (!result.rowCount) throw new NotFoundException({ error: { code: 'REQUEST_NOT_FOUND' } })
+      if(accept)await client.query("INSERT INTO app_notifications(id,user_id,actor_id,kind,friend_request_id) VALUES($1,$2,$3,'friend_accepted',$4)",[randomUUID(),request[0].target,viewer,id])
     })
   }
 
@@ -149,8 +151,8 @@ export class SocialService {
     })
   }
 
-  private async rows<T extends Record<string, unknown>>(sql: string, values: unknown[]): Promise<T[]> {
-    try { return (await this.database.connection.query<T>(sql, values)).rows }
+  private async rows<T extends Record<string, unknown>>(sql: string, values: unknown[], client?:PoolClient): Promise<T[]> {
+    try { return (await (client??this.database.connection).query<T>(sql, values)).rows }
     catch { throw new ServiceUnavailableException({ error: { code: 'SOCIAL_UNAVAILABLE' } }) }
   }
 
@@ -179,7 +181,7 @@ export class SocialService {
     return result
   }
 
-  async search(viewer: string, raw: unknown): Promise<UserCard> {
+  async search(viewer: string, raw: unknown, client?:PoolClient): Promise<UserCard> {
     if (typeof raw !== 'string') throw new BadRequestException({ error: { code: 'INVALID_REQUEST' } })
     const handle = raw.trim().toLowerCase().replace(/^@/, '')
     const rows = await this.rows<UserCard & Record<string, unknown>>(`${edges}
@@ -190,21 +192,21 @@ export class SocialService {
         CASE WHEN f.status='pending' THEN f.id ELSE NULL END AS "requestId"
       FROM users u LEFT JOIN friendships f ON ((f.requester_id=$1 AND f.recipient_id=u.id)
         OR (f.recipient_id=$1 AND f.requester_id=u.id)) AND f.status IN ('accepted','pending')
-      WHERE u.handle=$2 AND ${visible}`, [viewer,handle])
+      WHERE u.handle=$2 AND ${visible}`, [viewer,handle],client)
     if (!rows[0]) throw new NotFoundException({ error: { code: 'USER_NOT_FOUND' } })
     return rows[0]
   }
 
-  async mutualFriends(viewer: string, target: string, query: Query): Promise<CursorPage<PersonCard>> {
+  async mutualFriends(viewer: string, target: string, query: Query, client?:PoolClient): Promise<CursorPage<PersonCard>> {
     if (!uuid(target)) throw new NotFoundException({ error: { code: 'USER_NOT_FOUND' } })
     const p = pagination(query, `mutual:${viewer}:${target}`)
-    const targetRows = await this.rows(`SELECT u.id FROM users u WHERE u.id=$2 AND ${visible}`, [viewer,target])
+    const targetRows = await this.rows(`SELECT u.id FROM users u WHERE u.id=$2 AND ${visible}`, [viewer,target],client)
     if (!targetRows.length) throw new NotFoundException({ error: { code: 'USER_NOT_FOUND' } })
     const rows = await this.rows<PersonCard & Record<string, unknown>>(`${edges}
       SELECT ${person} FROM users u JOIN edges x ON x.b=u.id JOIN edges y ON y.b=u.id
       WHERE x.a=$1 AND y.a=$2 AND ${visible}
         AND ($3::text IS NULL OR (u.display_name COLLATE "C",u.id)>($3::text COLLATE "C",$4::uuid))
-      ORDER BY u.display_name COLLATE "C",u.id LIMIT $5`, [viewer,target,p.name,p.id,p.limit+1])
+      ORDER BY u.display_name COLLATE "C",u.id LIMIT $5`, [viewer,target,p.name,p.id,p.limit+1],client)
     return page(rows, p, u => [u.displayName,u.userId])
   }
 

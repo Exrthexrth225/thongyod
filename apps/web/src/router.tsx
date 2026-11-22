@@ -63,6 +63,7 @@ import { UserProfilePage } from '@/pages/UserProfilePage'
 import { WelcomePage } from '@/pages/WelcomePage'
 import { WheelPage } from '@/pages/WheelPage'
 import { OnboardingGate } from '@/features/onboarding/OnboardingGate'
+import { LoginPage, SignupPage } from '@/pages/LoginPage'
 
 /** Paths that already have their own page (tabs). */
 const TAB_PATHS = ['/', '/gangs', '/explore', '/pet', '/me']
@@ -77,6 +78,8 @@ const placeholderToolRoutes: RouteObject[] = TOOLS.filter(
 // Paths are English; labels shown to users come from i18n.
 const createRouter = import.meta.env.VITE_DEPLOY_MOCKS === 'true' ? createHashRouter : createBrowserRouter
 export const router = createRouter([
+  { path: '/login', element: <LoginPage /> },
+  { path: '/signup', element: <SignupPage /> },
   {
     // Tab pages: with the bottom tab bar.
     path: '/',

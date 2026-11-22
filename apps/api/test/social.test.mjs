@@ -80,6 +80,7 @@ test('social reads enforce session, privacy, exact handles and stable scoped pag
     assert.equal((await json('/gangs?q=missing')).items.length,0)
   } finally {
     await app?.close()
+    await pool.query('DELETE FROM app_notifications WHERE user_id=ANY($1::uuid[]) OR actor_id=ANY($1::uuid[])',[ids])
     await pool.query('DELETE FROM gang_members WHERE gang_id=ANY($1::uuid[])',[gangs])
     await pool.query('DELETE FROM gang_settings WHERE gang_id=ANY($1::uuid[])',[gangs])
     await pool.query('DELETE FROM gangs WHERE id=ANY($1::uuid[])',[gangs])
@@ -204,6 +205,7 @@ test('friend mutations enforce ownership, serialize with blocks and preserve sha
     assert.equal((await (await call('/gangs')).json()).items.find(g=>g.id===gang).memberCount,3)
   } finally {
     await app?.close()
+    await pool.query('DELETE FROM app_notifications WHERE user_id=ANY($1::uuid[]) OR actor_id=ANY($1::uuid[])',[ids])
     await pool.query('DELETE FROM gang_members WHERE gang_id=$1',[gang])
     await pool.query('DELETE FROM gang_settings WHERE gang_id=$1',[gang])
     await pool.query('DELETE FROM gangs WHERE id=$1',[gang])

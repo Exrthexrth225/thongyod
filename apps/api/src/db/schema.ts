@@ -132,3 +132,28 @@ export const homeStates = pgTable('home_states', {
 export const seedRuns = pgTable('seed_runs', {
   key: text('key').primaryKey(), anchor: instant('anchor').notNull(), version: integer('version').notNull(),
 })
+
+export const notifications = pgTable('app_notifications', {
+  id: uuid('id').primaryKey(), userId: uuid('user_id').notNull().references(()=>users.id),
+  actorId: uuid('actor_id').notNull().references(()=>users.id), kind:text('kind').notNull(),
+  friendRequestId:uuid('friend_request_id'),meetupId:uuid('meetup_id').references(()=>meetups.id),roomCode:text('room_code'),
+  createdAt:instant('created_at').notNull().defaultNow(),readAt:instant('read_at'),
+},t=>[index('notifications_user_page').on(t.userId,t.createdAt,t.id),check('notification_kind',sql`${t.kind} in ('friend_request','friend_accepted','meetup_invite','game_invite')`)])
+
+export const gameRooms = pgTable('game_rooms', {
+  code:text('code').primaryKey(),data:jsonb('data').notNull(),
+  createdAt:instant('created_at').notNull(),expiresAt:instant('expires_at').notNull(),
+},t=>[index('rooms_expiry').on(t.expiresAt),check('room_code',sql`${t.code} ~ '^[0-9]{6}$'`),check('room_expiry',sql`${t.expiresAt}>${t.createdAt}`)])
+
+export const mediaDeletes = pgTable('media_deletes', {
+  url:text('url').primaryKey(),createdAt:instant('created_at').notNull().defaultNow(),
+})
+
+export const loginAttempts=pgTable('auth_login_attempts',{
+  stateHash:text('state_hash').primaryKey(),browserHash:text('browser_hash').notNull(),encryptedData:text('encrypted_data').notNull(),
+  expiresAt:instant('expires_at').notNull(),
+},t=>[index('login_attempt_expiry').on(t.expiresAt)])
+
+export const signupTickets=pgTable('auth_signup_tickets',{
+  tokenHash:text('token_hash').primaryKey(),encryptedData:text('encrypted_data').notNull(),expiresAt:instant('expires_at').notNull(),
+},t=>[index('signup_ticket_expiry').on(t.expiresAt)])

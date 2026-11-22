@@ -68,7 +68,7 @@ async function startProduction(env) {
   const port = socket.address().port
   await new Promise(resolve => socket.close(resolve))
   const child = spawn(process.execPath, [fileURLToPath(new URL('../dist-prod/main.js', import.meta.url))], {
-    env: { ...process.env, NODE_ENV: 'production', APP_ENV: 'production', ENABLE_DEV_LOGIN: 'false', APP_ORIGIN: 'https://thongyod.example', ...env, PORT: String(port) },
+    env: { ...process.env, NODE_ENV: 'production', APP_ENV: 'production', ENABLE_DEV_LOGIN: 'false', APP_ORIGIN: 'https://thongyod.example', PGSSLMODE:'disable', ...env, PORT: String(port) },
     stdio: 'ignore', windowsHide: true,
   })
   const url = `http://127.0.0.1:${port}`

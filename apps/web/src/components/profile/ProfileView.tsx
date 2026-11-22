@@ -27,7 +27,7 @@ type ProfileViewProps = {
 export function ProfileView({ profile, actions }: ProfileViewProps) {
   const { t } = useTranslation()
   const isSelf = profile.relationship === 'self'
-  const limited = !isSelf && profile.stats === null
+  const limited = !isSelf && profile.relationship !== 'friend'
   const [openTitle, setOpenTitle] = useState<EarnedTitle | null>(null)
   // The main title under the name opens its sheet when it is one of the earned titles we can see.
   const mainTitle = profile.title ? (profile.titles ?? []).find((x) => x.name === profile.title) : undefined

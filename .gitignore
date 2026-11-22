@@ -6,6 +6,7 @@ dist/
 build/
 coverage/
 .turbo/
+.media/
 .vite/
 
 # Environment variables (secrets!) - never commit these

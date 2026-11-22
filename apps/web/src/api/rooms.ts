@@ -52,7 +52,13 @@ export const useBackToLobby = (code: string) => useRoomAction(code, () => ({ url
 export const useRoomSettings = (code: string) =>
   useRoomAction<Partial<SpyRoomSettings> | Partial<PartyRoomSettings>>(code, (settings) => ({ url: `/rooms/${code}/settings`, method: 'PATCH', body: settings }))
 /** Answer the current party card (ใครน่าจะ…: a player id, ไม่เคย…: 'have' | 'never'). */
-export const useRoomVote = (code: string) => useRoomAction<string>(code, (choice) => ({ url: `/rooms/${code}/vote`, body: { choice } }))
+export function useRoomVote(code: string) {
+  const client = useQueryClient()
+  return useRoomAction<string>(code, (choice) => ({
+    url: `/rooms/${code}/vote`,
+    body: { choice, roundNumber: client.getQueryData<Room>(roomKeys.room(code))?.round?.number },
+  }))
+}
 
 /** Invite friends: they get a "ชวนเล่น" notification that opens the room. */
 export function useInviteToRoom(code: string) {

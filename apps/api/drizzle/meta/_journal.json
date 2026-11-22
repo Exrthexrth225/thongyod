@@ -22,6 +22,27 @@
       "when": 1795330728706,
       "tag": "0002_friend_sends_and_links",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795358420591,
+      "tag": "0003_notifications",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795358587508,
+      "tag": "0004_rooms_and_media_cleanup",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795358835162,
+      "tag": "0005_line_login",
+      "breakpoints": true
     }
   ]
 }

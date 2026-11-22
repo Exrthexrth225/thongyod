@@ -53,3 +53,5 @@ export type {
   PetMood,
   PetSummary,
 } from './home.js'
+
+export type { RoomGame, RoomState, SpyRoomSettings, PartyRoomSettings, RoomPlayer, SpySecret, RoomRound, PartyRound, SpyRoomData, PartyRoomData, Room } from './rooms.js'

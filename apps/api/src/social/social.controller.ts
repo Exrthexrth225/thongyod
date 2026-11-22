@@ -3,11 +3,20 @@ import type { IncomingMessage } from 'node:http'
 import { SessionService } from '../auth/session.service.js'
 import { SocialService } from './social.service.js'
 import { FriendLinksService } from './friend-links.service.js'
+import { ProfilesService } from './profiles.service.js'
 import { assertMutationOrigin } from '../auth/policy.js'
 
 @Controller()
 export class SocialController {
-  constructor(private readonly sessions: SessionService, private readonly social: SocialService, private readonly links: FriendLinksService) {}
+  constructor(private readonly sessions: SessionService, private readonly social: SocialService, private readonly links: FriendLinksService,private readonly profiles:ProfilesService) {}
+
+  @Get('users/:id/profile')
+  @Header('Cache-Control','no-store')
+  async profile(@Req() request:IncomingMessage,@Param('id') id:string){return this.profiles.profile((await this.sessions.me(request)).userId,id)}
+
+  @Get('gangs/:id')
+  @Header('Cache-Control','no-store')
+  async gang(@Req() request:IncomingMessage,@Param('id') id:string){return this.profiles.gang((await this.sessions.me(request)).userId,id)}
 
   @Get('friends/link')
   @Header('Cache-Control', 'no-store')

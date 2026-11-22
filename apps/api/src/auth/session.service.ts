@@ -12,7 +12,7 @@ export const meColumns = `u.id AS "userId", u.display_name AS "displayName", u.h
     THEN to_char((u.handle_changed_at + interval '720 hours') AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
     ELSE NULL END AS "handleChangeableAt"`
 
-function profilePatch(body: unknown): UpdateMeRequest {
+export function profilePatch(body: unknown): UpdateMeRequest {
   if (!body || typeof body !== 'object' || Array.isArray(body)
     || Object.keys(body).some(key => !['displayName', 'bio', 'handle'].includes(key))) {
     throw new BadRequestException({ error: { code: 'INVALID_REQUEST' } })

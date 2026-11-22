@@ -104,6 +104,7 @@ test('friend sends retain rolling history and links rotate atomically without ex
     assert.equal((await pool.query('SELECT count(*)::int AS n FROM friend_link_tokens WHERE user_id=$1 AND revoked_at IS NULL',[ids[0]])).rows[0].n,1)
   } finally {
     await app?.close()
+    await pool.query('DELETE FROM app_notifications WHERE user_id=ANY($1::uuid[]) OR actor_id=ANY($1::uuid[])',[ids])
     for (const table of ['auth_sessions','friend_link_tokens']) await pool.query(`DELETE FROM ${table} WHERE user_id=ANY($1::uuid[])`,[ids])
     await pool.query('DELETE FROM friend_request_sends WHERE requester_id=ANY($1::uuid[]) OR recipient_id=ANY($1::uuid[])',[ids])
     await pool.query('DELETE FROM user_blocks WHERE blocker_id=ANY($1::uuid[]) OR blocked_id=ANY($1::uuid[])',[ids])

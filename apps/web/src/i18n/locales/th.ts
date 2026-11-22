@@ -2,6 +2,15 @@
 // Rule: never write UI text directly in components; add a key here and use t('key').
 // en.ts must have exactly the same keys (TypeScript checks this).
 export const th = {
+  auth: {
+    login: 'เข้าสู่ระบบ', intro: 'เจอเพื่อน นัดเจอ แล้วมาเล่นด้วยกัน', withLine: 'เข้าสู่ระบบด้วย LINE',
+    loginFailed: 'เข้าสู่ระบบด้วย LINE ไม่สำเร็จ ลองอีกครั้งได้เลย', unavailable: 'ระบบเข้าสู่ระบบยังไม่พร้อม กรุณาลองใหม่ภายหลัง', browse: 'ดูเครื่องมือที่ใช้ได้',
+    signup: 'สร้างโปรไฟล์ของคุณ', signupExpired: 'หมดเวลาสมัครแล้ว กรุณาเข้าสู่ระบบด้วย LINE อีกครั้ง',
+    name: 'ชื่อที่แสดง', nameHelp: '2–20 ตัว ใช้ภาษาไทย อังกฤษ ตัวเลข เว้นวรรค จุด ขีดล่าง หรือขีดกลาง ชื่อซ้ำกับเพื่อนได้',
+    handle: 'ชื่อผู้ใช้', handleHelp: '4–20 ตัว ขึ้นต้นด้วย a–z ใช้ตัวอักษรอังกฤษ ตัวเลข จุด หรือขีดล่าง เพื่อนใช้ชื่อนี้ค้นหาคุณ',
+    handleTaken: 'ชื่อผู้ใช้นี้มีคนใช้แล้ว ลองชื่ออื่นนะ', saveFailed: 'สร้างบัญชีไม่สำเร็จ ตรวจสอบข้อมูลแล้วลองอีกครั้ง',
+    saving: 'กำลังสร้างบัญชี…', create: 'สร้างบัญชี',
+  },
   nav: {
     label: 'เมนูหลัก',
     home: 'หน้าหลัก',

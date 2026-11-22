@@ -2,6 +2,15 @@ import type { Messages } from './th'
 
 // English UI text. Must have exactly the same keys as th.ts.
 export const en: Messages = {
+  auth: {
+    login: 'Log in', intro: 'Meet friends, make plans, and play together.', withLine: 'Continue with LINE',
+    loginFailed: 'LINE login did not finish. Please try again.', unavailable: 'Login is not ready yet. Please try again later.', browse: 'Explore tools',
+    signup: 'Create your profile', signupExpired: 'Your signup session expired. Log in with LINE again.',
+    name: 'Display name', nameHelp: '2–20 Thai or English letters, numbers, spaces, dots, underscores or hyphens. Names may repeat.',
+    handle: 'Username', handleHelp: '4–20 characters. Start with a–z; use letters, numbers, dots or underscores. Friends find you with this name.',
+    handleTaken: 'This username is already taken. Choose another one.', saveFailed: 'Could not create your account. Check your details and try again.',
+    saving: 'Creating account…', create: 'Create account',
+  },
   nav: {
     label: 'Main menu',
     home: 'Home',
