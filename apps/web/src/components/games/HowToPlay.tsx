@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronRight, CircleHelp, Maximize, Minimize, Pin, PinOff, Play, Target } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CircleHelp, FlaskConical, Maximize, Minimize, Pin, PinOff, Play, Target } from 'lucide-react'
 import { SoundToggle } from '@/components/common/SoundToggle'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Button } from '@/components/ui/button'
@@ -21,10 +21,10 @@ type SheetProps = { game: GameId; open: boolean; onOpenChange: (open: boolean) =
 export function HowToPlaySheet({ game, open, onOpenChange }: SheetProps) {
   const { t } = useTranslation()
   const [step, setStep] = useState(0)
-  const icons = HOW_TO[game]
+  const icons = HOW_TO[game] ?? []
   const tint = gameById(game).tint
   const total = icons.length
-  const Icon = icons[step]
+  const Icon = icons[step] ?? CircleHelp
   const key = `games.howto.${game}.s${step + 1}` as 'games.howto.spy.s1'
 
   return (
@@ -41,7 +41,7 @@ export function HowToPlaySheet({ game, open, onOpenChange }: SheetProps) {
           <Target className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <span>
             <b className="font-medium">{t('games.howto.goalLabel')}: </b>
-            {t(`games.howto.${game}.goal`)}
+            {t(`games.howto.${game}.goal` as 'games.howto.spy.goal')}
           </span>
         </p>
         <div key={step} className="game-card-in flex flex-col items-center gap-3 py-2 text-center" aria-live="polite">
@@ -96,6 +96,18 @@ export function HowToButton({ game }: { game: GameId }) {
       </Button>
       <HowToPlaySheet game={game} open={open} onOpenChange={setOpen} />
     </>
+  )
+}
+
+/** "ช่วงทดสอบ" line under the header of a game that is playable but not finished (#124). */
+export function BetaNote({ game }: { game: GameId }) {
+  const { t } = useTranslation()
+  if (gameById(game).status !== 'beta') return null
+  return (
+    <p className="mx-4 mb-3 flex items-start gap-2 rounded-2xl bg-tone-warning px-3 py-2 text-sm text-tone-warning-foreground">
+      <FlaskConical className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+      {t('games.betaNote')}
+    </p>
   )
 }
 

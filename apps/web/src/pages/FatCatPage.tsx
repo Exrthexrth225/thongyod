@@ -1,6 +1,6 @@
 import { useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { GameHeaderActions } from '@/components/games/HowToPlay'
+import { BetaNote, GameHeaderActions } from '@/components/games/HowToPlay'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { STANDARD_SET } from '@/config/games/fatCat'
 import { FatCatGame } from '@/features/fat-cat/FatCatGame'
@@ -13,6 +13,7 @@ export function FatCatPage() {
   return (
     <>
       <PageHeader title={t('games.list.fatCat.title')} subtitle={t('games.list.fatCat.desc')} backTo="/games" action={<GameHeaderActions game="fatCat" />} />
+      <BetaNote game="fatCat" />
       <FatCatGame />
     </>
   )

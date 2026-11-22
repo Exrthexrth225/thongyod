@@ -6,7 +6,8 @@ import {
 } from 'lucide-react'
 import type { GameId } from './games'
 
-export const HOW_TO: Record<GameId, LucideIcon[]> = {
+/** Locked games (#124) have no steps yet. */
+export const HOW_TO: Partial<Record<GameId, LucideIcon[]>> = {
   headsUp: [Smartphone, MessageCircle, ArrowDownUp, Trophy],
   spy: [Users, VenetianMask, MessageCircle, Vote, Crown],
   insider: [Crown, Eye, MessageCircle, Timer, Pointer],

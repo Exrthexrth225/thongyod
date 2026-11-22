@@ -8,7 +8,7 @@ import { GameTile } from '@/components/games/GameTile'
 import { HeroHeader } from '@/components/layout/HeroHeader'
 import { PET_SPECIES } from '@/components/pet/species'
 import { Card } from '@/components/ui/card'
-import { GAMES, gameById, type GameId } from '@/config/games'
+import { GAMES, isPlayable, gameById, type GameId } from '@/config/games'
 import { TOOLS, type Tool } from '@/config/tools'
 import { getMyPet } from '@/features/onboarding/storage'
 import { SHOW_BACK } from '@/lib/nav'
@@ -36,7 +36,7 @@ export function ExplorePage() {
   const friends = ready.filter((tool) => tool.group === 'friends' && !tool.featured)
   const solo = ready.filter((tool) => tool.group === 'solo' && !tool.featured)
   const soon = TOOLS.filter((tool) => tool.status === 'soon')
-  const gameCount = GAMES.filter((g) => g.status === 'ready').length
+  const gameCount = GAMES.filter(isPlayable).length
   const top = gameById(FEATURED_GAME)
 
   return (

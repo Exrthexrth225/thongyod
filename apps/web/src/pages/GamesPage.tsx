@@ -4,7 +4,7 @@ import { ChevronRight, Pin, Users, Wifi } from 'lucide-react'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { GameTile } from '@/components/games/GameTile'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { GAMES, type Game, type GameKind } from '@/config/games'
+import { GAMES, isPlayable, type Game, type GameKind } from '@/config/games'
 import { fitsGroup, pinStore, recentStore, topRow } from '@/features/games/library'
 import { useGameSettings } from '@/lib/gameSettings'
 import { SHOW_BACK } from '@/lib/nav'
@@ -24,7 +24,7 @@ export function GamesPage() {
   const [{ size }, setFilter] = useGameSettings<{ size: number | null }>('library', { size: null })
   const pins = pinStore.use()
   const recent = recentStore.use()
-  const top = topRow(pins, recent, (id) => byId.get(id)?.status === 'ready')
+  const top = topRow(pins, recent, (id) => { const g = byId.get(id); return !!g && isPlayable(g) })
 
   return (
     <div className="flex flex-col gap-2 pb-8">

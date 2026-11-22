@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { ChevronRight, CircleHelp, Smartphone, User, Users, Wifi, type LucideIcon } from 'lucide-react'
+import { ChevronRight, CircleHelp, FlaskConical, Lock, Smartphone, User, Users, Wifi, type LucideIcon } from 'lucide-react'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Button } from '@/components/ui/button'
 import type { Game } from '@/config/games'
@@ -40,10 +40,23 @@ export function GameTile({ game, className }: { game: Game; className?: string }
       <span className="mt-1.5 font-heading text-lg leading-snug font-bold">{t(`games.list.${game.id}.title`)}</span>
       <span className="line-clamp-2 text-[13px] leading-snug opacity-85">{t(`games.list.${game.id}.desc`)}</span>
       <span className="mt-auto flex w-full flex-wrap items-center gap-x-2 gap-y-1 pt-2 text-xs opacity-85">
-        <span className="flex items-center gap-1">
-          <Users className="size-3" aria-hidden="true" />
-          {game.status === 'soon' ? t('explore.soon') : players}
-        </span>
+        {game.status === 'soon' ? (
+          <span className="flex items-center gap-1 font-semibold">
+            <Lock className="size-3" aria-hidden="true" />
+            {t('games.locked')}
+          </span>
+        ) : (
+          <span className="flex items-center gap-1">
+            <Users className="size-3" aria-hidden="true" />
+            {players}
+          </span>
+        )}
+        {game.status === 'beta' && (
+          <span className="flex items-center gap-1 rounded-full bg-background/30 px-2 py-0.5 font-semibold">
+            <FlaskConical className="size-3" aria-hidden="true" />
+            {t('games.beta')}
+          </span>
+        )}
         {tags.includes('rooms') && (
           <span className="flex items-center gap-1 rounded-full bg-background/30 px-2 py-0.5 font-semibold">
             <Wifi className="size-3" aria-hidden="true" />
@@ -55,9 +68,9 @@ export function GameTile({ game, className }: { game: Game; className?: string }
   )
   const classes = cn('flex min-h-40 flex-col items-start gap-0.5 rounded-3xl p-3.5 text-left', tintClass(game.tint), className)
 
-  if (game.status !== 'ready') {
+  if (game.status === 'soon') {
     return (
-      <div className={cn(classes, 'opacity-55')} aria-label={t(`games.list.${game.id}.title`) + t('explore.lockedSuffix')}>
+      <div className={cn(classes, 'opacity-55')} aria-label={t(`games.list.${game.id}.title`) + t('games.lockedSuffix')}>
         {body}
       </div>
     )

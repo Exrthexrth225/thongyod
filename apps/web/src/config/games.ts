@@ -1,6 +1,6 @@
 // Every game, shown in the "เกม" section on Explore and on /games (DECISIONS #73).
 // To add a game: one entry here + `games.list.<id>.title/.desc` in th.ts and en.ts.
-import { Bomb, Brush, Cat, Fingerprint, Flag, CupSoda, Dices, Eye, Gauge, Grid3x3, Hand, LoaderPinwheel, MessageSquareOff, Pointer, Smartphone, Sparkles, VenetianMask, type LucideIcon } from 'lucide-react'
+import { ArrowUpNarrowWide, Beer, Bomb, Brush, Bug, Cat, Contrast, Crown, GalleryHorizontalEnd, Grid2x2X, Hash, Layers, Link, MessageSquareX, Moon, Palette, Shield, Fingerprint, Flag, CupSoda, Dices, Eye, Gauge, Grid3x3, Hand, LoaderPinwheel, MessageSquareOff, Pointer, Smartphone, Sparkles, VenetianMask, type LucideIcon } from 'lucide-react'
 
 import headsUpArt from '@/assets/games/headsUp.webp'
 import spyArt from '@/assets/games/spy.webp'
@@ -20,6 +20,8 @@ import fingerArt from '@/assets/games/finger.webp'
 import raceArt from '@/assets/games/race.webp'
 
 export type GameId = 'headsUp' | 'spy' | 'insider' | 'spectrum' | 'codewords' | 'taboo' | 'draw' | 'bomb' | 'mostLikely' | 'neverHave' | 'dice' | 'cups' | 'wheel' | 'fortune' | 'finger' | 'race' | 'fatCat'
+  // Coming soon (#124): shown locked as กำลังพัฒนา until built.
+  | 'swipe' | 'truthDrink' | 'horseBet' | 'mines' | 'stroop' | 'speedTap' | 'werewolf' | 'mission' | 'roach' | 'throne' | 'ito' | 'fakeArtist' | 'chain' | 'myWord'
 
 /** How it is played: one phone passed around the group, alone, or each friend on their own phone (rooms). */
 export type GameMode = 'onePhone' | 'solo' | 'rooms'
@@ -39,12 +41,13 @@ export type Game = {
   /** Also playable with each friend on their own phone (room, DECISIONS #76). The card then shows both tags and asks which way. */
   rooms?: boolean
   players: [min: number, max: number]
-  status: 'ready' | 'soon'
+  /** ready = done; beta = playable but art or polish missing (ช่วงทดสอบ); soon = locked (กำลังพัฒนา). */
+  status: 'ready' | 'beta' | 'soon'
   to: string
 }
 
 export const GAMES: Game[] = [
-  { id: 'fatCat', kind: 'drink', icon: Cat, tint: 3, mode: 'onePhone', players: [2, 20], status: 'ready', to: '/games/fat-cat' },
+  { id: 'fatCat', kind: 'drink', icon: Cat, tint: 3, mode: 'onePhone', players: [2, 20], status: 'beta', to: '/games/fat-cat' },
   { id: 'headsUp', kind: 'party', icon: Smartphone, art: headsUpArt, tint: 8, mode: 'onePhone', players: [2, 20], status: 'ready', to: '/head-guess' },
   { id: 'spy', kind: 'board', icon: VenetianMask, art: spyArt, tint: 6, mode: 'onePhone', rooms: true, players: [3, 12], status: 'ready', to: '/games/spy' },
   { id: 'insider', kind: 'board', icon: Eye, art: insiderArt, tint: 7, mode: 'onePhone', players: [4, 12], status: 'ready', to: '/games/insider' },
@@ -62,5 +65,28 @@ export const GAMES: Game[] = [
   { id: 'wheel', kind: 'toy', icon: LoaderPinwheel, art: wheelArt, tint: 3, mode: 'solo', players: [1, 20], status: 'ready', to: '/wheel' },
   { id: 'fortune', kind: 'toy', icon: Sparkles, art: fortuneArt, tint: 4, mode: 'solo', players: [1, 1], status: 'ready', to: '/fortune' },
 ]
+
+// Planned games (#124): locked tiles so the circle can see what is coming. Own names and themes (rules after Ohana-style
+// drinking games, One Night werewolf, Avalon, Cockroach Poker, Coup, Ito, A Fake Artist, telephone pictionary).
+const SOON: [GameId, GameKind, LucideIcon, number, [number, number]][] = [
+  ['swipe', 'drink', GalleryHorizontalEnd, 5, [2, 20]],
+  ['truthDrink', 'drink', Beer, 1, [2, 20]],
+  ['horseBet', 'drink', Layers, 4, [2, 20]],
+  ['mines', 'drink', Grid2x2X, 6, [2, 12]],
+  ['stroop', 'drink', Contrast, 8, [2, 12]],
+  ['speedTap', 'drink', Hash, 2, [2, 12]],
+  ['werewolf', 'board', Moon, 6, [3, 10]],
+  ['mission', 'board', Shield, 5, [5, 10]],
+  ['roach', 'board', Bug, 4, [3, 6]],
+  ['throne', 'board', Crown, 3, [2, 6]],
+  ['ito', 'board', ArrowUpNarrowWide, 2, [2, 10]],
+  ['fakeArtist', 'party', Palette, 7, [4, 10]],
+  ['chain', 'party', Link, 8, [4, 12]],
+  ['myWord', 'party', MessageSquareX, 1, [3, 12]],
+]
+GAMES.push(...SOON.map(([id, kind, icon, tint, players]): Game => ({ id, kind, icon, tint, mode: 'onePhone', players, status: 'soon', to: '' })))
+
+/** Can be opened (done or in testing). */
+export const isPlayable = (g: Game) => g.status !== 'soon'
 
 export const gameById = (id: GameId) => GAMES.find((g) => g.id === id)!

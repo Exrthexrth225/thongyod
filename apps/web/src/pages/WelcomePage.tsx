@@ -6,7 +6,7 @@ import { Egg, type EggStyle } from '@/components/pet/Egg'
 import { Pet } from '@/components/pet/Pet'
 import type { PetSpeciesId } from '@/components/pet/species'
 import { Button } from '@/components/ui/button'
-import { GAMES } from '@/config/games'
+import { GAMES, isPlayable } from '@/config/games'
 import { finishOnboarding, getMyPet, saveMyPet } from '@/features/onboarding/storage'
 import { secureRandomInt } from '@/lib/random'
 import { tintClass } from '@/lib/tones'
@@ -69,7 +69,7 @@ const POINTS = [
 
 function Intro({ onNext }: { onNext: () => void }) {
   const { t } = useTranslation()
-  const games = GAMES.filter((g) => g.status === 'ready').length
+  const games = GAMES.filter(isPlayable).length
   return (
     <>
       <div className="flex items-end justify-center gap-2">
