@@ -152,3 +152,4 @@
 | AvatarEditor | `src/components/profile/AvatarEditor.tsx` | ours | Profile picture on แก้ไขโปรไฟล์: avatar + camera badge, เปลี่ยนรูป / ลบรูป, opens the cropper, uploads | me | #116 |
 | AvatarCropper | `src/components/profile/AvatarCropper.tsx` | ours | Square crop dialog (drag, pinch, zoom slider) → 512 px JPEG Blob | file, busy, onCancel, onDone, onLoadError | Math in `features/profile/crop.ts` |
 | TitleSheet | `src/components/profile/TitleSheet.tsx` | ours | A ฉายา in a BottomSheet: name, how it is earned (catalog by key), gang, month, meetup link, holder link | title (TitleInfo \| null), onClose, holderLink? | Profile chips, main title, ฉายาทั้งหมด, gang page (#117) |
+| PackIcon | `src/components/games/PackIcon.tsx` | ours | A content pack's picture: Earth's category sticker by pack id, else its Lucide icon | id, icon, className? | PackPicker, ใบ้บนหัว setup (#118) |

@@ -1,3 +1,4 @@
+import bottleArt from '@/assets/party/bottle.webp'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Dices, Smartphone, Wine } from 'lucide-react'
@@ -169,12 +170,7 @@ export function DiceBottleGame() {
                   </span>
                 )
               })}
-            <svg viewBox="0 0 60 200" className="bottle-spin h-[62%]" style={{ transform: `rotate(${bottle}deg)` }} aria-hidden="true">
-              <rect x="22" y="4" width="16" height="10" rx="3" className="fill-current opacity-80" />
-              <path d="M24 14 h12 v34 c0 10 18 18 18 40 v96 a12 12 0 0 1 -12 12 h-24 a12 12 0 0 1 -12 -12 v-96 c0 -22 18 -30 18 -40 z" className="fill-current opacity-90" />
-              <rect x="14" y="110" width="32" height="44" rx="6" className="fill-background opacity-70" />
-              <path d="M20 40 c0 8 -2 12 -6 18" className="stroke-background opacity-50" strokeWidth="3" fill="none" strokeLinecap="round" />
-            </svg>
+            <img src={bottleArt} alt="" draggable={false} className="bottle-spin aspect-square h-[62%] object-contain" style={{ transform: `rotate(${bottle}deg)` }} />
           </button>
           <p className="min-h-8 text-center text-xl font-medium" role="status" aria-live="polite">
             {shown && seat !== null && <span className="game-pop inline-block">{t('games.dice.pointsAt', { n: seat + 1 })}</span>}
