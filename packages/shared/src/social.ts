@@ -9,3 +9,8 @@ export interface FriendRequest { id: string; user: PersonCard; mutualFriends: nu
 export interface FriendRequests { incoming: FriendRequest[]; outgoing: FriendRequest[] }
 export interface GangSummary { id: string; name: string; memberCount: number }
 export interface CursorPage<T> { items: T[]; nextCursor: string | null }
+export interface BlockUserRequest { userId: string }
+export interface SocialMutationErrorResponse {
+  error: { code: 'INVALID_REQUEST' | 'UNAUTHENTICATED' | 'AUTH_UNAVAILABLE' | 'ORIGIN_NOT_ALLOWED' | 'DEV_ACCESS_DENIED'
+    | 'USER_NOT_FOUND' | 'REQUEST_NOT_FOUND' | 'NOT_FRIENDS' | 'SOCIAL_UNAVAILABLE' }
+}

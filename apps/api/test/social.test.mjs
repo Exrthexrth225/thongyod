@@ -91,3 +91,127 @@ test('social reads enforce session, privacy, exact handles and stable scoped pag
     if(previous===undefined)delete process.env.PGDATABASE;else process.env.PGDATABASE=previous
   }
 })
+
+test('friend mutations enforce ownership, serialize with blocks and preserve shared memberships', {
+  skip: !process.env.PGPASSWORD ? 'Configure the separate local test database first' : false,
+}, async () => {
+  const previous = process.env.PGDATABASE
+  process.env.PGDATABASE = process.env.TEST_PGDATABASE
+  const config = databaseConfig()
+  assertLocalDatabase(config, 'thongyod_test')
+  const pool = new Pool(config)
+  const ids = [randomUUID(),randomUUID(),randomUUID()]
+  const handles = ids.map(id => `action_${id.slice(0,8)}`)
+  const tokens = ids.map(() => randomBytes(32).toString('base64url'))
+  const gang = randomUUID()
+  const origin = 'http://localhost:5173'
+  let app
+  try {
+    await migrateDatabase(pool)
+    for (let i=0;i<ids.length;i++) {
+      await pool.query('INSERT INTO users(id,display_name,display_name_key,handle) VALUES($1,$2,$3,$4)',[ids[i],`Action_${i}`,`action_${i}`,handles[i]])
+      await pool.query("INSERT INTO auth_sessions(id,user_id,token_hash,source,expires_at) VALUES($1,$2,$3,'line',now()+interval '1 day')",[randomUUID(),ids[i],sessionHash(tokens[i])])
+    }
+    await pool.query('INSERT INTO gangs(id,created_by,created_at) VALUES($1,$2,now())',[gang,ids[0]])
+    await pool.query("INSERT INTO gang_settings(gang_id,name,updated_at) VALUES($1,'Action_Gang',now())",[gang])
+    for(const id of ids) await pool.query('INSERT INTO gang_members(id,gang_id,user_id,joined_at) VALUES($1,$2,$3,now())',[randomUUID(),gang,id])
+    const memberships=(await pool.query('SELECT * FROM gang_members WHERE gang_id=$1 ORDER BY id',[gang])).rows
+    app=await NestFactory.create(AppModule,{logger:false})
+    await app.listen(0,'127.0.0.1')
+    const url=await app.getUrl()
+    const call=(path,method='GET',actor=0,body,headers={})=>fetch(url+path,{method,headers:{Origin:origin,
+      ...(actor<0?{}:{Cookie:`thongyod_session=${tokens[actor]}`}),
+      ...(body===undefined?{}:{'Content-Type':'application/json'}),...headers},...(body===undefined?{}:{body:JSON.stringify(body)})})
+    const reset=async(status='pending',sender=0,recipient=1)=>{
+      await pool.query('DELETE FROM friendships WHERE requester_id=ANY($1::uuid[]) OR recipient_id=ANY($1::uuid[])',[ids])
+      const id=randomUUID()
+      await pool.query("INSERT INTO friendships(id,requester_id,recipient_id,status,created_at,responded_at) VALUES($1,$2,$3,$4,'2026-01-01T00:00:00Z',$5)",[id,ids[sender],ids[recipient],status,status==='accepted'?new Date('2026-01-02T00:00:00Z'):null])
+      return id
+    }
+    const state=async id=>(await pool.query('SELECT status,created_at,responded_at FROM friendships WHERE id=$1',[id])).rows[0]
+    const empty=async response=>{assert.equal(response.status,204);assert.equal(await response.text(),'');assert.equal(response.headers.get('cache-control'),'no-store')}
+    const requests=async actor=>(await call('/friends/requests','GET',actor)).json()
+    const search=actor=>call('/users/search?handle='+handles[1-actor],'GET',actor)
+    let id=await reset()
+    for(const [path,method,body] of [[`/friends/requests/${id}/accept`,'POST'],[`/friends/requests/${id}`,'DELETE'],[`/friends/${ids[1]}`,'DELETE'],['/blocks','POST',{userId:ids[1]}],[`/blocks/${ids[1]}`,'DELETE']]) {
+      assert.equal((await call(path,method,-1,body)).status,401)
+      assert.equal((await call(path,method,0,body,{Origin:'https://evil.example'})).status,403)
+      assert.equal((await call(path,method,0,body,{Origin:''})).status,403)
+    }
+    for(const body of [{},{userId:123},{userId:ids[1],actorId:ids[0]},[]]) assert.equal((await call('/blocks','POST',0,body)).status,400)
+    assert.equal((await call('/blocks','POST',0,{userId:ids[1]},{'Content-Type':'text/plain'})).status,400)
+    for(const target of [ids[0],ids[0].toUpperCase(),randomUUID(),'invalid']) assert.equal((await call('/blocks','POST',0,{userId:target})).status,404)
+    assert.equal((await call(`/friends/requests/${id}/accept`,'POST',0)).status,404)
+    assert.equal((await call(`/friends/requests/${id}/accept`,'POST',2,undefined,{'X-User-Id':ids[1]})).status,404)
+    assert.equal((await call(`/friends/requests/${id}`,'DELETE',2)).status,404)
+    assert.equal((await call('/friends/requests/invalid/accept','POST',1)).status,404)
+    assert.equal((await state(id)).status,'pending')
+    await empty(await call(`/friends/requests/${id}/accept`,'POST',1))
+    assert.equal((await state(id)).status,'accepted')
+    assert.equal((await (await search(0)).json()).relationship,'friend')
+    assert.equal((await call(`/friends/requests/${id}/accept`,'POST',1)).status,404)
+    const accepted=await state(id)
+    await empty(await call(`/friends/${ids[0]}`,'DELETE',1))
+    assert.deepEqual(await state(id),{...accepted,status:'ended'})
+    assert.equal((await call(`/friends/${ids[1]}`,'DELETE',0)).status,404)
+    assert.equal((await (await search(0)).json()).relationship,'none')
+
+    id=await reset()
+    await empty(await call(`/friends/requests/${id}`,'DELETE',0))
+    assert.equal((await state(id)).status,'ended');assert.deepEqual((await requests(0)).outgoing,[])
+    const stale=id
+    id=await reset()
+    assert.equal((await call(`/friends/requests/${stale}/accept`,'POST',1)).status,404)
+    await empty(await call(`/friends/requests/${id}`,'DELETE',1))
+    assert.equal((await state(id)).status,'declined');assert.deepEqual((await requests(1)).incoming,[])
+
+    id=await reset('accepted')
+    await empty(await call('/blocks','POST',0,{userId:ids[1]}))
+    await empty(await call('/blocks','POST',0,{userId:ids[1]}))
+    assert.equal((await pool.query('SELECT count(*)::int AS n FROM user_blocks WHERE blocker_id=$1',[ids[0]])).rows[0].n,1)
+    assert.equal((await state(id)).status,'ended')
+    assert.equal((await search(0)).status,404);assert.equal((await search(1)).status,404)
+    await empty(await call('/blocks','POST',1,{userId:ids[0]}))
+    await empty(await call(`/blocks/${ids[1]}`,'DELETE',0))
+    await empty(await call(`/blocks/${ids[1]}`,'DELETE',0))
+    assert.equal((await search(0)).status,404)
+    await empty(await call(`/blocks/${ids[0]}`,'DELETE',1))
+    assert.equal((await (await search(0)).json()).relationship,'none')
+    for(const [sender,recipient] of [[0,1],[1,0]]) {
+      id=await reset('pending',sender,recipient)
+      await empty(await call('/blocks','POST',0,{userId:ids[1]}))
+      assert.equal((await state(id)).status,'ended')
+      assert.deepEqual(await requests(0),{incoming:[],outgoing:[]})
+      assert.equal((await call(`/friends/requests/${id}/accept`,'POST',recipient)).status,404)
+      await empty(await call(`/blocks/${ids[1]}`,'DELETE',0))
+    }
+    id=await reset()
+    const doubleAccept=await Promise.all([call(`/friends/requests/${id}/accept`,'POST',1),call(`/friends/requests/${id}/accept`,'POST',1)])
+    assert.deepEqual(doubleAccept.map(r=>r.status).sort(),[204,404]);assert.equal((await state(id)).status,'accepted')
+    id=await reset()
+    const acceptCancel=await Promise.all([call(`/friends/requests/${id}/accept`,'POST',1),call(`/friends/requests/${id}`,'DELETE',0)])
+    assert.deepEqual(acceptCancel.map(r=>r.status).sort(),[204,404]);assert.ok(['accepted','ended'].includes((await state(id)).status))
+    id=await reset()
+    const blockAccept=await Promise.all([call('/blocks','POST',0,{userId:ids[1]}),call(`/friends/requests/${id}/accept`,'POST',1)])
+    assert.equal(blockAccept[0].status,204);assert.ok([204,404].includes(blockAccept[1].status))
+    assert.equal((await state(id)).status,'ended');assert.equal((await search(0)).status,404)
+    await empty(await call(`/blocks/${ids[1]}`,'DELETE',0))
+    const bothBlock=await Promise.all([call('/blocks','POST',0,{userId:ids[1]}),call('/blocks','POST',1,{userId:ids[0]})])
+    assert.deepEqual(bothBlock.map(r=>r.status),[204,204])
+    const bothUnblock=await Promise.all([call(`/blocks/${ids[1]}`,'DELETE',0),call(`/blocks/${ids[0]}`,'DELETE',1)])
+    assert.deepEqual(bothUnblock.map(r=>r.status),[204,204])
+    assert.deepEqual((await pool.query('SELECT * FROM gang_members WHERE gang_id=$1 ORDER BY id',[gang])).rows,memberships)
+    assert.equal((await (await call('/gangs')).json()).items.find(g=>g.id===gang).memberCount,3)
+  } finally {
+    await app?.close()
+    await pool.query('DELETE FROM gang_members WHERE gang_id=$1',[gang])
+    await pool.query('DELETE FROM gang_settings WHERE gang_id=$1',[gang])
+    await pool.query('DELETE FROM gangs WHERE id=$1',[gang])
+    await pool.query('DELETE FROM auth_sessions WHERE user_id=ANY($1::uuid[])',[ids])
+    await pool.query('DELETE FROM user_blocks WHERE blocker_id=ANY($1::uuid[]) OR blocked_id=ANY($1::uuid[])',[ids])
+    await pool.query('DELETE FROM friendships WHERE requester_id=ANY($1::uuid[]) OR recipient_id=ANY($1::uuid[])',[ids])
+    await pool.query('DELETE FROM users WHERE id=ANY($1::uuid[])',[ids])
+    await pool.end()
+    if(previous===undefined)delete process.env.PGDATABASE;else process.env.PGDATABASE=previous
+  }
+})

@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common'
+import { BadRequestException, HttpException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common'
+import type { PoolClient } from 'pg'
 import type { CursorPage, Friend, FriendRequests, GangSummary, PersonCard, UserCard } from '@thongyod/shared'
 import { DatabaseService } from '../db/database.service.js'
 
@@ -44,6 +45,76 @@ function page<T>(rows: T[], p: ReturnType<typeof pagination>, position: (item: T
 @Injectable()
 export class SocialService {
   constructor(private readonly database: DatabaseService) {}
+
+  private async mutatePair(viewer: string, target: string, code: 'USER_NOT_FOUND' | 'REQUEST_NOT_FOUND' | 'NOT_FRIENDS', apply: (client: PoolClient) => Promise<void>): Promise<void> {
+    if (!uuid(target) || viewer === target.toLowerCase()) throw new NotFoundException({ error: { code } })
+    const client = await Promise.resolve().then(() => this.database.connection.connect()).catch(() => {
+      throw new ServiceUnavailableException({ error: { code: 'SOCIAL_UNAVAILABLE' } })
+    })
+    try {
+      await client.query('BEGIN')
+      // Every pair mutation takes these locks in UUID order, including block/unblock.
+      const users = await client.query('SELECT id FROM users WHERE id=ANY($1::uuid[]) ORDER BY id FOR UPDATE', [[viewer, target]])
+      if (users.rowCount !== 2) throw new NotFoundException({ error: { code } })
+      await apply(client)
+      await client.query('COMMIT')
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => undefined)
+      if (error instanceof HttpException) throw error
+      throw new ServiceUnavailableException({ error: { code: 'SOCIAL_UNAVAILABLE' } })
+    } finally { client.release() }
+  }
+
+  async requestAction(viewer: string, id: string, accept: boolean): Promise<void> {
+    if (!uuid(id)) throw new NotFoundException({ error: { code: 'REQUEST_NOT_FOUND' } })
+    const request = await this.rows<{ target: string }>(`SELECT
+        CASE WHEN requester_id=$1 THEN recipient_id ELSE requester_id END AS target
+      FROM friendships WHERE id=$2 AND status='pending'
+        AND ${accept ? 'recipient_id=$1' : '(requester_id=$1 OR recipient_id=$1)'}`, [viewer, id])
+    if (!request[0]) throw new NotFoundException({ error: { code: 'REQUEST_NOT_FOUND' } })
+    await this.mutatePair(viewer, request[0].target, 'REQUEST_NOT_FOUND', async client => {
+      const result = await client.query(`UPDATE friendships f SET
+          status=CASE WHEN $3 THEN 'accepted'::friendship_status
+            WHEN f.recipient_id=$1 THEN 'declined'::friendship_status ELSE 'ended'::friendship_status END,
+          responded_at=clock_timestamp()
+        WHERE f.id=$2 AND f.status='pending'
+          AND ${accept ? 'f.recipient_id=$1' : '(f.requester_id=$1 OR f.recipient_id=$1)'}
+          AND NOT EXISTS (SELECT 1 FROM user_blocks b WHERE
+            (b.blocker_id=f.requester_id AND b.blocked_id=f.recipient_id)
+            OR (b.blocker_id=f.recipient_id AND b.blocked_id=f.requester_id))`, [viewer, id, accept])
+      if (!result.rowCount) throw new NotFoundException({ error: { code: 'REQUEST_NOT_FOUND' } })
+    })
+  }
+
+  async unfriend(viewer: string, target: string): Promise<void> {
+    await this.mutatePair(viewer, target, 'NOT_FRIENDS', async client => {
+      const result = await client.query(`UPDATE friendships SET status='ended'
+        WHERE status='accepted' AND ((requester_id=$1 AND recipient_id=$2) OR (requester_id=$2 AND recipient_id=$1))`, [viewer, target])
+      if (!result.rowCount) throw new NotFoundException({ error: { code: 'NOT_FRIENDS' } })
+    })
+  }
+
+  async block(viewer: string, body: unknown): Promise<void> {
+    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).length !== 1
+      || !('userId' in body) || typeof body.userId !== 'string') {
+      throw new BadRequestException({ error: { code: 'INVALID_REQUEST' } })
+    }
+    const target = body.userId
+    await this.mutatePair(viewer, target, 'USER_NOT_FOUND', async client => {
+      await client.query(`INSERT INTO user_blocks(blocker_id,blocked_id,created_at) VALUES($1,$2,clock_timestamp())
+        ON CONFLICT (blocker_id,blocked_id) DO NOTHING`, [viewer, target])
+      // Keep request timestamps/history and shared memberships; revoke only this pair's active relationship.
+      await client.query(`UPDATE friendships SET status='ended',responded_at=COALESCE(responded_at,clock_timestamp())
+        WHERE status IN ('accepted','pending')
+          AND ((requester_id=$1 AND recipient_id=$2) OR (requester_id=$2 AND recipient_id=$1))`, [viewer, target])
+    })
+  }
+
+  async unblock(viewer: string, target: string): Promise<void> {
+    await this.mutatePair(viewer, target, 'USER_NOT_FOUND', async client => {
+      await client.query('DELETE FROM user_blocks WHERE blocker_id=$1 AND blocked_id=$2', [viewer, target])
+    })
+  }
 
   private async rows<T extends Record<string, unknown>>(sql: string, values: unknown[]): Promise<T[]> {
     try { return (await this.database.connection.query<T>(sql, values)).rows }
