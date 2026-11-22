@@ -1,4 +1,4 @@
-export type { PersonCard, Friend, UserCard, FriendRequest, FriendRequests, GangSummary, CursorPage, BlockUserRequest, SocialMutationErrorResponse } from './social.js'
+export type { PersonCard, Friend, UserCard, FriendRequest, FriendRequests, GangSummary, CursorPage, BlockUserRequest, SendFriendRequest, SocialMutationErrorResponse } from './social.js'
 export type {
   Me,
   UpdateMeRequest,

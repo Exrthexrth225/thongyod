@@ -18,7 +18,7 @@ export async function seedDatabase(pool: Pool, anchor: Date): Promise<void> {
       || !['127.0.0.1', '::1'].includes(actual.address)) throw new Error('Local database identity mismatch')
     await client.query('SELECT pg_advisory_xact_lock(20261103)')
     // Explicit tables only, no CASCADE, no schema drop, transaction rollback on failure.
-    await client.query(`TRUNCATE TABLE seed_runs, home_states, user_preferences, meetup_responses,
+    await client.query(`TRUNCATE TABLE seed_runs, home_states, user_preferences, meetup_responses, friend_request_sends,
       meetups, gang_members, gang_settings, gangs, friend_link_tokens, user_blocks,
       friendships, auth_sessions, auth_identities, users`)
     const db = drizzle(client)
@@ -30,6 +30,7 @@ export async function seedDatabase(pool: Pool, anchor: Date): Promise<void> {
     await db.insert(schema.meetups).values(data.meetups)
     await db.insert(schema.meetupResponses).values(data.responses)
     await db.insert(schema.friendships).values(data.friendships)
+    await db.insert(schema.friendRequestSends).values(data.friendships.map(f => ({ requestId: f.id, requesterId: f.requesterId, recipientId: f.recipientId, sentAt: f.createdAt })))
     await db.insert(schema.blocks).values(data.blocks)
     await db.insert(schema.friendLinks).values(data.links)
     await db.insert(schema.homeStates).values(data.home)

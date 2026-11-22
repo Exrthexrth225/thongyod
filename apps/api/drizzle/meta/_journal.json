@@ -15,6 +15,13 @@
       "when": 1795298714627,
       "tag": "0001_user_handles",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795330728706,
+      "tag": "0002_friend_sends_and_links",
+      "breakpoints": true
     }
   ]
 }

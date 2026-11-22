@@ -61,9 +61,18 @@ export const blocks = pgTable('user_blocks', {
   blockedId: uuid('blocked_id').notNull().references(() => users.id), createdAt: instant('created_at').notNull(),
 }, (t) => [primaryKey({ columns: [t.blockerId, t.blockedId] }), check('block_not_self', sql`${t.blockerId} <> ${t.blockedId}`)])
 
+// Append-only send events: cancelling/resending must not erase the rolling quota.
+export const friendRequestSends = pgTable('friend_request_sends', {
+  requestId: uuid('request_id').primaryKey(),
+  requesterId: uuid('requester_id').notNull().references(() => users.id),
+  recipientId: uuid('recipient_id').notNull().references(() => users.id),
+  sentAt: instant('sent_at').notNull(),
+}, (t) => [index('friend_send_quota').on(t.requesterId, t.sentAt), check('send_not_self', sql`${t.requesterId} <> ${t.recipientId}`)])
+
 export const friendLinks = pgTable('friend_link_tokens', {
   id: uuid('id').primaryKey(), userId: uuid('user_id').notNull().references(() => users.id),
   tokenHash: text('token_hash').notNull().unique(), createdAt: instant('created_at').notNull(), revokedAt: instant('revoked_at'),
+  encryptedToken: text('encrypted_token'),
 }, (t) => [uniqueIndex('one_active_friend_link').on(t.userId).where(sql`${t.revokedAt} is null`)])
 
 export const gangs = pgTable('gangs', {

@@ -1,6 +1,7 @@
-import { BadRequestException, HttpException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common'
+import { BadRequestException, ConflictException, HttpException, HttpStatus, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common'
+import { randomUUID } from 'node:crypto'
 import type { PoolClient } from 'pg'
-import type { CursorPage, Friend, FriendRequests, GangSummary, PersonCard, UserCard } from '@thongyod/shared'
+import type { CursorPage, Friend, FriendRequest, FriendRequests, GangSummary, PersonCard, UserCard } from '@thongyod/shared'
 import { DatabaseService } from '../db/database.service.js'
 
 const edges = `WITH edges AS (
@@ -46,7 +47,7 @@ function page<T>(rows: T[], p: ReturnType<typeof pagination>, position: (item: T
 export class SocialService {
   constructor(private readonly database: DatabaseService) {}
 
-  private async mutatePair(viewer: string, target: string, code: 'USER_NOT_FOUND' | 'REQUEST_NOT_FOUND' | 'NOT_FRIENDS', apply: (client: PoolClient) => Promise<void>): Promise<void> {
+  private async mutatePair<T = void>(viewer: string, target: string, code: 'USER_NOT_FOUND' | 'REQUEST_NOT_FOUND' | 'NOT_FRIENDS', apply: (client: PoolClient) => Promise<T>): Promise<T> {
     if (!uuid(target) || viewer === target.toLowerCase()) throw new NotFoundException({ error: { code } })
     const client = await Promise.resolve().then(() => this.database.connection.connect()).catch(() => {
       throw new ServiceUnavailableException({ error: { code: 'SOCIAL_UNAVAILABLE' } })
@@ -56,13 +57,45 @@ export class SocialService {
       // Every pair mutation takes these locks in UUID order, including block/unblock.
       const users = await client.query('SELECT id FROM users WHERE id=ANY($1::uuid[]) ORDER BY id FOR UPDATE', [[viewer, target]])
       if (users.rowCount !== 2) throw new NotFoundException({ error: { code } })
-      await apply(client)
+      const result = await apply(client)
       await client.query('COMMIT')
+      return result
     } catch (error) {
       await client.query('ROLLBACK').catch(() => undefined)
       if (error instanceof HttpException) throw error
       throw new ServiceUnavailableException({ error: { code: 'SOCIAL_UNAVAILABLE' } })
     } finally { client.release() }
+  }
+
+  async sendRequest(viewer: string, body: unknown): Promise<FriendRequest> {
+    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).length !== 1
+      || !('userId' in body) || typeof body.userId !== 'string') throw new BadRequestException({ error: { code: 'INVALID_REQUEST' } })
+    const target = body.userId.toLowerCase()
+    if (viewer === target) throw new BadRequestException({ error: { code: 'CANNOT_ADD_SELF' } })
+    return this.mutatePair(viewer, target, 'USER_NOT_FOUND', async client => {
+      const blocked = await client.query(`SELECT 1 FROM user_blocks WHERE
+        (blocker_id=$1 AND blocked_id=$2) OR (blocker_id=$2 AND blocked_id=$1)`, [viewer,target])
+      if (blocked.rowCount) throw new NotFoundException({ error: { code: 'USER_NOT_FOUND' } })
+      const old = (await client.query<{ id: string; status: string }>(`SELECT id,status FROM friendships WHERE
+        (requester_id=$1 AND recipient_id=$2) OR (requester_id=$2 AND recipient_id=$1)`, [viewer,target])).rows[0]
+      if (old?.status === 'accepted') throw new ConflictException({ error: { code: 'ALREADY_FRIENDS' } })
+      if (old?.status === 'pending') throw new ConflictException({ error: { code: 'REQUEST_EXISTS' } })
+      const quota = await client.query<{ n: number }>(`SELECT count(*)::int AS n FROM friend_request_sends
+        WHERE requester_id=$1 AND sent_at>statement_timestamp()-interval '24 hours'`, [viewer])
+      if (quota.rows[0].n >= 20) throw new HttpException({ error: { code: 'DAILY_LIMIT_REACHED' } }, HttpStatus.TOO_MANY_REQUESTS)
+      const id = randomUUID()
+      if (old) await client.query(`UPDATE friendships SET id=$1,requester_id=$2,recipient_id=$3,status='pending',
+        created_at=clock_timestamp(),responded_at=NULL WHERE id=$4`, [id,viewer,target,old.id])
+      else await client.query(`INSERT INTO friendships(id,requester_id,recipient_id,status,created_at)
+        VALUES($1,$2,$3,'pending',clock_timestamp())`, [id,viewer,target])
+      await client.query(`INSERT INTO friend_request_sends(request_id,requester_id,recipient_id,sent_at)
+        SELECT id,requester_id,recipient_id,created_at FROM friendships WHERE id=$1`, [id])
+      const result = await client.query<FriendRequest>(`${edges} SELECT f.id,
+        json_build_object('userId',u.id,'displayName',u.display_name,'handle',u.handle,'avatarUrl',u.avatar_url) AS "user",
+        ${mutual} AS "mutualFriends",to_char(f.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS "createdAt"
+        FROM friendships f JOIN users u ON u.id=f.recipient_id WHERE f.id=$2 AND f.requester_id=$1`, [viewer,id])
+      return result.rows[0]
+    })
   }
 
   async requestAction(viewer: string, id: string, accept: boolean): Promise<void> {

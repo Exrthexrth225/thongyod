@@ -2,15 +2,44 @@ import { BadRequestException, Body, Controller, Delete, Get, Header, HttpCode, P
 import type { IncomingMessage } from 'node:http'
 import { SessionService } from '../auth/session.service.js'
 import { SocialService } from './social.service.js'
+import { FriendLinksService } from './friend-links.service.js'
 import { assertMutationOrigin } from '../auth/policy.js'
 
 @Controller()
 export class SocialController {
-  constructor(private readonly sessions: SessionService, private readonly social: SocialService) {}
+  constructor(private readonly sessions: SessionService, private readonly social: SocialService, private readonly links: FriendLinksService) {}
+
+  @Get('friends/link')
+  @Header('Cache-Control', 'no-store')
+  async ownLink(@Req() request: IncomingMessage) {
+    return this.links.own((await this.sessions.me(request)).userId)
+  }
+
+  @Post('friends/link')
+  @HttpCode(200)
+  @Header('Cache-Control', 'no-store')
+  async rotateLink(@Req() request: IncomingMessage) {
+    return this.links.own(await this.mutationViewer(request), true)
+  }
+
+  @Get('friend-links/:code')
+  @Header('Cache-Control', 'no-store')
+  async resolveLink(@Req() request: IncomingMessage, @Param('code') code: string) {
+    return this.links.resolve((await this.sessions.me(request)).userId, code)
+  }
 
   private async mutationViewer(request: IncomingMessage): Promise<string> {
     assertMutationOrigin(request)
     return (await this.sessions.me(request)).userId
+  }
+
+  @Post('friends/requests')
+  @HttpCode(201)
+  @Header('Cache-Control', 'no-store')
+  async send(@Req() request: IncomingMessage, @Body() body: unknown) {
+    const viewer = await this.mutationViewer(request)
+    if (!/^application\/json(?:;|$)/i.test(request.headers['content-type'] ?? '')) throw new BadRequestException({ error: { code: 'INVALID_REQUEST' } })
+    return this.social.sendRequest(viewer, body)
   }
 
   @Post('friends/requests/:id/accept')

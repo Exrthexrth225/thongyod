@@ -6,10 +6,11 @@ import { SessionService } from './auth/session.service.js'
 import { ALLOW_DEV_SESSIONS } from './auth/policy.js'
 import { SocialController } from './social/social.controller.js'
 import { SocialService } from './social/social.service.js'
+import { FriendLinksService } from './social/friend-links.service.js'
 
 @Module({
   controllers: [HealthController, AuthController, SocialController],
-  providers: [DatabaseService, SessionService, SocialService, { provide: ALLOW_DEV_SESSIONS, useValue: false }],
+  providers: [DatabaseService, SessionService, SocialService, FriendLinksService, { provide: ALLOW_DEV_SESSIONS, useValue: false }],
   exports: [DatabaseService, SessionService],
 })
 export class AppModule {}
