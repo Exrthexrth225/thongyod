@@ -41,4 +41,7 @@ Placed on the adult canvas (720×581) with one scale, same baseline, body centre
 ```bash
 python3 tools/pet-art/grid.py image/17-game-stickers.png apps/web/src/assets/games 4 4 headsUp,spy,insider,spectrum,codewords,taboo,draw,bomb,mostLikely,neverHave,dice,cups,wheel,fortune,finger,race
 python3 tools/pet-art/grid.py image/18-racers.png apps/web/src/assets/racers 4 2 cat,shiba,bunny,duck,frog,penguin,panda,koala --baseline --min 0.06
+python3 tools/pet-art/grid.py image/26-racers-fall.png apps/web/src/assets/racers-fall 4 2 cat,shiba,bunny,duck,frog,penguin,panda,koala --baseline --min 0.06
+python3 tools/pet-art/grid.py image/27-racers-sleep.png apps/web/src/assets/racers-sleep 4 2 cat,shiba,bunny,duck,frog,penguin,panda,koala --baseline --min 0.005
+python3 tools/pet-art/grid.py image/28-race-props.png apps/web/src/assets/race-props 3 2 rock,peel,bee,zzz,question,exclaim --size 160 --min 0.005
 ```
