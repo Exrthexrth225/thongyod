@@ -1,8 +1,8 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Award, ChevronRight, Lock, Users } from 'lucide-react'
-import type { Profile } from '@/api/types'
+import type { EarnedTitle, Profile } from '@/api/types'
 import { Avatar } from '@/components/common/Avatar'
 import { AvatarStack } from '@/components/common/AvatarStack'
 import { SectionHeader } from '@/components/common/SectionHeader'
@@ -11,6 +11,7 @@ import { MeetupRow } from '@/components/meetup/MeetupRow'
 import { Card } from '@/components/ui/card'
 import { formatMonthYear } from '@/lib/date'
 import { SHOW_BACK } from '@/lib/nav'
+import { TitleSheet } from './TitleSheet'
 
 /** Chip sections (titles, shared gangs) show this many; the rest are behind "ดูทั้งหมด". */
 const CHIP_PREVIEW = 6
@@ -27,6 +28,9 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
   const { t } = useTranslation()
   const isSelf = profile.relationship === 'self'
   const limited = !isSelf && profile.stats === null
+  const [openTitle, setOpenTitle] = useState<EarnedTitle | null>(null)
+  // The main title under the name opens its sheet when it is one of the earned titles we can see.
+  const mainTitle = profile.title ? (profile.titles ?? []).find((x) => x.name === profile.title) : undefined
 
   return (
     <div className="flex flex-col gap-3 pb-6">
@@ -38,9 +42,15 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
         <Avatar name={profile.displayName} src={profile.avatarUrl} className="size-20 text-2xl ring-4 ring-background" />
         <h2 className="mt-1 text-xl font-medium">{profile.displayName}</h2>
         <p className="text-sm text-muted-foreground">@{profile.handle}</p>
-        {profile.title && (
-          <span className="rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">{profile.title}</span>
-        )}
+        {profile.title &&
+          (mainTitle ? (
+            <button type="button" onClick={() => setOpenTitle(mainTitle)} className="pressable flex items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
+              <Award className="size-3.5" aria-hidden="true" />
+              {profile.title}
+            </button>
+          ) : (
+            <span className="rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">{profile.title}</span>
+          ))}
         {profile.bio && <p className="max-w-xs text-sm">{profile.bio}</p>}
         {profile.friendsSince && (
           <p className="text-xs text-muted-foreground">
@@ -139,16 +149,22 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
           />
           <div className="flex flex-wrap gap-2 px-4">
             {profile.titles.slice(0, CHIP_PREVIEW).map((title) => (
-              <span key={title.id} className="flex items-center gap-1.5 rounded-3xl bg-card px-3 py-1.5 text-sm">
+              <button
+                key={title.id}
+                type="button"
+                onClick={() => setOpenTitle(title)}
+                className="pressable flex min-h-9 items-center gap-1.5 rounded-3xl bg-card px-3 py-1.5 text-sm"
+              >
                 <Award className="size-4 text-brand" aria-hidden="true" />
                 {title.name}
                 {title.gangName && <span className="text-xs text-muted-foreground">· {title.gangName}</span>}
-              </span>
+              </button>
             ))}
           </div>
         </section>
       )}
 
+      <TitleSheet title={openTitle} onClose={() => setOpenTitle(null)} />
     </div>
   )
 }

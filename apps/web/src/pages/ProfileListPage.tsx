@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Award, Users } from 'lucide-react'
@@ -9,6 +10,8 @@ import { IconTile } from '@/components/common/IconTile'
 import { ListRow } from '@/components/common/ListRow'
 import { LoadingState } from '@/components/common/LoadingState'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { TitleSheet } from '@/components/profile/TitleSheet'
+import type { EarnedTitle } from '@/api/types'
 import { Card } from '@/components/ui/card'
 import { formatMonthYear } from '@/lib/date'
 
@@ -22,6 +25,7 @@ export function ProfileListPage({ kind }: { kind: ListKind }) {
   const profile = useProfile(userId)
   const notFound = profile.error instanceof ApiError && profile.error.status === 404
   const p = profile.data
+  const [openTitle, setOpenTitle] = useState<EarnedTitle | null>(null)
   const title = kind === 'titles' ? t('profile.titlesPage') : t('profile.sharedGangsPage')
 
   return (
@@ -45,6 +49,7 @@ export function ProfileListPage({ kind }: { kind: ListKind }) {
                   leading={<IconTile icon={Award} />}
                   title={x.name}
                   subtitle={[x.gangName, t('profile.earnedOn', { date: formatMonthYear(new Date(x.earnedAt)) })].filter(Boolean).join(' · ')}
+                  onClick={() => setOpenTitle(x)}
                 />
               ))
             )
@@ -55,6 +60,7 @@ export function ProfileListPage({ kind }: { kind: ListKind }) {
           )}
         </Card>
       )}
+      <TitleSheet title={openTitle} onClose={() => setOpenTitle(null)} />
     </div>
   )
 }

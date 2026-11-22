@@ -1,6 +1,6 @@
 // In-memory profile data for the dev mock API (decisions #36, #44, #45).
 import type { EarnedTitle, GangDetail, Me, Profile, UpdateMeRequest } from '@/api/types'
-import { gangs, gangUpcoming, ME, person, personCard, sharedGangs, upcomingTogether, userById, users } from './db'
+import { gangs, gangUpcoming, getMeetup, ME, person, personCard, sharedGangs, upcomingTogether, userById, users } from './db'
 import { areFriends, cardOf, friendCount, friendsSince, mutualIds } from './friends'
 
 /** Same rules as the backend (decisions #40, #45). */
@@ -18,25 +18,30 @@ const bios = new Map<string, string>([
 ])
 const handleChangedAt = new Map<string, Date>()
 
-type TitleSeed = { id: string; name: string; gangId: string | null; earnedAt: string }
+type TitleSeed = { id: string; key: string; name: string; gangId: string | null; earnedAt: string; meetupId?: string }
 const titles: Record<string, TitleSeed[]> = {
   u1: [
-    { id: 't1', name: 'สายเปย์', gangId: 'g1', earnedAt: '2026-10-20T12:00:00.000Z' },
-    { id: 't2', name: 'มาตรงเวลา', gangId: 'g2', earnedAt: '2026-09-02T12:00:00.000Z' },
+    { id: 't1', key: 'payer', name: 'สายเปย์', gangId: 'g1', earnedAt: '2026-10-20T12:00:00.000Z', meetupId: 'm1' },
+    { id: 't2', key: 'onTime', name: 'มาตรงเวลา', gangId: 'g2', earnedAt: '2026-09-02T12:00:00.000Z' },
     // More titles so the profile cuts the list and shows "ดูทั้งหมด".
-    { id: 't7', name: 'เจ้าภาพ', gangId: 'g1', earnedAt: '2026-08-11T12:00:00.000Z' },
-    { id: 't8', name: 'โอนไวใจถึง', gangId: 'g3', earnedAt: '2026-07-30T12:00:00.000Z' },
-    { id: 't9', name: 'หนูทดลอง', gangId: 'g5', earnedAt: '2026-07-02T12:00:00.000Z' },
-    { id: 't10', name: 'เส้นสายดี', gangId: 'g4', earnedAt: '2026-06-18T12:00:00.000Z' },
-    { id: 't11', name: 'มือไวใจเร็ว', gangId: 'g6', earnedAt: '2026-06-01T12:00:00.000Z' },
-    { id: 't12', name: 'สายมู', gangId: null, earnedAt: '2026-05-20T12:00:00.000Z' },
+    { id: 't7', key: 'host', name: 'เจ้าภาพ', gangId: 'g1', earnedAt: '2026-08-11T12:00:00.000Z' },
+    { id: 't8', key: 'fastPayer', name: 'โอนไวใจถึง', gangId: 'g3', earnedAt: '2026-07-30T12:00:00.000Z' },
+    { id: 't9', key: 'explorer', name: 'หนูทดลอง', gangId: 'g5', earnedAt: '2026-07-02T12:00:00.000Z' },
+    { id: 't10', key: 'connector', name: 'เส้นสายดี', gangId: 'g4', earnedAt: '2026-06-18T12:00:00.000Z' },
+    { id: 't11', key: 'quickVoter', name: 'มือไวใจเร็ว', gangId: 'g6', earnedAt: '2026-06-01T12:00:00.000Z' },
+    { id: 't12', key: 'saimu', name: 'สายมู', gangId: null, earnedAt: '2026-05-20T12:00:00.000Z' },
   ],
   u2: [
-    { id: 't3', name: 'ตัวตึงหมูกระทะ', gangId: 'g1', earnedAt: '2026-10-01T12:00:00.000Z' },
-    { id: 't6', name: 'ราชาแบด', gangId: 'g9-secret', earnedAt: '2026-07-01T12:00:00.000Z' },
+    { id: 't3', key: 'bbqKing', name: 'ตัวตึงหมูกระทะ', gangId: 'g1', earnedAt: '2026-10-01T12:00:00.000Z', meetupId: 'm1' },
+    { id: 't6', key: 'badmintonKing', name: 'ราชาแบด', gangId: 'g9-secret', earnedAt: '2026-07-01T12:00:00.000Z' },
   ],
-  u3: [{ id: 't4', name: 'นก', gangId: 'g3', earnedAt: '2026-11-03T08:00:00.000Z' }],
-  u5: [{ id: 't5', name: 'สายมู', gangId: null, earnedAt: '2026-08-15T12:00:00.000Z' }],
+  u3: [{ id: 't4', key: 'stoodUp', name: 'นก', gangId: 'g3', earnedAt: '2026-11-03T08:00:00.000Z' }],
+  u5: [{ id: 't5', key: 'saimu', name: 'สายมู', gangId: null, earnedAt: '2026-08-15T12:00:00.000Z' }],
+}
+
+function meetupRef(id: string) {
+  const m = getMeetup(id)
+  return m ? { id: m.id, title: m.title } : null
 }
 
 /** Small stable number per user so stats look real. */
@@ -64,7 +69,10 @@ export function getProfile(userId: string): Profile | null {
   const myGangIds = new Set(gangs.filter((g) => g.memberIds.includes(ME)).map((g) => g.id))
   const visibleTitles: EarnedTitle[] = (titles[userId] ?? []).map((t) => ({
     id: t.id,
+    key: t.key,
     name: t.name,
+    // The meetup only when I am in its gang too (same privacy as the gang name).
+    meetup: t.meetupId && t.gangId && myGangIds.has(t.gangId) ? meetupRef(t.meetupId) : null,
     // Hide the gang name when I am not in that gang (#44).
     gangName: t.gangId && myGangIds.has(t.gangId) ? (gangs.find((g) => g.id === t.gangId)?.name ?? null) : null,
     earnedAt: t.earnedAt,
@@ -152,6 +160,6 @@ export function getGangDetail(gangId: string): GangDetail | null {
   const gangTitles = Object.entries(titles)
     .flatMap(([userId, list]) => list.filter((x) => x.gangId === gangId && gang.memberIds.includes(userId)).map((x) => ({ x, userId })))
     .sort((a, b) => b.x.earnedAt.localeCompare(a.x.earnedAt))
-    .map(({ x, userId }) => ({ id: x.id, name: x.name, holder: person(userId), earnedAt: x.earnedAt }))
+    .map(({ x, userId }) => ({ id: x.id, key: x.key, name: x.name, holder: person(userId), earnedAt: x.earnedAt }))
   return { id: gang.id, name: gang.name, memberCount: gang.memberIds.length, members, upcoming: gangUpcoming(gangId), titles: gangTitles }
 }
