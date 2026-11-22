@@ -66,6 +66,9 @@ export function RaceGame() {
   const frame = useRef(0)
   const timers = useRef<number[]>([])
   const skip = useRef(false)
+  /** Skip needs two taps (#125, Earth): one stray tap while holding the phone must not end the race. */
+  const [armed, setArmed] = useState(false)
+  const armTimer = useRef(0)
   /** The goal at the moment the race started (read inside the frame loop). */
   const goalNow = useRef<Goal>('first')
 
@@ -307,12 +310,27 @@ export function RaceGame() {
       role="button"
       tabIndex={0}
       aria-label={phase === 'running' ? t('race.skip') : t('race.trackLabel')}
-      onClick={() => (skip.current = true)}
+      onClick={() => {
+        if (phase !== 'running' || skip.current) return
+        window.clearTimeout(armTimer.current)
+        if (armed) {
+          skip.current = true
+          setArmed(false)
+          return
+        }
+        setArmed(true)
+        armTimer.current = window.setTimeout(() => setArmed(false), 1600)
+      }}
       onKeyDown={(e) => e.key === 'Enter' && (skip.current = true)}
       ref={trackBox}
       className={cn('race-field relative flex flex-col overflow-hidden rounded-[28px] py-1.5', sideways && 'h-full')}
     >
       <span className="race-finish absolute inset-y-0 right-5 w-3" aria-hidden="true" />
+      {armed && phase === 'running' && (
+        <span className="race-call pointer-events-none absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-ink px-4 py-2 font-heading text-base font-bold whitespace-nowrap text-ink-foreground" aria-live="polite">
+          {t('race.tapAgain')}
+        </span>
+      )}
       {runners.map((r, i) => {
         const place = finished.indexOf(i)
         return (
