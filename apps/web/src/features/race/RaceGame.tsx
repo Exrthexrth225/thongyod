@@ -323,6 +323,7 @@ export function RaceGame() {
       }}
       onKeyDown={(e) => e.key === 'Enter' && (skip.current = true)}
       ref={trackBox}
+      data-phase={phase}
       className={cn('race-field relative flex flex-col overflow-hidden rounded-[28px] py-1.5', sideways && 'h-full')}
     >
       <span className="race-finish absolute inset-y-0 right-5 w-3" aria-hidden="true" />
@@ -344,7 +345,7 @@ export function RaceGame() {
             <div ref={(el) => void (runnerEls.current[i] = el)} className="race-slot absolute left-2 z-[2] will-change-transform" style={{ transform: 'translateX(0)' }}>
               <RaceRunner racer={r.racer} initial={String(i + 1)} running={phase === 'running' && place === -1} won={place === 0} className="size-full" />
               <RaceFx />
-              <span className="race-tag pointer-events-none absolute -bottom-0.5 left-1/2 max-w-24 -translate-x-1/2 truncate rounded-full bg-ink px-1.5 text-[10px] leading-4 font-semibold text-ink-foreground">{r.name}</span>
+              <span className="race-tag pointer-events-none absolute max-w-24 truncate rounded-full bg-ink/85 px-2 text-[11px] leading-5 font-semibold text-ink-foreground">{r.name}</span>
               {place !== -1 && (
                 <span className="num-pop absolute -top-0.5 -right-0.5 grid size-5 place-items-center rounded-full bg-yolk text-[11px] font-bold text-on-slab ring-2 ring-ink">{place + 1}</span>
               )}

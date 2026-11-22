@@ -37,6 +37,9 @@
 }
 /* Each runner is a square as tall as most of its lane; the start line sits just in front of its nose. */
 .race-slot { top: 6cqh; height: 88cqh; aspect-ratio: 1; }
+/* Names never cover the animals (#126): in front of them before the start, trailing behind once they run. */
+.race-tag { top: 50%; translate: 0 -50%; left: calc(100% + 2px); }
+.race-field:is([data-phase='running'], [data-phase='result']) .race-tag { left: auto; right: calc(100% + 2px); }
 .race-start { left: calc(0.5rem + 88cqh + 2px); width: 3px; background: var(--chalk); border-radius: 2px; }
 .race-count { animation: race-count 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
 @keyframes race-count { from { transform: scale(2.2); opacity: 0; } 30% { opacity: 1; } to { transform: scale(0.9); opacity: 0.9; } }
