@@ -43,5 +43,9 @@ python3 tools/pet-art/grid.py image/17-game-stickers.png apps/web/src/assets/gam
 python3 tools/pet-art/grid.py image/18-racers.png apps/web/src/assets/racers 4 2 cat,shiba,bunny,duck,frog,penguin,panda,koala --baseline --min 0.06
 python3 tools/pet-art/grid.py image/26-racers-fall.png apps/web/src/assets/racers-fall 4 2 cat,shiba,bunny,duck,frog,penguin,panda,koala --baseline --min 0.06
 python3 tools/pet-art/grid.py image/27-racers-sleep.png apps/web/src/assets/racers-sleep 4 2 cat,shiba,bunny,duck,frog,penguin,panda,koala --baseline --min 0.005
+python3 tools/pet-art/grid.py image/29-cups-bottle.png apps/web/src/assets/party 3 2 cup,bottle,thongyod,candy,cookie,donut --size 256 --min 0.005
+python3 tools/pet-art/grid.py image/30-pack-stickers.png apps/web/src/assets/packs 4 4 food,campus,animals,actions,jobs,city,things,sports,life,brain,travel,online,future,chaos,mixed,fantasy --size 160 --min 0.003
 python3 tools/pet-art/grid.py image/28-race-props.png apps/web/src/assets/race-props 3 2 rock,peel,bee,zzz,question,exclaim --size 160 --min 0.005
 ```
+
+Eggs (image/10, 11) and effects (image/09) were cut once with small scripts (tight crop per cell / per connected piece) into `assets/eggs` and `assets/effects` (#115).

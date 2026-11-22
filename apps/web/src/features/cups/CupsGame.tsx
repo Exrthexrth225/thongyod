@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Candy, Play, RotateCcw, Trophy } from 'lucide-react'
+import { Play, RotateCcw, Trophy } from 'lucide-react'
+import candyArt from '@/assets/party/candy.webp'
+import cookieArt from '@/assets/party/cookie.webp'
+import cupArt from '@/assets/party/cup.webp'
+import donutArt from '@/assets/party/donut.webp'
+import thongyodArt from '@/assets/party/thongyod.webp'
 import { Button } from '@/components/ui/button'
 import { markDone } from '@/features/daily/daily'
 import { celebrate } from '@/lib/celebrate'
@@ -18,6 +23,9 @@ type Saved = { best: number }
 
 /** Width of one slot as a share of the table. */
 const LIFT = -64
+
+/** The treat changes every level (#118): ทองหยอด first, like the app's name. Earth's art, image/29. */
+const TREATS = [thongyodArt, candyArt, cookieArt, donutArt]
 
 // ขนมอยู่ไหน: watch the candy go under a cup, follow the shuffle, tap the right cup. Each win = next level.
 export function CupsGame() {
@@ -120,7 +128,7 @@ export function CupsGame() {
               {/* Candy sits on the table under its cup. */}
               {cupId === candy && (phase === 'show' || phase === 'win' || phase === 'lose') && (
                 <span className="absolute bottom-0 left-1/2 grid -translate-x-1/2 place-items-center">
-                  <Candy className={cn('size-10', (phase === 'win' || phase === 'show') && 'game-pop', 'text-tint-3-foreground')} aria-hidden="true" />
+                  <img src={TREATS[(level - 1) % TREATS.length]} alt="" draggable={false} className={cn('size-14 object-contain', (phase === 'win' || phase === 'show') && 'game-pop')} />
                 </span>
               )}
               <button
@@ -131,12 +139,7 @@ export function CupsGame() {
                 className="relative mx-auto block w-[86%] max-w-28 transition-transform ease-out disabled:cursor-default motion-reduce:transition-none"
                 style={{ transform: `translate(${(arc[cupId] ?? 0) * 0.4}px, ${up ? LIFT : (arc[cupId] ?? 0)}px)`, transitionDuration: up ? '380ms' : `${speed * 0.5}ms` }}
               >
-                <svg viewBox="0 0 100 110" className={cn('w-full drop-shadow-sm', phase === 'pick' && 'active:scale-95')} aria-hidden="true">
-                  <path d="M28 10 h44 l16 88 H12 Z" className="fill-tint-1 stroke-tint-1-foreground" strokeWidth="2" strokeLinejoin="round" />
-                  <ellipse cx="50" cy="10" rx="22" ry="6" className="fill-tint-1 stroke-tint-1-foreground" strokeWidth="2" />
-                  <path d="M38 25 29 85 M62 25 71 85" className="stroke-tint-1-foreground opacity-25" strokeWidth="4" strokeLinecap="round" />
-                  <rect x="9" y="96" width="82" height="9" rx="4.5" className="fill-tint-1 stroke-tint-1-foreground" strokeWidth="2" />
-                </svg>
+                <img src={cupArt} alt="" draggable={false} className={cn('w-full drop-shadow-sm', phase === 'pick' && 'active:scale-95')} />
               </button>
             </div>
           )

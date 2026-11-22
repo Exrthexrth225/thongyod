@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import { tintClass } from '@/lib/tones'
 import { cn } from '@/lib/utils'
+import { PackIcon } from './PackIcon'
 
 export type PackOption = { id: string; icon: LucideIcon; tint: number; name: string; hint?: string; meta?: string }
 
@@ -26,7 +27,6 @@ export function PackPicker({ packs, value, onChange, multiple, label }: PackPick
     <div className="grid grid-cols-2 gap-2 px-4" role={multiple ? 'group' : 'radiogroup'} aria-label={label}>
       {packs.map((pack) => {
         const selected = value.includes(pack.id)
-        const Icon = pack.icon
         return (
           <button
             key={pack.id}
@@ -40,7 +40,7 @@ export function PackPicker({ packs, value, onChange, multiple, label }: PackPick
               selected ? 'ring-3 ring-brand' : 'opacity-75 ring-0',
             )}
           >
-            <Icon className="size-6" aria-hidden="true" />
+            <PackIcon id={pack.id} icon={pack.icon} />
             <span className="mt-1 text-sm font-medium">{pack.name}</span>
             {pack.hint && <span className="text-xs opacity-80">{pack.hint}</span>}
             {pack.meta && <span className="mt-auto text-[11px] opacity-80">{pack.meta}</span>}

@@ -1,3 +1,4 @@
+import { PackIcon } from '@/components/games/PackIcon'
 import { useTranslation } from 'react-i18next'
 import { ArrowDown, ArrowUp, Play, Shuffle, Smartphone } from 'lucide-react'
 import { Badge } from '@/components/common/Badge'
@@ -52,7 +53,6 @@ export function SetupScreen({ saved, onChange, tilt, onStart }: Props) {
             const best = saved.best[pack.id]
             const name = pack.id === MIX_PACK ? t('headsUp.mix.name') : t(`headsUp.packs.${pack.id as 'food'}.name`)
             const hint = pack.id === MIX_PACK ? t('headsUp.mix.hint') : t(`headsUp.packs.${pack.id as 'food'}.hint`)
-            const Icon = pack.icon
             return (
               <button
                 key={pack.id}
@@ -67,7 +67,7 @@ export function SetupScreen({ saved, onChange, tilt, onStart }: Props) {
                 )}
               >
                 <span className="flex w-full items-center justify-between">
-                  <Icon className="size-6" aria-hidden="true" />
+                  <PackIcon id={pack.id} icon={pack.icon} />
                   {pack.level && <span className="rounded-full bg-background/60 px-2 py-0.5 text-[11px] font-medium">{t(`headsUp.levels.${pack.level}`)}</span>}
                 </span>
                 <span className="mt-1 text-sm font-medium">{name}</span>
