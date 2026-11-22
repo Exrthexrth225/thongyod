@@ -69,7 +69,14 @@ export type UpdateMeRequest = { displayName?: string; bio?: string | null; handl
 
 export type EarnedTitle = {
   id: string
+  /**
+   * PROVISIONAL (#117, HANDOFF): which title this is (`title_key` in the ERD). The frontend explains how it is
+   * earned from this key (config/titles.ts + i18n). null/unknown key = a generic line.
+   */
+  key: string | null
   name: string
+  /** PROVISIONAL (#117): the meetup that earned it, when one did and I can see it; otherwise null. */
+  meetup?: { id: string; title: string } | null
   /** null when earned outside a gang, or when I am not in that gang (privacy, #44). */
   gangName: string | null
   earnedAt: string
@@ -110,7 +117,7 @@ export type GangSummary = { id: string; name: string; memberCount: number }
 export type GangMember = PersonCard & { title: string | null }
 
 /** A title earned inside this gang (spec §11: titles are per gang). */
-export type GangTitle = { id: string; name: string; holder: PersonRef; earnedAt: string }
+export type GangTitle = { id: string; /** PROVISIONAL (#117) */ key: string | null; name: string; holder: PersonRef; earnedAt: string }
 
 /**
  * PROVISIONAL (frontend mock, not yet agreed with the backend — see HANDOFF).

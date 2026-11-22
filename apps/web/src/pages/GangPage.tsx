@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Award, CalendarPlus } from 'lucide-react'
@@ -15,6 +16,8 @@ import { SectionHeader } from '@/components/common/SectionHeader'
 import { SeeAllLink } from '@/components/common/SeeAllLink'
 import { GangAvatar } from '@/components/gang/GangAvatar'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { TitleSheet } from '@/components/profile/TitleSheet'
+import type { GangTitle } from '@/api/types'
 import { MeetupRow } from '@/components/meetup/MeetupRow'
 import { buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -34,6 +37,7 @@ export function GangPage() {
   const me = useMe()
   const notFound = gang.error instanceof ApiError && gang.error.status === 404
   const g = gang.data
+  const [openTitle, setOpenTitle] = useState<GangTitle | null>(null)
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -87,7 +91,7 @@ export function GangPage() {
                       leading={<IconTile icon={Award} />}
                       title={x.name}
                       subtitle={`${x.holder.displayName} · ${t('profile.earnedOn', { date: formatMonthYear(new Date(x.earnedAt)) })}`}
-                      to={profileLink(x.holder.userId, me.data?.userId)}
+                      onClick={() => setOpenTitle(x)}
                     />
                   ))
                 ) : (
@@ -104,6 +108,11 @@ export function GangPage() {
               {t('gang.invite')}
             </Link>
           </div>
+          <TitleSheet
+            title={openTitle && { ...openTitle, gangName: g.name }}
+            holderLink={openTitle ? profileLink(openTitle.holder.userId, me.data?.userId) : undefined}
+            onClose={() => setOpenTitle(null)}
+          />
         </>
       )}
     </div>

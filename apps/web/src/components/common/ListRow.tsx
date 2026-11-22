@@ -15,10 +15,12 @@ type ListRowProps = {
   trailing?: ReactNode
   /** Router state for the link, e.g. SHOW_BACK so the page opened from here shows a back button. */
   linkState?: unknown
+  /** Instead of a link: the whole row is a button (e.g. opens a sheet), with a chevron. */
+  onClick?: () => void
 }
 
 // One row inside a list card. Rows separate themselves with a top border.
-export function ListRow({ leading, title, subtitle, to, trailing, linkState }: ListRowProps) {
+export function ListRow({ leading, title, subtitle, to, trailing, linkState, onClick }: ListRowProps) {
   const main = (
     <>
       {leading}
@@ -30,6 +32,14 @@ export function ListRow({ leading, title, subtitle, to, trailing, linkState }: L
   )
   const row = 'flex min-h-16 items-center gap-3 py-2.5 [&+&]:border-t [&+&]:border-background'
 
+  if (onClick && !to && !trailing) {
+    return (
+      <button type="button" onClick={onClick} className={cn(row, 'pressable w-full text-left')}>
+        {main}
+        <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+      </button>
+    )
+  }
   if (to && !trailing) {
     return (
       <Link to={to} state={linkState} className={cn(row, 'pressable')}>
