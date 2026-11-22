@@ -12,6 +12,10 @@ export function Die({ rotation, rolling, className, faceClass }: DieProps) {
   return (
     <div className={cn('die', rolling && 'die-hop', className)} aria-hidden="true">
       <div className="die-cube" style={{ transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)` }}>
+        {/* Inner planes fill the rounded corners so the cube looks solid while it tumbles. */}
+        {['x', 'y', 'z'].map((axis) => (
+          <div key={axis} className={cn('die-core', faceClass)} data-axis={axis} />
+        ))}
         {([1, 2, 3, 4, 5, 6] as Face[]).map((f) => (
           <div key={f} className={cn('die-face', faceClass)} data-f={f}>
             {Array.from({ length: 9 }, (_, i) => (

@@ -8,7 +8,7 @@ export function rollDice(count: number, random: (max: number) => number = secure
 }
 
 /** Cube rotation (deg) that shows `face` to the viewer. Faces: 1 front, 6 back, 2 top, 5 bottom, 3 right, 4 left. */
-const FACE_ROTATION: Record<Face, { x: number; y: number }> = {
+export const FACE_ROTATION: Record<Face, { x: number; y: number }> = {
   1: { x: 0, y: 0 },
   6: { x: 0, y: 180 },
   2: { x: -90, y: 0 },

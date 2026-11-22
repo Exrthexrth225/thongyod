@@ -13,7 +13,7 @@ import { useGameSound } from '@/lib/soundPrefs'
 import { tintClass } from '@/lib/tones'
 import { cn } from '@/lib/utils'
 import { Die } from './Die'
-import { rollDice, spinBottle, total, tumble, type Face } from './logic'
+import { FACE_ROTATION, rollDice, spinBottle, total, tumble, type Face } from './logic'
 import '@/components/games/games.css'
 
 type Mode = 'dice' | 'bottle'
@@ -36,7 +36,8 @@ export function DiceBottleGame() {
   const sound = useGameSound('dice')
   const [settings, setSettings] = useGameSettings<Settings>('dice', DEFAULTS, fix)
   const [faces, setFaces] = useState<Face[]>(() => Array.from({ length: settings.dice }, () => 1 as Face))
-  const [rots, setRots] = useState(() => Array.from({ length: 3 }, () => ({ x: -20, y: 25 })))
+  // Before the first roll every die sits flat, showing a face (a tilted cube looked broken when a die was added, #126).
+  const [rots, setRots] = useState(() => ([5, 3, 6] as Face[]).map((f) => FACE_ROTATION[f]))
   const [busy, setBusy] = useState(false)
   const [shown, setShown] = useState(false)
   const [bottle, setBottle] = useState(0)
