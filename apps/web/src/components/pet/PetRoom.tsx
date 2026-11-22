@@ -28,7 +28,7 @@ export function PetRoom({ scene, night, say, className, children }: PetRoomProps
       {children}
       {night && <div className="pet-room-night" aria-hidden="true" />}
       {say && (
-        <p key={say} className="pet-say absolute top-4 left-1/2 z-[4] max-w-[80%] -translate-x-1/2 rounded-2xl bg-card px-3 py-1.5 text-center text-sm font-semibold text-foreground shadow-sm" aria-live="polite">
+        <p key={say} className="pet-say absolute top-[4.25rem] left-1/2 z-[4] max-w-[80%] -translate-x-1/2 rounded-2xl bg-card px-3 py-1.5 text-center text-sm font-semibold text-foreground shadow-sm" aria-live="polite">
           {say}
         </p>
       )}

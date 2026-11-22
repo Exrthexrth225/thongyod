@@ -144,6 +144,10 @@ export const en: Messages = {
     billPaid: '{{name}} paid for {{subject}}',
   },
   pet: {
+    games: {
+      catch: 'Move your pet to catch snacks for coins',
+      hide: 'Find where your pet is hiding',
+    },
     touchHint: 'Pat its head, tickle its belly, poke its nose, hold to hug',
     wish: {
       food: 'I want {{food}}!',
@@ -162,6 +166,7 @@ export const en: Messages = {
       how: 'Grows when you care for it, pat it, play, grant wishes and teach tricks',
       up: 'Friendship level {{n}}!',
       unlocked: 'You can teach "{{trick}}" now',
+      short: 'Lv {{n}}',
     },
     trait: {
       title: 'Personality',
@@ -225,6 +230,8 @@ export const en: Messages = {
         shelf: 'Bookshelf',
         lamp: 'Lamp',
       },
+      how: 'Tap where you think it is hiding ({{n}} tries left)',
+      foundShort: 'Found it!',
     },
     needs: {
       food: 'Full',
@@ -246,6 +253,10 @@ export const en: Messages = {
       train: 'Tricks',
       catch: 'Catch',
       hide: 'Hide & seek',
+      lightsOff: 'Lights off',
+      lightsOn: 'Lights on',
+      games: 'Games',
+      album: 'Album',
     },
     food: {
       title: 'Pick a snack',
@@ -262,6 +273,7 @@ export const en: Messages = {
       full: "{{name}} is full and won't eat",
       poor: 'Not enough coins',
       earnHint: "Do today's missions, play a game or shake the fortune sticks to earn coins",
+      drag: 'Drag a snack to its mouth, or tap to feed',
     },
     play: {
       throw: 'Throw the ball',

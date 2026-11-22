@@ -1,5 +1,12 @@
 /* Pet rooms (#119). Drawn scenes come from Earth's art (image/32–34); until then these simple CSS scenes stand in. */
 .pet-room { position: relative; overflow: hidden; isolation: isolate; }
+/* In-game HUD (#122): the room is a picture, so the HUD keeps the same colours in light and dark mode. */
+.pet-room { --hud-ink: #241f45; --hud-paper: #fffdf8; --hud-track: rgb(255 255 255 / 0.6); }
+.pet-hud-ring { background: var(--hud-track); box-shadow: 0 6px 14px -6px rgb(36 31 69 / 0.55); }
+.pet-hud-face { background: var(--hud-paper); color: var(--hud-ink); }
+.pet-hud-face.is-active { background: var(--hud-ink); color: var(--hud-paper); }
+.pet-hud-label { background: rgb(36 31 69 / 0.72); color: var(--hud-paper); }
+.pet-hud-chip { background: var(--hud-paper); color: var(--hud-ink); box-shadow: 0 4px 12px -6px rgb(36 31 69 / 0.5); }
 .pet-room-bg { position: absolute; inset: 0; z-index: -2; background-size: cover; background-position: center bottom; }
 .pet-room-bg.is-living {
   background:

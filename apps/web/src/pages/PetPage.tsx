@@ -1,29 +1,29 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Bath, BookHeart, ChevronRight, Coins, GraduationCap, Heart, Home, Search, Sparkles, Utensils, Volleyball } from 'lucide-react'
+import { ArrowLeft, Bath, BookHeart, Coins, FlaskConical, Gamepad2, GraduationCap, Heart, Lamp, LampDesk, Search, Sparkles, Utensils, Volleyball } from 'lucide-react'
 import bubbleArt from '@/assets/effects/bubble.webp'
 import bubbleBigArt from '@/assets/effects/bubbleBig.webp'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { RoundAction } from '@/components/pet/RoundAction'
+import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { CatchGame } from '@/components/pet/CatchGame'
 import { Egg } from '@/components/pet/Egg'
-import { FoodSheet } from '@/components/pet/FoodSheet'
-import { NeedsBars } from '@/components/pet/NeedsBars'
 import { Pet, type PetHandle, type TouchKind } from '@/components/pet/Pet'
 import { PetBondSheet } from '@/components/pet/PetBondSheet'
 import { PetRoom, type RoomScene } from '@/components/pet/PetRoom'
 import { PetTestPanel } from '@/components/pet/PetTestPanel'
-import { SouvenirIcon } from '@/components/pet/SouvenirIcon'
 import { GestureLayer, TrickPicker } from '@/components/pet/TrickTrainer'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { useNavigate } from 'react-router'
 import { PET_FOODS, type PetFood } from '@/config/petFoods'
 import { bangkokDayKey } from '@/features/fortune/logic'
 import { getMyPet } from '@/features/onboarding/storage'
-import { SOUVENIRS, loadAway, takeAwayEvent } from '@/features/pet/away'
+import { takeAwayEvent } from '@/features/pet/away'
 import type { TrickId } from '@/features/pet/behavior'
 import { BOND_UP_EVENT, bondStore, gainBond, levelOf } from '@/features/pet/bond'
 import { bathed, feed, playOnce } from '@/features/pet/care'
-import { useCoins } from '@/features/pet/coins'
+import { getCoins, useCoins } from '@/features/pet/coins'
 import { useGrowth } from '@/features/pet/growth'
 import { did, payGameCoins, touchedPet, WISH_EVENT, wishesToday } from '@/features/pet/life'
 import { applyCare, getNeedsState, isNightAt, moodOf, needsAt, setNeedsState, useNeedsState, wantOf } from '@/features/pet/needs'
@@ -49,16 +49,6 @@ const HIDES = [
   { id: 'shelf', x: 9, y: 52 },
   { id: 'lamp', x: 86, y: 55 },
 ] as const
-const MAIN_ACTIONS = [
-  { id: 'feed', icon: Utensils, cls: 'bg-tangerine' },
-  { id: 'play', icon: Volleyball, cls: 'bg-yolk' },
-  { id: 'bath', icon: Bath, cls: 'bg-sky' },
-] as const
-const MORE_ACTIONS = [
-  { id: 'train', icon: GraduationCap },
-  { id: 'catch', icon: Sparkles },
-  { id: 'hide', icon: Search },
-] as const
 
 /** Re-read the clock every 20 s so the bars and wishes move while the page is open. */
 function useNow(ms = 20_000) {
@@ -77,7 +67,7 @@ export function PetPage() {
   const pet = useRef<PetHandle>(null)
   const [myPet] = useState(getMyPet)
   const [away] = useState(() => (myPet ? takeAwayEvent(new Date(), bangkokDayKey(new Date())) : null))
-  const [foundCount] = useState(() => loadAway().found.length)
+  const navigate = useNavigate()
   const showTest = import.meta.env.DEV || import.meta.env.VITE_DEPLOY_MOCKS === 'true'
 
   const now = useNow()
@@ -88,9 +78,16 @@ export function PetPage() {
   const growth = useGrowth()
   wishStore.use()
   const [nightTest, setNightTest] = useState<boolean | null>(null)
-  const night = nightTest ?? isNightAt(now)
   const [mode, setMode] = useState<Mode>('home')
-  const [sheet, setSheet] = useState<'food' | 'bond' | null>(null)
+  const [sheet, setSheet] = useState<'bond' | 'games' | 'test' | null>(null)
+  const [feeding, setFeeding] = useState(false)
+  const [lightsOff, setLightsOff] = useState(false)
+  const realNight = nightTest ?? isNightAt(now)
+  const night = realNight || lightsOff
+  /** A food being dragged to the pet (#122, like Talking Tom / Toca: drag it into the mouth). */
+  const [drag, setDrag] = useState<{ food: PetFood; x: number; y: number; moved: boolean } | null>(null)
+  const petBox = useRef<HTMLDivElement>(null)
+  const [awaySay, setAwaySay] = useState(true)
   // Where the pet is and whether it is walking.
   const [x, setX] = useState<number>(SPOTS.rug)
   const [walking, setWalking] = useState<false | 'left' | 'right'>(false)
@@ -161,6 +158,12 @@ export function PetPage() {
     }
   }, [wishId, mode, night])
 
+  // Back from being away: say what it did for a few seconds.
+  useEffect(() => {
+    const id = window.setTimeout(() => setAwaySay(false), 6000)
+    return () => window.clearTimeout(id)
+  }, [])
+
   // Wish granted / closer friends: cheer and say so.
   useEffect(() => {
     const onWish = () => {
@@ -204,6 +207,7 @@ export function PetPage() {
         trick: wish.kind === 'trick' ? t(`pet.tricks.names.${wish.trick}`) : '',
       }) + ' ' + t('pet.wish.left', { n: Math.max(1, Math.ceil((Date.parse(wish.at) + WISH_MINUTES * 60_000 - now.getTime()) / 60_000)) })
     : null
+  const awayText = away && awaySay ? t(`pet.away.${away.activity}`, { name }) + (away.souvenir ? t('pet.away.found', { item: t(`pet.souvenirs.${away.souvenir}`) }) : '') : null
   const say = night
     ? t('pet.say.sleep', { name })
     : mode === 'bath'
@@ -212,7 +216,7 @@ export function PetPage() {
         ? t('pet.hide.say')
         : mode !== 'home'
           ? null
-          : (wishText ?? (want ? t(`pet.say.${want}`) : null))
+          : (wishText ?? awayText ?? (want ? t(`pet.say.${want}`) : null))
 
   function onTouch(kind: TouchKind) {
     if (kind === 'pat' || kind === 'tickle') did({ kind })
@@ -221,8 +225,8 @@ export function PetPage() {
   }
 
   function onFood(food: PetFood) {
+    if (food.price > getCoins()) return toastManager.add({ title: t('pet.food.poor'), description: t('pet.food.earnHint') })
     const r = feed(food)
-    setSheet(null)
     if (r === 'fed' || r === 'wish') pet.current?.run('eat', { food: food.art, isCookie: food.id === 'cookie' })
     else if (r === 'full') {
       pet.current?.run('refuse')
@@ -243,6 +247,8 @@ export function PetPage() {
   }
 
   function enter(next: Mode) {
+    setFeeding(false)
+    setSheet(null)
     setMode(next)
     xRef.current = SPOTS.rug
     setX(SPOTS.rug)
@@ -259,9 +265,20 @@ export function PetPage() {
     if (next === 'hide') setHide({ spot: secureRandomInt(HIDES.length), tries: 0, found: false })
   }
 
-  function act(id: (typeof MAIN_ACTIONS)[number]['id'] | (typeof MORE_ACTIONS)[number]['id']) {
-    if (id === 'feed') setSheet('food')
-    else enter(id)
+  // Dragging food (pointer capture keeps the moves on the button): let go over the pet, or just tap, and it eats it.
+  function onFoodDown(e: PointerEvent<HTMLButtonElement>, food: PetFood) {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    setDrag({ food, x: e.clientX, y: e.clientY, moved: false })
+  }
+  function onFoodMove(e: PointerEvent<HTMLButtonElement>) {
+    setDrag((d) => d && { ...d, x: e.clientX, y: e.clientY, moved: d.moved || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 8 })
+  }
+  function onFoodUp(e: PointerEvent<HTMLButtonElement>) {
+    if (!drag) return
+    const r = petBox.current?.getBoundingClientRect()
+    const over = r && e.clientX > r.left && e.clientX < r.right && e.clientY > r.top && e.clientY < r.bottom
+    setDrag(null)
+    if (over || !drag.moved) onFood(drag.food)
   }
 
   function onScrub(e: PointerEvent<HTMLDivElement>) {
@@ -354,140 +371,185 @@ export function PetPage() {
 
   const petHidden = mode === 'hide' && hide && !hide.found
   const lv = levelOf(bond.points)
+  const backHome = () => enter('home')
 
   return (
     <>
-      <PageHeader
-        title={t('pages.pet.title')}
-        action={
-          <span className="flex items-center gap-1.5">
-            <button type="button" onClick={() => setSheet('bond')} className="pressable flex items-center gap-1 rounded-full bg-tangerine px-2.5 py-1 text-sm font-bold text-on-slab" aria-label={t('pet.bond.title', { name })}>
-              <Heart className="size-4 fill-current" aria-hidden="true" />
-              {lv}
+      <h1 className="sr-only">{t('pages.pet.title')}</h1>
+      <PetRoom scene={SCENE[mode]} night={night && mode === 'home'} say={say} className="h-[calc(100dvh-6.5rem-env(safe-area-inset-bottom))] min-h-[560px] w-full rounded-t-none rounded-b-[32px]">
+        {/* HUD: back (in a mode) on the left; friendship and coins on the right. */}
+        <div className="absolute inset-x-0 top-0 z-[6] flex items-start justify-between gap-2 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)]">
+          {mode !== 'home' || feeding ? (
+            <button type="button" onClick={backHome} className="pet-hud-chip pressable grid size-11 place-items-center rounded-full" aria-label={t('pet.actions.home')}>
+              <ArrowLeft className="size-5" aria-hidden="true" />
             </button>
-            <span className="flex items-center gap-1 rounded-full bg-yolk px-2.5 py-1 text-sm font-bold text-on-slab tabular-nums" aria-label={t('pet.coins', { n: coins })}>
-              <Coins className="size-4" aria-hidden="true" />
+          ) : trait && !night ? (
+            <span className="pet-hud-chip flex h-9 items-center rounded-full px-3 text-xs font-bold">{t(`pet.trait.names.${trait}`)}</span>
+          ) : (
+            <span />
+          )}
+          <span className="flex items-center gap-1.5">
+            <button type="button" onClick={() => setSheet('bond')} className="pet-hud-chip pressable flex h-9 items-center gap-1 rounded-full px-3 text-sm font-bold" aria-label={t('pet.bond.title', { name })}>
+              <Heart className="size-4 fill-current text-tangerine" aria-hidden="true" />
+              {t('pet.bond.short', { n: lv })}
+            </button>
+            <span className="pet-hud-chip flex h-9 items-center gap-1 rounded-full px-3 text-sm font-bold tabular-nums" aria-label={t('pet.coins', { n: coins })}>
+              <Coins className="size-4 text-yolk" aria-hidden="true" />
               {coins}
             </span>
-          </span>
-        }
-      />
-      <div className="flex flex-col items-center gap-3 px-4 pt-2 pb-8">
-        <PetRoom scene={SCENE[mode]} night={night && mode === 'home'} say={say} className="aspect-[4/5] w-full">
-          <div
-            className="absolute bottom-[3%] z-[2]"
-            style={{ left: `${x}%`, transform: 'translateX(-50%)', transition: walkMs ? `left ${walkMs}ms linear` : undefined, visibility: petHidden ? 'hidden' : undefined }}
-          >
-            <Pet
-              species={myPet.species}
-              size={250}
-              ref={pet}
-              onTouch={onTouch}
-              nightMode={night && mode === 'home'}
-              mood={moodOf(needs)}
-              bathing={mode === 'bath'}
-              walking={walking}
-            />
-          </div>
-          {trait && mode === 'home' && !night && <span className="absolute top-3 left-3 z-[4] rounded-full bg-card/90 px-2.5 py-1 text-xs font-semibold">{t(`pet.trait.names.${trait}`)}</span>}
-          {mode === 'play' && <span key={throwKey} className={cn('pet-ball', throwKey > 0 && 'is-thrown')} aria-hidden="true" />}
-          {mode === 'bath' && (
-            <div className="absolute inset-0 z-[5] touch-none" onPointerMove={onScrub} onPointerDown={() => (lastPoint.current = null)} aria-label={t('pet.bath.rub')} role="img">
-              {bubbles.map((b) => (
-                <img key={b.id} src={b.big ? bubbleBigArt : bubbleArt} alt="" className="pet-scrub" style={{ left: b.x, top: b.y }} draggable={false} />
-              ))}
-            </div>
-          )}
-          {mode === 'train' && <GestureLayer onGesture={onGesture} />}
-          {mode === 'catch' && (
-            <div className="absolute inset-0 z-[5] touch-none" onPointerMove={onCatchMove} onPointerDown={onCatchMove}>
-              <CatchGame petX={x} running={catching} onCatch={() => navigator.vibrate?.(8)} onEnd={endCatch} />
-            </div>
-          )}
-          {mode === 'hide' &&
-            !hide?.found &&
-            HIDES.map((h, i) => (
-              <button key={h.id} type="button" onClick={() => seek(i)} className="absolute z-[5] size-[22%] -translate-x-1/2 -translate-y-1/2 rounded-full" style={{ left: `${h.x}%`, top: `${h.y}%` }} aria-label={t(`pet.hide.spots.${h.id}`)} />
-            ))}
-        </PetRoom>
-
-        <NeedsBars needs={needs} />
-
-        {mode === 'home' ? (
-          <>
-            <div className="grid w-full grid-cols-3 gap-2">
-              {MAIN_ACTIONS.map((a) => (
-                <button key={a.id} type="button" disabled={night} onClick={() => act(a.id)} className={cn('on-slab pressable flex flex-col items-center gap-1 rounded-3xl py-3 font-heading text-base font-bold disabled:opacity-45', a.cls)}>
-                  <a.icon className="size-6" aria-hidden="true" />
-                  {t(`pet.actions.${a.id}`)}
-                </button>
-              ))}
-            </div>
-            <div className="grid w-full grid-cols-3 gap-2">
-              {MORE_ACTIONS.map((a) => (
-                <button key={a.id} type="button" disabled={night} onClick={() => act(a.id)} className="pressable flex items-center justify-center gap-1.5 rounded-2xl bg-card py-2.5 text-sm font-semibold disabled:opacity-45">
-                  <a.icon className="size-4" aria-hidden="true" />
-                  {t(`pet.actions.${a.id}`)}
-                </button>
-              ))}
-            </div>
-            {night && <p className="text-center text-xs text-muted-foreground">{t('pet.nightHint', { name })}</p>}
-            {!night && <p className="text-center text-xs text-muted-foreground">{t('pet.touchHint')}</p>}
-          </>
-        ) : (
-          <div className="flex w-full flex-col gap-2">
-            {mode === 'train' && <TrickPicker value={trick} onChange={setTrick} />}
-            {mode === 'bath' && (
-              <div>
-                <p className="mb-1 text-sm font-semibold">{t('pet.bath.rub')}</p>
-                <span className="block h-3 overflow-hidden rounded-full bg-muted">
-                  <span className="block h-full rounded-full bg-sky transition-[width]" style={{ width: `${scrub * 100}%` }} />
-                </span>
-              </div>
+            {showTest && (
+              <button type="button" onClick={() => setSheet('test')} className="pet-hud-chip pressable grid size-9 place-items-center rounded-full" aria-label={t('pet.test.title')}>
+                <FlaskConical className="size-4" aria-hidden="true" />
+              </button>
             )}
-            {mode === 'catch' && <p className="text-center text-sm">{catching ? t('pet.catch.how') : t('pet.catch.done', { n: catchScore ?? 0 })}</p>}
-            <div className="flex gap-2">
-              <Button variant="secondary" size="lg" onClick={() => enter('home')} aria-label={t('pet.actions.home')} className={cn(mode === 'bath' || mode === 'train' ? 'flex-1' : '')}>
-                <Home />
-                {(mode === 'bath' || mode === 'train') && t('pet.actions.home')}
-              </Button>
-              {mode === 'play' && (
-                <Button size="lg" className="flex-1" onClick={throwBall}>
-                  <Volleyball data-icon="inline-start" />
-                  {t('pet.play.throw')}
-                </Button>
-              )}
-              {mode === 'catch' && !catching && (
-                <Button size="lg" className="flex-1" onClick={() => enter('catch')}>
-                  {t('pet.catch.again')}
-                </Button>
-              )}
-              {mode === 'hide' && hide?.found && (
-                <Button size="lg" className="flex-1" onClick={() => enter('hide')}>
-                  {t('pet.hide.again')}
-                </Button>
-              )}
+          </span>
+        </div>
+
+        <div
+          ref={petBox}
+          className="absolute z-[2]"
+          style={{ left: `${x}%`, bottom: mode === 'home' && !feeding ? '9%' : '22%', transform: 'translateX(-50%)', transition: walkMs ? `left ${walkMs}ms linear` : 'bottom 0.4s ease', visibility: petHidden ? 'hidden' : undefined }}
+        >
+          <Pet species={myPet.species} size={300} ref={pet} onTouch={onTouch} nightMode={night && mode === 'home'} mood={moodOf(needs)} bathing={mode === 'bath'} walking={walking} />
+        </div>
+
+        {mode === 'play' && <span key={throwKey} className={cn('pet-ball', throwKey > 0 && 'is-thrown')} style={{ bottom: '24%' }} aria-hidden="true" />}
+        {mode === 'bath' && (
+          <div className="absolute inset-0 z-[5] touch-none" onPointerMove={onScrub} onPointerDown={() => (lastPoint.current = null)} aria-label={t('pet.bath.rub')} role="img">
+            {bubbles.map((b) => (
+              <img key={b.id} src={b.big ? bubbleBigArt : bubbleArt} alt="" className="pet-scrub" style={{ left: b.x, top: b.y }} draggable={false} />
+            ))}
+          </div>
+        )}
+        {mode === 'train' && <GestureLayer onGesture={onGesture} />}
+        {mode === 'catch' && (
+          <div className="absolute inset-0 z-[5] touch-none" onPointerMove={onCatchMove} onPointerDown={onCatchMove}>
+            <CatchGame petX={x} running={catching} onCatch={() => navigator.vibrate?.(8)} onEnd={endCatch} />
+          </div>
+        )}
+        {mode === 'hide' &&
+          !hide?.found &&
+          HIDES.map((h, i) => (
+            <button key={h.id} type="button" onClick={() => seek(i)} className="absolute z-[5] size-[22%] -translate-x-1/2 -translate-y-1/2 rounded-full" style={{ left: `${h.x}%`, top: `${h.y}%` }} aria-label={t(`pet.hide.spots.${h.id}`)} />
+          ))}
+
+        {/* Home: round buttons down both sides; the rings are the needs. */}
+        {mode === 'home' && !feeding && (
+          <>
+            <div className="absolute bottom-4 left-2 z-[6] flex flex-col gap-2">
+              <RoundAction icon={Utensils} label={t('pet.actions.feed')} meter={needs.food} tone="var(--tangerine)" onClick={() => setFeeding(true)} disabled={night} />
+              <RoundAction icon={Bath} label={t('pet.actions.bath')} meter={needs.clean} tone="var(--sky)" onClick={() => enter('bath')} disabled={night} />
+              <RoundAction icon={lightsOff ? LampDesk : Lamp} label={t(lightsOff ? 'pet.actions.lightsOn' : 'pet.actions.lightsOff')} active={lightsOff} onClick={() => setLightsOff((v) => !v)} disabled={realNight} />
+            </div>
+            <div className="absolute right-2 bottom-4 z-[6] flex flex-col gap-2">
+              <RoundAction icon={Volleyball} label={t('pet.actions.play')} meter={needs.fun} tone="var(--yolk)" onClick={() => enter('play')} disabled={night} />
+              <RoundAction icon={GraduationCap} label={t('pet.actions.train')} onClick={() => enter('train')} disabled={night} />
+              <RoundAction icon={Gamepad2} label={t('pet.actions.games')} onClick={() => setSheet('games')} disabled={night} />
+              <RoundAction icon={BookHeart} label={t('pet.actions.album')} onClick={() => void navigate('/pet/album', { state: SHOW_BACK })} />
+            </div>
+          </>
+        )}
+
+        {/* Feeding: a row of bowls on the floor (like the cat games): drag a snack into its mouth, or tap it. */}
+        {feeding && mode === 'home' && (
+          <div className="absolute inset-x-0 bottom-3 z-[6] flex flex-col items-center gap-2 px-2">
+            <p className="pet-hud-label rounded-full px-3 py-1 text-xs font-bold">{t('pet.food.drag')}</p>
+            <div className="flex w-full justify-center gap-1.5">
+              {PET_FOODS.map((food) => (
+                <button
+                  key={food.id}
+                  type="button"
+                  onPointerDown={(e) => onFoodDown(e, food)}
+                  onPointerMove={onFoodMove}
+                  onPointerUp={onFoodUp}
+                  onPointerCancel={() => setDrag(null)}
+                  onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onFood(food)}
+                  className={cn('flex w-[4.5rem] touch-none flex-col items-center gap-1', food.price > coins && 'opacity-50')}
+                  aria-label={`${t(`pet.food.items.${food.id}`)} ${food.price}`}
+                >
+                  <span className="pet-hud-ring grid size-16 place-items-center rounded-full p-[3px]">
+                    <span className="pet-hud-face grid size-full place-items-center rounded-full">
+                      <img src={food.art} alt="" draggable={false} className={cn('size-11 object-contain', drag?.moved && drag.food.id === food.id && 'opacity-30')} />
+                    </span>
+                  </span>
+                  <span className="pet-hud-chip flex items-center gap-0.5 rounded-full px-2 text-xs leading-5 font-bold tabular-nums">
+                    <Coins className="size-3 text-yolk" aria-hidden="true" />
+                    {food.price}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
         )}
 
-        <Link to="/pet/album" state={SHOW_BACK} className="on-slab pressable flex w-full items-center gap-3 rounded-3xl bg-mint p-4">
-          {away?.souvenir ? <SouvenirIcon id={away.souvenir} className="size-12" /> : <BookHeart className="size-8 shrink-0" aria-hidden="true" />}
-          <span className="min-w-0 flex-1">
-            <span className="block font-heading text-lg font-medium">{t('pet.album.open')}</span>
-            <span className="block text-[13px] text-pretty text-muted-foreground">
-              {away
-                ? t(`pet.away.${away.activity}`, { name }) + (away.souvenir ? t('pet.away.found', { item: t(`pet.souvenirs.${away.souvenir}`) }) : '')
-                : t('pet.album.count', { n: foundCount, total: SOUVENIRS.length })}
-            </span>
-          </span>
-          <ChevronRight className="size-5 shrink-0" aria-hidden="true" />
-        </Link>
+        {/* Mode trays. */}
+        {mode !== 'home' && (
+          <div className="absolute inset-x-0 bottom-4 z-[6] flex flex-col items-center gap-2 px-4">
+            {mode === 'play' && (
+              <Button size="lg" className="w-full" onClick={throwBall}>
+                <Volleyball data-icon="inline-start" />
+                {t('pet.play.throw')}
+              </Button>
+            )}
+            {mode === 'bath' && (
+              <div className="pet-hud-chip w-full rounded-2xl px-3 py-2">
+                <p className="mb-1 text-sm font-bold">{t('pet.bath.rub')}</p>
+                <span className="block h-2.5 overflow-hidden rounded-full bg-black/10">
+                  <span className="block h-full rounded-full bg-sky transition-[width]" style={{ width: `${scrub * 100}%` }} />
+                </span>
+              </div>
+            )}
+            {mode === 'train' && <TrickPicker value={trick} onChange={setTrick} />}
+            {mode === 'catch' && (
+              <>
+                <p className="pet-hud-chip rounded-full px-3 py-1.5 text-center text-sm font-semibold">{catching ? t('pet.catch.how') : t('pet.catch.done', { n: catchScore ?? 0 })}</p>
+                {!catching && (
+                  <Button size="lg" className="w-full" onClick={() => enter('catch')}>
+                    {t('pet.catch.again')}
+                  </Button>
+                )}
+              </>
+            )}
+            {mode === 'hide' && (
+              <>
+                <p className="pet-hud-chip rounded-full px-3 py-1.5 text-center text-sm font-semibold">{hide?.found ? t('pet.hide.foundShort') : t('pet.hide.how', { n: 3 - (hide?.tries ?? 0) })}</p>
+                {hide?.found && (
+                  <Button size="lg" className="w-full" onClick={() => enter('hide')}>
+                    {t('pet.hide.again')}
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </PetRoom>
 
-        {showTest && <PetTestPanel onMove={(a) => pet.current?.run(a)} night={nightTest} onNight={setNightTest} foods={PET_FOODS.map((f) => f.id)} />}
-      </div>
-      <FoodSheet open={sheet === 'food'} onOpenChange={(o) => setSheet(o ? 'food' : null)} coins={coins} onPick={onFood} />
+      {drag && drag.moved && <img src={drag.food.art} alt="" className="pointer-events-none fixed z-[60] w-16 -translate-x-1/2 -translate-y-1/2 drop-shadow-lg" style={{ left: drag.x, top: drag.y }} />}
+
+      <BottomSheet open={sheet === 'games'} onOpenChange={(o) => setSheet(o ? 'games' : null)} title={t('pet.actions.games')}>
+        <div className="grid grid-cols-2 gap-2 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          {(
+            [
+              { id: 'catch', icon: Sparkles },
+              { id: 'hide', icon: Search },
+            ] as const
+          ).map((g) => (
+            <button key={g.id} type="button" onClick={() => enter(g.id)} className="pressable flex flex-col items-center gap-1 rounded-3xl bg-card p-4 text-center">
+              <g.icon className="size-8" aria-hidden="true" />
+              <span className="font-heading text-lg font-bold">{t(`pet.actions.${g.id}`)}</span>
+              <span className="text-xs text-muted-foreground">{t(`pet.games.${g.id}`)}</span>
+            </button>
+          ))}
+        </div>
+      </BottomSheet>
       <PetBondSheet open={sheet === 'bond'} onOpenChange={(o) => setSheet(o ? 'bond' : null)} name={name} />
+      {showTest && (
+        <BottomSheet open={sheet === 'test'} onOpenChange={(o) => setSheet(o ? 'test' : null)} title={t('pet.test.title')}>
+          <div className="px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+            <PetTestPanel onMove={(a) => pet.current?.run(a)} night={nightTest} onNight={setNightTest} foods={PET_FOODS.map((f) => f.id)} />
+          </div>
+        </BottomSheet>
+      )}
     </>
   )
 }
