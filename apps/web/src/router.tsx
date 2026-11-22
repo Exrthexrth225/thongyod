@@ -21,6 +21,7 @@ import { GangMembersPage } from '@/pages/GangMembersPage'
 import { GangPage } from '@/pages/GangPage'
 import { GangsPage } from '@/pages/GangsPage'
 import { BombPage } from '@/pages/BombPage'
+import { FatCatPage, FatCatRulesPage } from '@/pages/FatCatPage'
 import { DrawPage } from '@/pages/DrawPage'
 import { CupsPage } from '@/pages/CupsPage'
 import { DicePage } from '@/pages/DicePage'
@@ -109,6 +110,8 @@ export const router = createRouter([
       { path: 'games/spectrum', element: <SpectrumPage /> },
       { path: 'games/codewords', element: <CodewordsPage /> },
       { path: 'games/bomb', element: <BombPage /> },
+      { path: 'games/fat-cat', element: <FatCatPage /> },
+      { path: 'games/fat-cat/rules/:id', element: <FatCatRulesPage /> },
       { path: 'games/taboo', element: <TabooPage /> },
       { path: 'games/draw', element: <DrawPage /> },
       { path: 'games/dice', element: <DicePage /> },

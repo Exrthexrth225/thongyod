@@ -698,6 +698,12 @@ Many phones in one game. Only the server knows everyone's role; each phone gets 
 - เซียมซี "เขย่าใหม่ (ปุ่มทดสอบ)" button under the fortune card (`FortunePage.tsx`, `forgetTodayForTesting` in `features/fortune/storage.ts`, i18n `fortune.testRedraw`). Earth asked for it on 2026-11-22 for testing; the real rule stays one stick per Bangkok day.
 - Pet tab "โหมดทดสอบ" panel (`components/pet/PetTestPanel.tsx`, `setStageForTesting` in growth.ts, `/welcome?step=egg&again=1`, i18n `pet.test.*`): hatch again, change age, +3 h, neglect, +100 coins, day/night, all moves. Shown on dev and the demo site only (#119); Earth asked for it.
 
+## Party games round 1 — 2026-11-22 (#123)
+- แมวอ้วง `/games/fat-cat` (rules `/games/fat-cat/rules/:id`): `config/games/fatCat.ts` (standard set, Thai content), `features/fat-cat/` (logic tested, stores `thongyod-fatcat-sets` / `thongyod-fatcat-hand`; the game in progress survives leaving for a 9's quick game).
+- Shared: `features/games/circle.ts` + `CircleEditor` (names in seat order), `features/games/library.ts` (recent + pins, `/games` top row and size filter), `lib/immersive.ts` (full screen), `lib/standalone.ts`.
+- Pet HUD redesign (#122) is parked on branch `wip/pet-hud` (not merged); its long-press fix (no save-image / copy callout app-wide) is on main.
+- Waiting for Earth's GPT art: แมวอ้วง card back, card faces / rank art, game sticker (now the Cat icon). Next games: Ito, ศิลปินตัวปลอม, ใบ้คำลูกโซ่ (reuse DrawCanvas), คำต้องห้ามแบบคำตัวเอง, finger "ช็อต" mode, then truth-or-drink / swipe cards with heat levels (น่ารัก / เอาเรื่อง / 18+), then role games (werewolf + Avalon-like need ElevenLabs narration: one file per voice with breaks, Claude cuts it).
+
 ## Waiting for Earth's art (pet care, #119–#121)
 - 35-pet-items.png → more foods, bowl, ball (CSS ball now), sponge, mud (should ride inside Pet's move layer), coin, foam.
 - 38/39 touch (bliss, laugh, surprised), 40/41 walk (step A, step B, beg), 42/43 tricks (sit pretty, high five, play dead), 44/45 eat with empty hands (open, chew, done) — per species, 3×3 by stage; cut like `care.py` and add to species.ts (pose slots already exist with stand-ins, `withExtras`). With 44/45: hold any food in the empty hands instead of the happy face.

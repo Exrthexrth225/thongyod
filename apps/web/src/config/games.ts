@@ -1,6 +1,6 @@
 // Every game, shown in the "เกม" section on Explore and on /games (DECISIONS #73).
 // To add a game: one entry here + `games.list.<id>.title/.desc` in th.ts and en.ts.
-import { Bomb, Brush, Fingerprint, Flag, CupSoda, Dices, Eye, Gauge, Grid3x3, Hand, LoaderPinwheel, MessageSquareOff, Pointer, Smartphone, Sparkles, VenetianMask, type LucideIcon } from 'lucide-react'
+import { Bomb, Brush, Cat, Fingerprint, Flag, CupSoda, Dices, Eye, Gauge, Grid3x3, Hand, LoaderPinwheel, MessageSquareOff, Pointer, Smartphone, Sparkles, VenetianMask, type LucideIcon } from 'lucide-react'
 
 import headsUpArt from '@/assets/games/headsUp.webp'
 import spyArt from '@/assets/games/spy.webp'
@@ -19,13 +19,13 @@ import fortuneArt from '@/assets/games/fortune.webp'
 import fingerArt from '@/assets/games/finger.webp'
 import raceArt from '@/assets/games/race.webp'
 
-export type GameId = 'headsUp' | 'spy' | 'insider' | 'spectrum' | 'codewords' | 'taboo' | 'draw' | 'bomb' | 'mostLikely' | 'neverHave' | 'dice' | 'cups' | 'wheel' | 'fortune' | 'finger' | 'race'
+export type GameId = 'headsUp' | 'spy' | 'insider' | 'spectrum' | 'codewords' | 'taboo' | 'draw' | 'bomb' | 'mostLikely' | 'neverHave' | 'dice' | 'cups' | 'wheel' | 'fortune' | 'finger' | 'race' | 'fatCat'
 
 /** How it is played: one phone passed around the group, alone, or each friend on their own phone (rooms). */
 export type GameMode = 'onePhone' | 'solo' | 'rooms'
 
-/** Section on /games (#92): party games, board-game style games, and toys / luck. */
-export type GameKind = 'party' | 'board' | 'toy'
+/** Section on /games (#92): drinking-circle games (#123), party games, board-game style games, and toys / luck. */
+export type GameKind = 'drink' | 'party' | 'board' | 'toy'
 
 export type Game = {
   id: GameId
@@ -33,8 +33,8 @@ export type Game = {
   icon: LucideIcon
   /** Category color 1–8 (lib/tones tint). */
   tint: number
-  /** Earth's sticker for the game (image/17-game-stickers.png, cut by tools/pet-art/grid.py). */
-  art: string
+  /** Earth's sticker for the game (image/17-game-stickers.png, cut by tools/pet-art/grid.py). Missing = the icon until it is drawn. */
+  art?: string
   mode: GameMode
   /** Also playable with each friend on their own phone (room, DECISIONS #76). The card then shows both tags and asks which way. */
   rooms?: boolean
@@ -44,6 +44,7 @@ export type Game = {
 }
 
 export const GAMES: Game[] = [
+  { id: 'fatCat', kind: 'drink', icon: Cat, tint: 3, mode: 'onePhone', players: [2, 20], status: 'ready', to: '/games/fat-cat' },
   { id: 'headsUp', kind: 'party', icon: Smartphone, art: headsUpArt, tint: 8, mode: 'onePhone', players: [2, 20], status: 'ready', to: '/head-guess' },
   { id: 'spy', kind: 'board', icon: VenetianMask, art: spyArt, tint: 6, mode: 'onePhone', rooms: true, players: [3, 12], status: 'ready', to: '/games/spy' },
   { id: 'insider', kind: 'board', icon: Eye, art: insiderArt, tint: 7, mode: 'onePhone', players: [4, 12], status: 'ready', to: '/games/insider' },
