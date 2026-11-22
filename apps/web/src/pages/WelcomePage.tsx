@@ -106,7 +106,7 @@ function Hatch({ onDone }: { onDone: () => void }) {
   // The main pet is permanent: replaying the intro shows it again instead of a new egg.
   const [existing] = useState(() => getMyPet()?.species ?? null)
   const [picked, setPicked] = useState<number | null>(null)
-  const [phase, setPhase] = useState<'choose' | 'wobble' | 'crack' | 'born'>(existing ? 'born' : 'choose')
+  const [phase, setPhase] = useState<'choose' | 'wobble' | 'cracked' | 'split' | 'born'>(existing ? 'born' : 'choose')
   const [species, setSpecies] = useState<PetSpeciesId | null>(existing)
 
   function pick(index: number) {
@@ -117,8 +117,9 @@ function Hatch({ onDone }: { onDone: () => void }) {
     setSpecies(result)
     saveMyPet(result)
     setPhase('wobble')
-    window.setTimeout(() => setPhase('crack'), 1500)
-    window.setTimeout(() => setPhase('born'), 1850)
+    window.setTimeout(() => setPhase('cracked'), 900)
+    window.setTimeout(() => setPhase('split'), 1600)
+    window.setTimeout(() => setPhase('born'), 2150)
   }
 
   if (phase === 'born' && species) {
@@ -153,7 +154,7 @@ function Hatch({ onDone }: { onDone: () => void }) {
             disabled={phase !== 'choose' && picked !== i}
             className={cn('flex flex-col items-center gap-2 rounded-2xl p-2 transition-opacity active:scale-95', picked !== null && picked !== i && 'opacity-30')}
           >
-            <Egg style={egg.style} state={picked === i ? (phase === 'crack' ? 'crack' : phase === 'wobble' ? 'wobble' : 'idle') : 'idle'} className="h-28" />
+            <Egg style={egg.style} state={picked === i && phase !== 'choose' && phase !== 'born' ? phase : 'idle'} className="h-28" />
             <span className="text-sm font-medium">{t(`welcome.eggs.${egg.style}`)}</span>
           </button>
         ))}

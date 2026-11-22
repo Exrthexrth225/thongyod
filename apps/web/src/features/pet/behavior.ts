@@ -7,9 +7,9 @@ export type PoseId = (typeof POSES)[number]
 /** One-shot body motion (CSS keyframes in pet.css, transform only). */
 export type Motion = 'none' | 'squish' | 'hop' | 'wave' | 'shy' | 'fly' | 'dash' | 'turn' | 'sneeze' | 'jump' | 'chomp' | 'dance' | 'stretch' | 'look' | 'wiggle' | 'bounce'
 /** Little drawings around the pet. */
-export type Overlay = 'none' | 'sparks' | 'hearts' | 'puff' | 'bubbles' | 'z' | 'crumbs' | 'confetti'
+export type Overlay = 'none' | 'sparks' | 'hearts' | 'puff' | 'bubbles' | 'z' | 'crumbs' | 'confetti' | 'anger'
 
-export type PetAction = 'happy' | 'wave' | 'shy' | 'love' | 'play1' | 'play2' | 'play3' | 'eat' | 'celebrate' | 'yawn' | 'sleep' | 'fidget'
+export type PetAction = 'happy' | 'wave' | 'shy' | 'love' | 'play1' | 'play2' | 'play3' | 'eat' | 'celebrate' | 'yawn' | 'sleep' | 'fidget' | 'grumpy'
 export type Plan = { pose: PoseId; motion: Motion; overlay: Overlay; /** How long before going back to the main pose. 0 = stays (sleep). */ ms: number }
 
 /** Per-species play moves: the same pose slots, different motion. */
@@ -42,6 +42,9 @@ export function planFor(action: PetAction, moves: SpeciesMoves): Plan {
       return { pose: 'sleep', motion: 'none', overlay: 'z', ms: 0 }
     case 'fidget':
       return { pose: 'main', ...FIDGETS[0] }
+    case 'grumpy':
+      // Poked too fast (#115): a cross-popping anger mark and a cross little shake, no pose change.
+      return { pose: 'main', motion: 'wiggle', overlay: 'anger', ms: 1300 }
   }
 }
 
