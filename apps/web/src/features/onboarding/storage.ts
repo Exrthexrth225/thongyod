@@ -1,6 +1,7 @@
 // First-run state (DECISIONS #46/#47). Kept on this device until the profile/pet API exists.
 import type { PetSpeciesId } from '@/components/pet/species'
 import { resetGrowth } from '@/features/pet/growth'
+import { resetNeeds } from '@/features/pet/needs'
 
 const ONBOARDED_KEY = 'thongyod-onboarded'
 const PET_KEY = 'thongyod-pet'
@@ -38,4 +39,5 @@ export function getMyPet(): MyPet | null {
 export function saveMyPet(species: PetSpeciesId): void {
   write(PET_KEY, JSON.stringify({ species, hatchedAt: new Date().toISOString() }))
   resetGrowth() // a new egg starts as a baby (#105)
+  resetNeeds() // … a little hungry (#119)
 }

@@ -144,6 +144,66 @@ export const en: Messages = {
     billPaid: '{{name}} paid for {{subject}}',
   },
   pet: {
+    needs: {
+      food: 'Full',
+      fun: 'Fun',
+      clean: 'Clean',
+    },
+    say: {
+      food: "I'm hungry…",
+      fun: "I'm bored, let's play",
+      clean: 'I feel sticky. Bath time?',
+      sleep: '{{name}} is asleep Zzz',
+      bath: 'Scrub me please~',
+    },
+    actions: {
+      feed: 'Feed',
+      play: 'Play',
+      bath: 'Bath',
+      home: 'Back inside',
+    },
+    food: {
+      title: 'Pick a snack',
+      items: {
+        cookie: 'Cookie',
+        thongyod: 'Thong yod',
+        donut: 'Donut',
+        candy: 'Candy',
+      },
+      adds: {
+        food: 'Full +{{n}}',
+        fun: 'Fun +{{n}}',
+      },
+      full: "{{name}} is full and won't eat",
+      poor: 'Not enough coins',
+      earnHint: "Do today's missions, play a game or shake the fortune sticks to earn coins",
+    },
+    play: {
+      throw: 'Throw the ball',
+    },
+    bath: {
+      rub: 'Rub your pet until it is all bubbly',
+    },
+    nightHint: '{{name}} sleeps from 11 pm to 7 am. You can tap gently, but it will be sleepy',
+    coins: '{{n}} coins',
+    test: {
+      title: 'Test mode (remove before release)',
+      hatch: 'Hatch',
+      hatchAgain: 'Hatch a new egg (replaces your pet)',
+      stage: 'Change age',
+      stages: {
+        baby: 'Baby',
+        teen: 'Teen',
+        adult: 'Adult',
+      },
+      time: 'Time and coins',
+      plusHours: '+{{n}} h',
+      neglect: 'Leave it alone',
+      coins: '+100 coins',
+      realTime: 'Real time',
+      day: 'Day',
+      night: 'Night',
+    },
     away: {
       walk: '{{name}} went for a walk',
       nap: '{{name}} had a nap',

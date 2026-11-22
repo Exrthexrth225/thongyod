@@ -696,6 +696,13 @@ Many phones in one game. Only the server knows everyone's role; each phone gets 
 
 ## Remove before release
 - เซียมซี "เขย่าใหม่ (ปุ่มทดสอบ)" button under the fortune card (`FortunePage.tsx`, `forgetTodayForTesting` in `features/fortune/storage.ts`, i18n `fortune.testRedraw`). Earth asked for it on 2026-11-22 for testing; the real rule stays one stick per Bangkok day.
+- Pet tab "โหมดทดสอบ" panel (`components/pet/PetTestPanel.tsx`, `setStageForTesting` in growth.ts, `/welcome?step=egg&again=1`, i18n `pet.test.*`): hatch again, change age, +3 h, neglect, +100 coins, day/night, all moves. Shown on dev and the demo site only (#119); Earth asked for it.
+
+## Waiting for Earth's art (pet care, #119)
+- 31-cup-lift.png (cup upside down + 2 lifting frames) → ขนมอยู่ไหน lift animation.
+- 32–34 rooms (living, bath, garden) → `SCENE_ART` in `components/pet/PetRoom.tsx` (CSS stand-ins now).
+- 35-pet-items.png → foods (apple, onigiri, moo ping, milk, ice cream, cake) in `config/petFoods.ts`, bowl, ball (replaces the CSS ball), sponge, mud (replaces the CSS blobs, should move with the pet), coin, foam.
+- 36/37 care poses per stage (sad, bath, refuse) → new pose slots in species.ts; `refuse` action and the sad rest pose use them.
 
 ## Earth's art (2026-11-22) — all wired
 - Game stickers (image/17), racers (image/18), second run frame + win pose (image/23, 24): assets/games, assets/racers, racers-run2, racers-win (`tools/pet-art/grid.py`).

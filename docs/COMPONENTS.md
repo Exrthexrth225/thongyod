@@ -153,3 +153,7 @@
 | AvatarCropper | `src/components/profile/AvatarCropper.tsx` | ours | Square crop dialog (drag, pinch, zoom slider) → 512 px JPEG Blob | file, busy, onCancel, onDone, onLoadError | Math in `features/profile/crop.ts` |
 | TitleSheet | `src/components/profile/TitleSheet.tsx` | ours | A ฉายา in a BottomSheet: name, how it is earned (catalog by key), gang, month, meetup link, holder link | title (TitleInfo \| null), onClose, holderLink? | Profile chips, main title, ฉายาทั้งหมด, gang page (#117) |
 | PackIcon | `src/components/games/PackIcon.tsx` | ours | A content pack's picture: Earth's category sticker by pack id, else its Lucide icon | id, icon, className? | PackPicker, ใบ้บนหัว setup (#118) |
+| PetRoom | `src/components/pet/PetRoom.tsx` (+ `pet-room.css`) | ours | The pet's scene (living / bath / garden), night dimming, speech bubble | scene, night?, say?, className, children | Pet tab (#119); drawn scenes plug into SCENE_ART |
+| NeedsBars | `src/components/pet/NeedsBars.tsx` | ours | อิ่ม / สนุก / สะอาด bars (meter role), low one pulses | needs | Pet tab |
+| FoodSheet | `src/components/pet/FoodSheet.tsx` | ours | Food menu in a BottomSheet: art, what it fills, price in coins | open, onOpenChange, coins, onPick | Pet tab; menu in `config/petFoods.ts` |
+| PetTestPanel | `src/components/pet/PetTestPanel.tsx` | ours | TEST ONLY: hatch again, change age, time, coins, day/night, all moves | onMove, night, onNight | Dev + demo site only; remove before release |

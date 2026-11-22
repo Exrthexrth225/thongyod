@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react'
 import { addDays } from '@/lib/date'
 import { bangkokDayKey } from '@/features/fortune/logic'
 import { requestCelebration } from '@/features/pet/celebrate'
-import { recordCareDay } from '@/features/pet/growth'
+import { ALL_MISSIONS_BONUS, earnCoins, MISSION_COINS } from '@/features/pet/coins'
 import { loadDraw } from '@/features/fortune/storage'
 
 export type MissionId = 'fortune' | 'pet' | 'tool'
@@ -36,7 +36,6 @@ function read(): DailyLog {
 /** Marks a mission done for today (Bangkok day). Safe to call many times. */
 export function markDone(id: MissionId, now: Date = new Date()): void {
   const day = bangkokDayKey(now)
-  if (id === 'pet') recordCareDay(day)
   if (log[day]?.includes(id)) return
   const days = Object.keys({ ...log, [day]: [] }).sort().slice(-KEEP_DAYS)
   const next: DailyLog = {}
@@ -48,8 +47,13 @@ export function markDone(id: MissionId, now: Date = new Date()): void {
     // Storage blocked: still counts for this visit.
   }
   listeners.forEach((l) => l())
+  // Coins for the pet (#119): each mission once a day, plus a bonus for all three.
+  earnCoins(MISSION_COINS)
   // That was the last mission of the day: the pet dances (once).
-  if (MISSIONS.every((m) => doneToday(log, now).includes(m))) requestCelebration(now)
+  if (MISSIONS.every((m) => doneToday(log, now).includes(m))) {
+    earnCoins(ALL_MISSIONS_BONUS)
+    requestCelebration(now)
+  }
 }
 
 /** Missions done today. The fortune mission also counts a stick drawn before this feature existed. */

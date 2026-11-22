@@ -104,7 +104,9 @@ function Intro({ onNext }: { onNext: () => void }) {
 function Hatch({ onDone }: { onDone: () => void }) {
   const { t } = useTranslation()
   // The main pet is permanent: replaying the intro shows it again instead of a new egg.
-  const [existing] = useState(() => getMyPet()?.species ?? null)
+  // ?again=1 (pet tab test panel, #119): hatch a new egg even when a pet exists (it replaces it).
+  const [params] = useSearchParams()
+  const [existing] = useState(() => (params.get('again') === '1' ? null : (getMyPet()?.species ?? null)))
   const [picked, setPicked] = useState<number | null>(null)
   const [phase, setPhase] = useState<'choose' | 'wobble' | 'cracked' | 'split' | 'born'>(existing ? 'born' : 'choose')
   const [species, setSpecies] = useState<PetSpeciesId | null>(existing)

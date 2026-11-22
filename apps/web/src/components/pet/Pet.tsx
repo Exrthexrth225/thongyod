@@ -22,6 +22,7 @@ import {
   TAP_ACTIONS,
   blinkDelayMs,
   idleDelayMs,
+  PLAY_ACTIONS,
   pickIdle,
   pickOther,
   planFor,
@@ -57,6 +58,10 @@ type PetProps = {
   className?: string
   /** Called when the user taps the pet (after its own reaction starts). */
   onTap?: () => void
+  /** Night (#119): the pet sleeps; a tap only makes it yawn and go back to sleep. */
+  nightMode?: boolean
+  /** Sad (a need is low, #119): no playful idle moves, only small fidgets and yawns. */
+  mood?: 'happy' | 'ok' | 'sad'
 }
 
 /**
@@ -68,7 +73,7 @@ const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia('
 const rnd = (n: number) => Math.floor(Math.random() * n)
 const eased = (frames: Keyframe[]) => frames.map((k) => ({ ...k, easing: 'ease-in-out' }))
 
-export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: PetProps) {
+export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nightMode = false, mood = 'happy' }: PetProps) {
   const { t } = useTranslation()
   const spec = PET_SPECIES[species]
   // Baby / teen: their own drawings when the species has them, and smaller (#105).
@@ -151,16 +156,28 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
 
   // run() and the idle clock call each other, so both live in refs that are refreshed every render.
   const runRef = useRef<(act: PetAct) => void>(() => {})
+  const nightRef = useRef(nightMode)
+  const moodRef = useRef(mood)
+  useEffect(() => {
+    nightRef.current = nightMode
+    moodRef.current = mood
+  })
   const scheduleIdle = useCallback(function schedule() {
     window.clearTimeout(idleTimer.current)
-    idleTimer.current = window.setTimeout(() => {
-      if (document.hidden || busy.current) return schedule()
-      const hour = new Date().getHours()
-      if (Date.now() - lastTouch.current > sleepAfterMs(hour)) return runRef.current('sleep')
-      const next = pickIdle(lastIdle.current, hour, rnd)
-      lastIdle.current = next
-      runRef.current(next)
-    }, idleDelayMs(rnd))
+    idleTimer.current = window.setTimeout(
+      () => {
+        if (document.hidden || busy.current) return schedule()
+        // Night: whatever woke it, it goes back to sleep.
+        if (nightRef.current) return runRef.current('sleep')
+        const hour = new Date().getHours()
+        if (Date.now() - lastTouch.current > sleepAfterMs(hour)) return runRef.current('sleep')
+        let next = pickIdle(lastIdle.current, hour, rnd)
+        if (moodRef.current === 'sad' && (PLAY_ACTIONS as readonly string[]).includes(next)) next = rnd(2) ? 'fidget' : 'yawn'
+        lastIdle.current = next
+        runRef.current(next)
+      },
+      nightRef.current ? 600 : idleDelayMs(rnd),
+    )
   }, [])
 
   const run = useCallback(
@@ -234,6 +251,17 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
     }
   }, [scheduleIdle])
 
+  // Night starts / ends while the page is open.
+  const wasNight = useRef(nightMode)
+  useEffect(() => {
+    if (wasNight.current === nightMode) {
+      if (nightMode) runRef.current('sleep')
+      return
+    }
+    wasNight.current = nightMode
+    runRef.current(nightMode ? 'sleep' : 'idle')
+  }, [nightMode])
+
   // Decode every pose before it is needed, so the first switch is instant.
   useEffect(() => {
     for (const src of [...POSES.map((p) => poses[p]), ...(spec.eatFrames ?? [])]) {
@@ -296,6 +324,7 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
     }
     touched()
     onTapProp?.()
+    if (nightRef.current) return busy.current ? undefined : react('yawn')
     // A playing reaction is never cut off; a burst of taps makes the pet shy away for a moment (#104).
     const r = tap(taps.current, Date.now(), Date.now() < reactingUntil.current)
     taps.current = r.state

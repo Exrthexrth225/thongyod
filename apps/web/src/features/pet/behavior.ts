@@ -9,7 +9,7 @@ export type Motion = 'none' | 'squish' | 'hop' | 'wave' | 'shy' | 'fly' | 'dash'
 /** Little drawings around the pet. */
 export type Overlay = 'none' | 'sparks' | 'hearts' | 'puff' | 'bubbles' | 'z' | 'crumbs' | 'confetti' | 'anger'
 
-export type PetAction = 'happy' | 'wave' | 'shy' | 'love' | 'play1' | 'play2' | 'play3' | 'eat' | 'celebrate' | 'yawn' | 'sleep' | 'fidget' | 'grumpy'
+export type PetAction = 'happy' | 'wave' | 'shy' | 'love' | 'play1' | 'play2' | 'play3' | 'eat' | 'celebrate' | 'yawn' | 'sleep' | 'fidget' | 'grumpy' | 'refuse'
 export type Plan = { pose: PoseId; motion: Motion; overlay: Overlay; /** How long before going back to the main pose. 0 = stays (sleep). */ ms: number }
 
 /** Per-species play moves: the same pose slots, different motion. */
@@ -42,6 +42,9 @@ export function planFor(action: PetAction, moves: SpeciesMoves): Plan {
       return { pose: 'sleep', motion: 'none', overlay: 'z', ms: 0 }
     case 'fidget':
       return { pose: 'main', ...FIDGETS[0] }
+    case 'refuse':
+      // Full (#119): shakes its head. Uses Earth's "refuse" pose once it is drawn (image/36, 37).
+      return { pose: 'main', motion: 'wiggle', overlay: 'none', ms: 1200 }
     case 'grumpy':
       // Poked too fast (#115): a cross-popping anger mark and a cross little shake, no pose change.
       return { pose: 'main', motion: 'wiggle', overlay: 'anger', ms: 1300 }

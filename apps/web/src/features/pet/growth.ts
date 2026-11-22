@@ -1,5 +1,6 @@
-// The pet grows up (Earth, 2026-11-22; DECISIONS #105): baby → teen → adult on the 2nd and 7th day you look after it
-// (days with a tap, hug or snack; they do not have to be in a row). It never shrinks, gets ill or dies.
+// The pet grows up (Earth, 2026-11-22; DECISIONS #105, #119): baby → teen → adult on the 2nd and 7th day you look
+// after it (a day with a feed, play or bath after which every need is fine; not necessarily in a row). It never
+// shrinks, gets ill or dies.
 import { useSyncExternalStore } from 'react'
 
 export type Stage = 'baby' | 'teen' | 'adult'
@@ -61,7 +62,15 @@ function save() {
   listeners.forEach((l) => l())
 }
 
-/** Called when you look after the pet (daily.markDone('pet')). */
+/** TEST ONLY (pet tab test panel, #119): jump to a stage now, with the grow-up toast and confetti. */
+export function setStageForTesting(stage: Stage): void {
+  const from = get().stage
+  current = { careDays: STAGE_AT[stage], lastDay: null, stage }
+  save()
+  if (stage !== from && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(GREW_EVENT, { detail: stage }))
+}
+
+/** Called after a care action that left every need fine (features/pet/care.ts). */
 export function recordCareDay(day: string): void {
   const r = addCareDay(get(), day)
   if (r.growth === current) return
