@@ -702,6 +702,7 @@ Many phones in one game. Only the server knows everyone's role; each phone gets 
 - แมวอ้วง `/games/fat-cat` (rules `/games/fat-cat/rules/:id`): `config/games/fatCat.ts` (standard set, Thai content), `features/fat-cat/` (logic tested, stores `thongyod-fatcat-sets` / `thongyod-fatcat-hand`; the game in progress survives leaving for a 9's quick game).
 - Shared: `features/games/circle.ts` + `CircleEditor` (names in seat order), `features/games/library.ts` (recent + pins, `/games` top row and size filter), `lib/immersive.ts` (full screen), `lib/standalone.ts`.
 - #124: all planned games listed as locked (`status: 'soon'`) or ช่วงทดสอบ (`'beta'`, `BetaNote`). PWA (manifest, Workbox, install button, iOS tags) waits until the app is done; note the demo's MSW worker and a PWA worker cannot share one scope.
+- #125: วางนิ้วสุ่ม instant reveal + labels outside the rings; race skip = two taps. Later (Earth): responsive layout for iPad.
 - Pet HUD redesign (#122) is parked on branch `wip/pet-hud` (not merged); its long-press fix (no save-image / copy callout app-wide) is on main.
 - Waiting for Earth's GPT art: แมวอ้วง card back, card faces / rank art, game sticker (now the Cat icon). Next games: Ito, ศิลปินตัวปลอม, ใบ้คำลูกโซ่ (reuse DrawCanvas), คำต้องห้ามแบบคำตัวเอง, finger "ช็อต" mode, then truth-or-drink / swipe cards with heat levels (น่ารัก / เอาเรื่อง / 18+), then role games (werewolf + Avalon-like need ElevenLabs narration: one file per voice with breaks, Claude cuts it).
 
