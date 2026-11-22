@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react'
+import { useRef, type CSSProperties, type ReactNode } from 'react'
 import { Drawer } from '@base-ui/react/drawer'
 import { cn } from '@/lib/utils'
 
@@ -19,12 +19,17 @@ const SNAP_POINTS = [0.62, 1]
 
 // Sheet that slides up from the bottom (Base UI Drawer): swipe to dismiss, backdrop tap closes, focus trapped.
 export function BottomSheet({ open, onOpenChange, title, action, footer, children, className }: BottomSheetProps) {
+  // Focus the sheet itself on open, not its first link/button: focusing a control lower down scrolled the content
+  // and cut off the top (the title badge in ฉายา, Earth #123).
+  const popup = useRef<HTMLDivElement>(null)
   return (
     <Drawer.Root open={open} onOpenChange={onOpenChange} snapPoints={SNAP_POINTS}>
       <Drawer.Portal>
         <Drawer.Backdrop className="fixed inset-0 z-50 min-h-dvh bg-black/45 transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-ending-style:opacity-0 data-starting-style:opacity-0 data-swiping:duration-0" />
         <Drawer.Viewport className="fixed inset-0 z-50 flex touch-none items-end justify-center">
           <Drawer.Popup
+            ref={popup}
+            initialFocus={popup}
             className={cn(
               'relative flex max-h-[calc(100dvh-var(--top-margin))] min-h-0 w-full max-w-md touch-none flex-col rounded-t-3xl border-t bg-popover text-popover-foreground shadow-lg outline-none',
               '[padding-bottom:max(0px,calc(var(--drawer-snap-point-offset)+var(--drawer-swipe-movement-y)))] [transform:translateY(calc(var(--drawer-snap-point-offset)+var(--drawer-swipe-movement-y)))]',
