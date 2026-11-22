@@ -1,3 +1,16 @@
+import heart from '@/assets/effects/heart.webp'
+import heartRed from '@/assets/effects/heartRed.webp'
+import spark from '@/assets/effects/spark.webp'
+import sparkSmall from '@/assets/effects/sparkSmall.webp'
+import cloud from '@/assets/effects/cloud.webp'
+import cloudSmall from '@/assets/effects/cloudSmall.webp'
+import bubble from '@/assets/effects/bubble.webp'
+import bubbleBig from '@/assets/effects/bubbleBig.webp'
+import crumb1 from '@/assets/effects/crumb1.webp'
+import crumb2 from '@/assets/effects/crumb2.webp'
+import crumb3 from '@/assets/effects/crumb3.webp'
+import anger from '@/assets/effects/anger.webp'
+import zzz from '@/assets/race-props/zzz.webp'
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, type CSSProperties, type Ref } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -286,7 +299,7 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
     // A playing reaction is never cut off; a burst of taps makes the pet shy away for a moment (#104).
     const r = tap(taps.current, Date.now(), Date.now() < reactingUntil.current)
     taps.current = r.state
-    if (r.outcome === 'annoyed') return react('shy')
+    if (r.outcome === 'annoyed') return react('grumpy')
     if (r.outcome === 'ignore') return
     const next = pickOther(TAP_ACTIONS, lastTap.current as (typeof TAP_ACTIONS)[number] | null, rnd)
     lastTap.current = next
@@ -370,36 +383,26 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp }: P
 }
 
 /** Little drawings around the pet. Sized in em (1em = footprint / 12) so they scale with the pet. */
+/** Earth's effect stickers (image/09-effects.png, cut by piece) + the Zzz from the race props. */
+const FX = { heart, heartRed, spark, sparkSmall, cloud, cloudSmall, bubble, bubbleBig, crumbs: [crumb1, crumb2, crumb3], anger, zzz }
+
 function PetOverlay({ name, mouth, head }: { name: Overlay; mouth: CSSProperties; head: CSSProperties }) {
   if (name === 'none') return null
-  const star = 'M12 0 L15 9 L24 12 L15 15 L12 24 L9 15 L0 12 L9 9 Z'
-  const heart = 'M12 21 C6 16 1 12.5 1 7.5 C1 4 3.7 1.5 7 1.5 C9.2 1.5 11 2.7 12 4.5 C13 2.7 14.8 1.5 17 1.5 C20.3 1.5 23 4 23 7.5 C23 12.5 18 16 12 21 Z'
+  const img = (src: string, cls: string, style: CSSProperties, key?: number) => <img key={key} src={src} alt="" draggable={false} className={`pet-fx absolute ${cls}`} style={style} />
   return (
     <span aria-hidden="true" className="pointer-events-none absolute inset-0 z-[4]">
       {name === 'sparks' &&
-        [-1.6, 0.2, 1.8].map((dx, i) => (
-          <svg key={i} viewBox="0 0 24 24" className="pet-fx pet-spark absolute size-[0.9em]" style={{ ...head, marginLeft: `${dx}em`, marginTop: `${-0.4 - (i % 2) * 0.5}em`, animationDelay: `${i * 0.1}s` }}>
-            <path d={star} fill="#F6C445" stroke="#E0A019" strokeWidth="1.2" />
-          </svg>
-        ))}
+        [-1.6, 0.2, 1.8].map((dx, i) =>
+          img(i === 1 ? FX.spark : FX.sparkSmall, 'pet-spark w-[1em]', { ...head, marginLeft: `${dx}em`, marginTop: `${-0.4 - (i % 2) * 0.5}em`, animationDelay: `${i * 0.1}s` }, i),
+        )}
       {name === 'hearts' &&
-        [-1, 0.3, 1.4].map((dx, i) => (
-          <svg key={i} viewBox="0 0 24 24" className="pet-fx pet-heart absolute size-[0.85em]" style={{ ...head, marginLeft: `${dx}em`, animationDelay: `${i * 0.22}s` }}>
-            <path d={heart} fill="#FF7A9A" stroke="#D94D73" strokeWidth="1.4" />
-          </svg>
-        ))}
+        [-1, 0.3, 1.4].map((dx, i) => img(i === 1 ? FX.heartRed : FX.heart, 'pet-heart w-[0.95em]', { ...head, marginLeft: `${dx}em`, animationDelay: `${i * 0.22}s` }, i))}
       {name === 'puff' &&
-        [0, 1, 2].map((i) => (
-          <span key={i} className="pet-fx pet-puff absolute block rounded-full border-[0.08em] border-[#C9B8C9] bg-white" style={{ ...mouth, width: `${1.4 - i * 0.3}em`, height: `${1.4 - i * 0.3}em`, animationDelay: `${0.12 + i * 0.1}s` }} />
-        ))}
+        [0, 1, 2].map((i) => img(i === 0 ? FX.cloud : FX.cloudSmall, 'pet-puff', { ...mouth, width: `${1.6 - i * 0.35}em`, animationDelay: `${0.12 + i * 0.1}s` }, i))}
       {name === 'bubbles' &&
-        [0, 1, 2].map((i) => (
-          <span key={i} className="pet-fx pet-bubble absolute block rounded-full border-[0.07em] border-[#8CC8F0] bg-[#E6F4FF]/70" style={{ ...mouth, width: `${0.7 - i * 0.15}em`, height: `${0.7 - i * 0.15}em`, animationDelay: `${i * 0.25}s` }} />
-        ))}
+        [0, 1, 2].map((i) => img(i === 0 ? FX.bubbleBig : FX.bubble, 'pet-bubble', { ...mouth, width: `${0.8 - i * 0.18}em`, animationDelay: `${i * 0.25}s` }, i))}
       {name === 'crumbs' &&
-        [0, 1, 2, 3].map((i) => (
-          <span key={i} className="pet-fx pet-crumb absolute block size-[0.22em] rounded-full bg-[#C98A3D]" style={{ ...mouth, marginLeft: `${(i - 1.5) * 0.35}em`, animationDelay: `${0.2 + i * 0.35}s` }} />
-        ))}
+        [0, 1, 2, 3].map((i) => img(FX.crumbs[i % 3], 'pet-crumb w-[0.3em]', { ...mouth, marginLeft: `${(i - 1.5) * 0.35}em`, animationDelay: `${0.2 + i * 0.35}s` }, i))}
       {name === 'confetti' &&
         ['#F6C445', '#FF7A9A', '#7CC6F2', '#8FD694', '#B89CF0', '#F6C445', '#FF7A9A', '#7CC6F2'].map((c, i) => (
           <span
@@ -408,12 +411,8 @@ function PetOverlay({ name, mouth, head }: { name: Overlay; mouth: CSSProperties
             style={{ ...head, background: c, ['--dx' as string]: `${(i - 3.5) * 0.9}em`, ['--rot' as string]: `${(i % 2 ? 1 : -1) * (120 + i * 30)}deg`, animationDelay: `${(i % 4) * 0.08}s` }}
           />
         ))}
-      {name === 'z' &&
-        [0, 1, 2].map((i) => (
-          <span key={i} className="pet-fx pet-z absolute font-bold text-[#8E7FA8]" style={{ ...head, marginLeft: '1.6em', fontSize: `${1 - i * 0.18}em`, animationDelay: `${i * 0.8}s` }}>
-            z
-          </span>
-        ))}
+      {name === 'anger' && img(FX.anger, 'pet-anger w-[1.1em]', { ...head, marginLeft: '1.3em', marginTop: '-0.5em' })}
+      {name === 'z' && img(FX.zzz, 'pet-z w-[1.6em]', { ...head, marginLeft: '1.9em' })}
     </span>
   )
 }

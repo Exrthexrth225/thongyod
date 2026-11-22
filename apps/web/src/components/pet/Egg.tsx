@@ -1,30 +1,45 @@
 import './pet.css'
 import { cn } from '@/lib/utils'
+import fire from '@/assets/eggs/fire.webp'
+import fireCrack from '@/assets/eggs/fireCrack.webp'
+import fireTop from '@/assets/eggs/fireTop.webp'
+import fireBottom from '@/assets/eggs/fireBottom.webp'
+import sleepy from '@/assets/eggs/sleepy.webp'
+import sleepyCrack from '@/assets/eggs/sleepyCrack.webp'
+import sleepyTop from '@/assets/eggs/sleepyTop.webp'
+import sleepyBottom from '@/assets/eggs/sleepyBottom.webp'
+import mystery from '@/assets/eggs/mystery.webp'
+import mysteryCrack from '@/assets/eggs/mysteryCrack.webp'
+import mysteryTop from '@/assets/eggs/mysteryTop.webp'
+import mysteryBottom from '@/assets/eggs/mysteryBottom.webp'
 
 export type EggStyle = 'fire' | 'sleepy' | 'mystery'
 
-const EGGS: Record<EggStyle, { shell: string; spot: string; line: string }> = {
-  fire: { shell: '#FFD9D2', spot: '#FC8E99', line: '#C9575F' },
-  sleepy: { shell: '#FFF1D6', spot: '#F9C96B', line: '#D69A3A' },
-  mystery: { shell: '#E9E3FA', spot: '#B6A6EE', line: '#7F6FC9' },
+/** Earth's egg art (image/10-eggs.png, 11-egg-shells.png). */
+const EGGS: Record<EggStyle, { whole: string; crack: string; top: string; bottom: string }> = {
+  fire: { whole: fire, crack: fireCrack, top: fireTop, bottom: fireBottom },
+  sleepy: { whole: sleepy, crack: sleepyCrack, top: sleepyTop, bottom: sleepyBottom },
+  mystery: { whole: mystery, crack: mysteryCrack, top: mysteryTop, bottom: mysteryBottom },
 }
 
-type EggProps = { style: EggStyle; state?: 'idle' | 'wobble' | 'crack'; className?: string }
+/** idle → wobble → cracked (cracks show, wobbles harder) → split (the top flies off, the bottom stays a moment). */
+export type EggState = 'idle' | 'wobble' | 'cracked' | 'split'
 
-// A pet egg for the first hatch (choose 1 of 3, DECISIONS #47). Pure SVG + CSS animation.
+type EggProps = { style: EggStyle; state?: EggState; className?: string }
+
+// A pet egg for the first hatch (choose 1 of 3, DECISIONS #47). Size it with a height class; width follows the art.
 export function Egg({ style, state = 'idle', className }: EggProps) {
-  const c = EGGS[style]
+  const art = EGGS[style]
   return (
-    <svg viewBox="0 0 120 150" aria-hidden="true" className={cn('egg', state === 'wobble' && 'egg-wobble', state === 'crack' && 'egg-crack', className)}>
-      <ellipse cx="60" cy="140" rx="34" ry="6" fill="#000" opacity="0.08" />
-      <path d="M60 8 C92 8 112 60 112 92 C112 122 90 140 60 140 C30 140 8 122 8 92 C8 60 28 8 60 8 Z" fill={c.shell} stroke={c.line} strokeWidth="4" />
-      <circle cx="40" cy="70" r="10" fill={c.spot} />
-      <circle cx="78" cy="52" r="7" fill={c.spot} />
-      <circle cx="84" cy="100" r="12" fill={c.spot} />
-      <circle cx="48" cy="112" r="6" fill={c.spot} />
-      {style === 'mystery' && <path d="M52 78 q0-12 10-12 q10 0 10 9 q0 7-9 10 v6" fill="none" stroke={c.line} strokeWidth="5" strokeLinecap="round" />}
-      {state === 'crack' && <path d="M14 80 l14 -8 l10 10 l12 -12 l10 10 l12 -12 l10 10 l14 -8" fill="none" stroke={c.line} strokeWidth="4" strokeLinejoin="round" />}
-      <ellipse cx="40" cy="38" rx="9" ry="14" fill="#fff" opacity="0.6" transform="rotate(-20 40 38)" />
-    </svg>
+    <span aria-hidden="true" className={cn('egg relative inline-block aspect-[262/300]', state === 'wobble' && 'egg-wobble', state === 'cracked' && 'egg-cracked', className)}>
+      {state === 'split' ? (
+        <>
+          <img src={art.bottom} alt="" draggable={false} className="egg-bottom absolute inset-x-0 bottom-0 mx-auto w-full" />
+          <img src={art.top} alt="" draggable={false} className="egg-top absolute inset-x-0 top-0 mx-auto w-full" />
+        </>
+      ) : (
+        <img src={state === 'cracked' ? art.crack : art.whole} alt="" draggable={false} className="size-full object-contain" />
+      )}
+    </span>
   )
 }
