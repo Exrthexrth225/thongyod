@@ -5,17 +5,19 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { STANDARD_SET } from '@/config/games/fatCat'
 import { FatCatGame } from '@/features/fat-cat/FatCatGame'
 import { RuleSetEditor } from '@/features/fat-cat/RuleSetEditor'
-import { setsStore } from '@/features/fat-cat/store'
+import { setsStore, tableStore } from '@/features/fat-cat/store'
 
 // /games/fat-cat — แมวอ้วง (#123)
 export function FatCatPage() {
   const { t } = useTranslation()
+  // Playing: the page is exactly one screen tall, so the card can take all the height left (#126).
+  const playing = tableStore.use() !== null
   return (
-    <>
+    <div className={playing ? 'flex h-dvh flex-col' : undefined}>
       <PageHeader title={t('games.list.fatCat.title')} subtitle={t('games.list.fatCat.desc')} backTo="/games" action={<GameHeaderActions game="fatCat" />} />
-      <BetaNote game="fatCat" />
+      {!playing && <BetaNote game="fatCat" />}
       <FatCatGame />
-    </>
+    </div>
   )
 }
 

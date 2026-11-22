@@ -5,18 +5,17 @@ import { Copy, Save, Trash2 } from 'lucide-react'
 import { BottomAction } from '@/components/games/BottomAction'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { MAX_PICKS, RANKS, STANDARD_SET, WHO, type Rank, type Rule, type RuleSet, type Who } from '@/config/games/fatCat'
+import { RANKS, STANDARD_SET, type Rank, type Rule, type RuleSet } from '@/config/games/fatCat'
 import { toastManager } from '@/lib/toast'
 import { SHOW_BACK } from '@/lib/nav'
 import { secureRandomInt } from '@/lib/random'
-import { cn } from '@/lib/utils'
 import { copySet } from './logic'
 import { setsStore } from './store'
 
 const field = 'w-full rounded-lg border border-input bg-card px-3 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40'
 
-// One rule set of แมวอ้วง (#123): the name, what "โดน" means, the rule for the whole game, and per card a title,
-// what to do, and who it hits (so the app can name them). The standard set is read-only: copy it to change it.
+// One rule set of แมวอ้วง (#123, #126): the name, the rule for the whole game, and per card a title and what to do.
+// The standard set is read-only: copy it to change it. (Cards can also be changed mid-game from the open card.)
 export function RuleSetEditor({ id }: { id: string }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -32,7 +31,6 @@ export function RuleSetEditor({ id }: { id: string }) {
   const clean = (s: RuleSet): RuleSet => ({
     ...s,
     name: s.name.trim() || t('games.fatCat.sets.untitled'),
-    penalty: s.penalty.trim() || STANDARD_SET.penalty,
     rules: Object.fromEntries(RANKS.map((r) => [r, { ...s.rules[r], title: s.rules[r].title.trim() || STANDARD_SET.rules[r].title }])) as Record<Rank, Rule>,
   })
 
@@ -61,9 +59,6 @@ export function RuleSetEditor({ id }: { id: string }) {
           <Labeled label={t('games.fatCat.sets.name')}>
             <Input value={draft.name} maxLength={30} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
           </Labeled>
-          <Labeled label={t('games.fatCat.sets.penaltyLabel')} hint={t('games.fatCat.sets.penaltyHint')}>
-            <Input value={draft.penalty} maxLength={30} onChange={(e) => setDraft({ ...draft, penalty: e.target.value })} />
-          </Labeled>
           <Labeled label={t('games.fatCat.sets.always')}>
             <textarea value={draft.always} maxLength={120} rows={2} onChange={(e) => setDraft({ ...draft, always: e.target.value })} className={field} />
           </Labeled>
@@ -80,33 +75,11 @@ export function RuleSetEditor({ id }: { id: string }) {
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold">{rule.title}</p>
                   <p className="text-sm text-muted-foreground">{rule.text}</p>
-                  <p className="mt-1 text-xs font-semibold">
-                    {t(`games.fatCat.who.${rule.who}`)}
-                    {rule.who === 'pick' && ` ${t('games.fatCat.sets.people', { n: rule.picks ?? 1 })}`}
-                  </p>
                 </div>
               ) : (
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
                   <Input value={rule.title} maxLength={24} aria-label={t('games.fatCat.sets.cardTitle', { rank })} onChange={(e) => setRule(rank, { title: e.target.value })} />
                   <textarea value={rule.text} maxLength={200} rows={2} aria-label={t('games.fatCat.sets.cardText', { rank })} onChange={(e) => setRule(rank, { text: e.target.value })} className={field} />
-                  <div className="flex gap-2">
-                    <select value={rule.who} aria-label={t('games.fatCat.sets.cardWho', { rank })} onChange={(e) => setRule(rank, { who: e.target.value as Who })} className={cn(field, 'h-11 flex-1')}>
-                      {WHO.map((w) => (
-                        <option key={w} value={w}>
-                          {t(`games.fatCat.who.${w}`)}
-                        </option>
-                      ))}
-                    </select>
-                    {rule.who === 'pick' && (
-                      <select value={rule.picks ?? 1} aria-label={t('games.fatCat.sets.picks', { rank })} onChange={(e) => setRule(rank, { picks: Number(e.target.value) })} className={cn(field, 'h-11 w-24')}>
-                        {Array.from({ length: MAX_PICKS }, (_, i) => i + 1).map((n) => (
-                          <option key={n} value={n}>
-                            {t('games.fatCat.sets.people', { n })}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
                 </div>
               )}
             </li>
