@@ -6,15 +6,19 @@ import { Button } from '@/components/ui/button'
 import { earnCoins } from '@/features/pet/coins'
 import { setStageForTesting, STAGES, useGrowth } from '@/features/pet/growth'
 import { getNeedsState, setNeedsState } from '@/features/pet/needs'
+import { bondStore } from '@/features/pet/bond'
+import { wishNowForTesting } from '@/features/pet/life'
+import { careLogStore } from '@/features/pet/personality'
+import { trickStore } from '@/features/pet/tricks'
 import { cn } from '@/lib/utils'
 
-const MOVES = ['happy', 'wave', 'shy', 'love', 'play1', 'play2', 'play3', 'celebrate', 'yawn', 'sleep', 'idle'] as const satisfies readonly PetAct[]
+const MOVES = ['happy', 'wave', 'shy', 'love', 'pat', 'tickle', 'poke', 'beg', 'play1', 'play2', 'play3', 'celebrate', 'yawn', 'sleep', 'trickSit', 'trickFive', 'trickSpin', 'trickJump', 'trickDead', 'idle'] as const satisfies readonly PetAct[]
 
-type PetTestPanelProps = { onMove: (act: PetAct) => void; night: boolean | null; onNight: (night: boolean | null) => void }
+type PetTestPanelProps = { onMove: (act: PetAct) => void; night: boolean | null; onNight: (night: boolean | null) => void; foods: string[] }
 
 // TEST ONLY (#119, Earth): try hatching, growing up, time passing and night on a real phone. Shown on dev and the
 // demo site only; remove or hide before release (HANDOFF "Remove before release").
-export function PetTestPanel({ onMove, night, onNight }: PetTestPanelProps) {
+export function PetTestPanel({ onMove, night, onNight, foods }: PetTestPanelProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const growth = useGrowth()
@@ -60,6 +64,24 @@ export function PetTestPanel({ onMove, night, onNight }: PetTestPanelProps) {
               {t(v === null ? 'pet.test.realTime' : v ? 'pet.test.night' : 'pet.test.day')}
             </Button>
           ))}
+        </div>
+        <p className="font-semibold">{t('pet.test.life')}</p>
+        <div className={row}>
+          <Button variant="outline" size="sm" onClick={() => wishNowForTesting({ kind: 'food', food: foods[Math.floor(Math.random() * foods.length)] })}>
+            {t('pet.test.wishFood')}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => wishNowForTesting({ kind: 'pat' })}>
+            {t('pet.test.wishPat')}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => bondStore.set({ ...bondStore.get(), points: bondStore.get().points + 60 })}>
+            {t('pet.test.bond')}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => trickStore.set({ ...trickStore.get(), day: null, triesToday: 0 })}>
+            {t('pet.test.tries')}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => careLogStore.set({ feed: 0, play: 0, bath: 0, touch: 0, settled: null })}>
+            {t('pet.test.trait')}
+          </Button>
         </div>
         <p className="font-semibold">{t('pet.demo.title')}</p>
         <div className={row}>

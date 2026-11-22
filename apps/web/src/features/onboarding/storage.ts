@@ -2,6 +2,7 @@
 import type { PetSpeciesId } from '@/components/pet/species'
 import { resetGrowth } from '@/features/pet/growth'
 import { resetNeeds } from '@/features/pet/needs'
+import { resetPetLife } from '@/features/pet/life'
 
 const ONBOARDED_KEY = 'thongyod-onboarded'
 const PET_KEY = 'thongyod-pet'
@@ -40,4 +41,5 @@ export function saveMyPet(species: PetSpeciesId): void {
   write(PET_KEY, JSON.stringify({ species, hatchedAt: new Date().toISOString() }))
   resetGrowth() // a new egg starts as a baby (#105)
   resetNeeds() // … a little hungry (#119)
+  resetPetLife() // no bond, tricks, personality or wishes yet (#121)
 }

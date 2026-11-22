@@ -2,6 +2,7 @@
 // after it (a day with a feed, play or bath after which every need is fine; not necessarily in a row). It never
 // shrinks, gets ill or dies.
 import { useSyncExternalStore } from 'react'
+import { settleTrait } from './personality'
 
 export type Stage = 'baby' | 'teen' | 'adult'
 export const STAGES: Stage[] = ['baby', 'teen', 'adult']
@@ -67,6 +68,7 @@ export function setStageForTesting(stage: Stage): void {
   const from = get().stage
   current = { careDays: STAGE_AT[stage], lastDay: null, stage }
   save()
+  if (stage === 'adult') settleTrait()
   if (stage !== from && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(GREW_EVENT, { detail: stage }))
 }
 
@@ -76,6 +78,7 @@ export function recordCareDay(day: string): void {
   if (r.growth === current) return
   current = r.growth
   save()
+  if (r.grewTo === 'adult') settleTrait() // grown up: its personality settles (#121)
   if (r.grewTo && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(GREW_EVENT, { detail: r.grewTo }))
 }
 

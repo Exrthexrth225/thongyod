@@ -157,3 +157,7 @@
 | NeedsBars | `src/components/pet/NeedsBars.tsx` | ours | อิ่ม / สนุก / สะอาด bars (meter role), low one pulses | needs | Pet tab |
 | FoodSheet | `src/components/pet/FoodSheet.tsx` | ours | Food menu in a BottomSheet: art, what it fills, price in coins | open, onOpenChange, coins, onPick | Pet tab; menu in `config/petFoods.ts` |
 | PetTestPanel | `src/components/pet/PetTestPanel.tsx` | ours | TEST ONLY: hatch again, change age, time, coins, day/night, all moves | onMove, night, onNight | Dev + demo site only; remove before release |
+| PetBondSheet | `src/components/pet/PetBondSheet.tsx` | ours | ความสนิท level, personality, trick list in a BottomSheet | open, onOpenChange, name | Pet tab heart chip (#121) |
+| GestureLayer / TrickPicker | `src/components/pet/TrickTrainer.tsx` | ours | Reads teaching gestures over the room; picks a trick (locked by bond level) | onGesture / value, onChange | Pet tab ฝึกท่า |
+| CatchGame | `src/components/pet/CatchGame.tsx` | ours | รับขนม: falling snacks, catch under the pet | petX, running, onCatch, onEnd | Pet tab |
+| localStore | `src/lib/localStore.ts` | ours | A small localStorage value with get / set / use() hook | key, fallback, valid | Pet bond, tricks, wishes, care log |

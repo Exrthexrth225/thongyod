@@ -64,6 +64,24 @@ export const MOTIONS: Record<Exclude<Motion, 'none'> | 'settle', MotionSpec> = {
     frames: [f(0, rest), f(0.08, SQUASH), f(0.25, 'translate(-9%, 0) rotate(-4deg) scale(1, 1)'), f(0.5, 'translate(7%, 0) rotate(3deg) scale(1, 1)'), f(0.75, 'translate(-3%, 0) rotate(-1deg) scale(1, 1)'), f(1, rest)],
   },
   // Turns around: a squeeze through the middle into its mirror image and back (a 2D drawing "turning").
+  // Tricks and touch (#121).
+  spin: {
+    ms: 1200,
+    swapAt: 0.12,
+    frames: [
+      f(0, rest),
+      f(0.12, 'translate(0, 0) rotate(0deg) scale(0.1, 1)'),
+      f(0.25, 'translate(0, -4%) rotate(0deg) scale(-1, 1)'),
+      f(0.37, 'translate(0, -6%) rotate(0deg) scale(-0.1, 1)'),
+      f(0.5, 'translate(0, -6%) rotate(0deg) scale(1, 1)'),
+      f(0.62, 'translate(0, -4%) rotate(0deg) scale(0.1, 1)'),
+      f(0.75, 'translate(0, -2%) rotate(0deg) scale(-1, 1)'),
+      f(0.87, 'translate(0, 0) rotate(0deg) scale(-0.1, 1)'),
+      f(1, rest),
+    ],
+  },
+  jolt: { ms: 700, swapAt: 0.12, frames: [f(0, rest), f(0.12, 'translate(-4%, 0) rotate(-6deg) scale(0.94, 1.06)'), f(0.45, 'translate(1%, 0) rotate(2deg) scale(1.02, 0.98)'), f(1, rest)] },
+  flop: { ms: 900, swapAt: 0.25, frames: [f(0, rest), f(0.25, 'translate(0, 0) rotate(-10deg) scale(1.1, 0.88)'), f(0.55, 'translate(0, 2%) rotate(0deg) scale(1.04, 0.96)'), f(1, rest)] },
   turn: {
     ms: 1500,
     swapAt: 0.18,

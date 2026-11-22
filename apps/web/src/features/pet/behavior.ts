@@ -1,15 +1,19 @@
 // What the pet does and when (DECISIONS #80). Pure: no timers, no DOM. Tested in behavior.test.ts.
 // The <Pet> component runs these plans with timers and CSS; this file decides.
 
-export const POSES = ['main', 'blink', 'happy', 'wave', 'shy', 'play1', 'play2', 'play3', 'sleep', 'eat', 'celebrate', 'yawn', 'sad', 'bath', 'refuse'] as const
+export const POSES = ['main', 'blink', 'happy', 'wave', 'shy', 'play1', 'play2', 'play3', 'sleep', 'eat', 'celebrate', 'yawn', 'sad', 'bath', 'refuse', 'bliss', 'laugh', 'surprised', 'walkA', 'walkB', 'beg', 'sitPretty', 'highFive', 'playDead', 'eatOpen', 'eatChew', 'eatDone'] as const
 export type PoseId = (typeof POSES)[number]
 
 /** One-shot body motion (CSS keyframes in pet.css, transform only). */
-export type Motion = 'none' | 'squish' | 'hop' | 'wave' | 'shy' | 'fly' | 'dash' | 'turn' | 'sneeze' | 'jump' | 'chomp' | 'dance' | 'stretch' | 'look' | 'wiggle' | 'bounce'
+export type Motion = 'none' | 'squish' | 'hop' | 'wave' | 'shy' | 'fly' | 'dash' | 'turn' | 'sneeze' | 'jump' | 'chomp' | 'dance' | 'stretch' | 'look' | 'wiggle' | 'bounce' | 'spin' | 'jolt' | 'flop'
 /** Little drawings around the pet. */
 export type Overlay = 'none' | 'sparks' | 'hearts' | 'puff' | 'bubbles' | 'z' | 'crumbs' | 'confetti' | 'anger'
 
-export type PetAction = 'happy' | 'wave' | 'shy' | 'love' | 'play1' | 'play2' | 'play3' | 'eat' | 'celebrate' | 'yawn' | 'sleep' | 'fidget' | 'grumpy' | 'refuse'
+export type PetAction = 'happy' | 'wave' | 'shy' | 'love' | 'play1' | 'play2' | 'play3' | 'eat' | 'celebrate' | 'yawn' | 'sleep' | 'fidget' | 'grumpy' | 'refuse' | 'pat' | 'tickle' | 'poke' | 'beg' | TrickId
+/** Tricks you can teach (#121). */
+export const TRICKS = ['trickSit', 'trickFive', 'trickSpin', 'trickJump', 'trickDead'] as const
+export type TrickId = (typeof TRICKS)[number]
+
 export type Plan = { pose: PoseId; motion: Motion; overlay: Overlay; /** How long before going back to the main pose. 0 = stays (sleep). */ ms: number }
 
 /** Per-species play moves: the same pose slots, different motion. */
@@ -42,6 +46,26 @@ export function planFor(action: PetAction, moves: SpeciesMoves): Plan {
       return { pose: 'sleep', motion: 'none', overlay: 'z', ms: 0 }
     case 'fidget':
       return { pose: 'main', ...FIDGETS[0] }
+    // Touch (#121): pat on the head, tickle the belly, poke the nose. Begging = it wants something.
+    case 'pat':
+      return { pose: 'bliss', motion: 'squish', overlay: 'hearts', ms: 1500 }
+    case 'tickle':
+      return { pose: 'laugh', motion: 'wiggle', overlay: 'sparks', ms: 1500 }
+    case 'poke':
+      return { pose: 'surprised', motion: 'jolt', overlay: 'none', ms: 1000 }
+    case 'beg':
+      return { pose: 'beg', motion: 'bounce', overlay: 'none', ms: 1600 }
+    // Tricks (#121).
+    case 'trickSit':
+      return { pose: 'sitPretty', motion: 'squish', overlay: 'sparks', ms: 1700 }
+    case 'trickFive':
+      return { pose: 'highFive', motion: 'wave', overlay: 'sparks', ms: 1500 }
+    case 'trickSpin':
+      return { pose: 'happy', motion: 'spin', overlay: 'sparks', ms: 1300 }
+    case 'trickJump':
+      return { pose: 'happy', motion: 'jump', overlay: 'sparks', ms: 1600 }
+    case 'trickDead':
+      return { pose: 'playDead', motion: 'flop', overlay: 'none', ms: 2400 }
     case 'refuse':
       // Full (#119): turns its head away, pushing the food off (image/36, 37).
       return { pose: 'refuse', motion: 'wiggle', overlay: 'none', ms: 1300 }

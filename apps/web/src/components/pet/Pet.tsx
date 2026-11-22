@@ -11,7 +11,7 @@ import crumb2 from '@/assets/effects/crumb2.webp'
 import crumb3 from '@/assets/effects/crumb3.webp'
 import anger from '@/assets/effects/anger.webp'
 import zzz from '@/assets/race-props/zzz.webp'
-import { useCallback, useEffect, useImperativeHandle, useRef, useState, type CSSProperties, type Ref } from 'react'
+import { useCallback, useEffect, useImperativeHandle, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent, type Ref } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   BLINK_MS,
@@ -36,7 +36,7 @@ import { MOTIONS } from '@/features/pet/motions'
 import { initialTaps, tap } from '@/features/pet/taps'
 import { GREW_EVENT, STAGE_SCALE, useGrowth } from '@/features/pet/growth'
 import { cn } from '@/lib/utils'
-import { PET_SPECIES, posesFor, type PetSpeciesId } from './species'
+import { hasOwnArt, PET_SPECIES, posesFor, type PetSpeciesId } from './species'
 import './pet.css'
 
 // The pet (DECISIONS #47, #80, UX_GUIDELINES §2). Three layers that never fight each other:
@@ -65,6 +65,19 @@ type PetProps = {
   mood?: 'happy' | 'ok' | 'sad'
   /** In the bath (#120): sits in the foam (bath drawing) and stays put. */
   bathing?: boolean
+  /** Walking across the room (#121): a walk cycle facing that way (the page moves the pet). */
+  walking?: false | 'left' | 'right'
+  /** How the user touched it (#121), after its own reaction starts: for bond points and wishes. */
+  onTouch?: (kind: TouchKind) => void
+}
+
+export type TouchKind = 'tap' | 'pat' | 'tickle' | 'poke' | 'hug'
+/** Where on the art (0–1) a touch landed. Head = top part; face = around the mouth; belly = lower middle. */
+function zoneAt(x: number, y: number, mouth: [number, number]): 'head' | 'face' | 'belly' | 'body' {
+  if (Math.hypot(x - mouth[0], (y - mouth[1]) * 1.2) < 0.16) return 'face'
+  if (y < 0.4) return 'head'
+  if (y > 0.55 && x > 0.2 && x < 0.8) return 'belly'
+  return 'body'
 }
 
 /**
@@ -76,7 +89,7 @@ const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia('
 const rnd = (n: number) => Math.floor(Math.random() * n)
 const eased = (frames: Keyframe[]) => frames.map((k) => ({ ...k, easing: 'ease-in-out' }))
 
-export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nightMode = false, mood = 'happy', bathing = false }: PetProps) {
+export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nightMode = false, mood = 'happy', bathing = false, walking = false, onTouch }: PetProps) {
   const { t } = useTranslation()
   const spec = PET_SPECIES[species]
   // Baby / teen: their own drawings when the species has them, and smaller (#105).
@@ -106,6 +119,9 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nig
   const busy = useRef(false)
   const pressTimer = useRef(0)
   const longPressed = useRef(false)
+  const box = useRef<HTMLSpanElement>(null)
+  /** The current finger: where it started, how far it went, how often it turned back (tickling). */
+  const stroke = useRef<{ x: number; y: number; zone: string; moved: number; turns: number; dir: number; lastX: number; lastY: number; patted: number } | null>(null)
   const poseRef = useRef<PoseId>('main')
   const taps = useRef(initialTaps)
   /** Until when a reaction to a tap (or hug) is playing. Idle moves can be interrupted by a tap, reactions cannot. */
@@ -328,27 +344,76 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nig
   function touched() {
     lastTouch.current = Date.now()
   }
-  function onPointerDown() {
+  /** Pointer position on the art box, 0–1. */
+  const artPoint = (e: { clientX: number; clientY: number }) => {
+    const r = box.current?.getBoundingClientRect()
+    return r ? { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height } : { x: 0.5, y: 0.5 }
+  }
+  const touchReact = (kind: TouchKind, act: PetAction) => {
+    onTapProp?.()
+    onTouch?.(kind)
+    if (nightRef.current) return busy.current ? undefined : react('yawn')
+    react(act)
+  }
+
+  function onPointerDown(e: PointerEvent) {
     touched()
+    const p = artPoint(e)
+    stroke.current = { x: e.clientX, y: e.clientY, zone: zoneAt(p.x, p.y, spec.anchors.mouth), moved: 0, turns: 0, dir: 0, lastX: e.clientX, lastY: e.clientY, patted: 0 }
     longPressed.current = false
     window.clearTimeout(pressTimer.current)
     pressTimer.current = window.setTimeout(() => {
+      if ((stroke.current?.moved ?? 0) > 12) return
       longPressed.current = true
       navigator.vibrate?.(20)
-      react('love')
+      touchReact('hug', 'love')
     }, LONG_PRESS_MS)
   }
-  const cancelPress = () => window.clearTimeout(pressTimer.current)
-  function onClick() {
-    cancelPress()
-    if (longPressed.current) {
-      longPressed.current = false
-      return
+  function onPointerMove(e: PointerEvent) {
+    const st = stroke.current
+    if (!st) return
+    const dx = e.clientX - st.lastX
+    const d = Math.hypot(dx, e.clientY - st.lastY)
+    if (d < 3) return
+    st.moved += d
+    st.lastX = e.clientX
+    st.lastY = e.clientY
+    if (st.moved > 12) window.clearTimeout(pressTimer.current)
+    // Back-and-forth on the belly = tickling; stroking the head = patting (a fresh reaction every ~140 px).
+    const dir = Math.sign(dx)
+    if (Math.abs(dx) > 4 && dir !== 0 && dir !== st.dir) {
+      if (st.dir !== 0) st.turns++
+      st.dir = dir
     }
+    if (busy.current && Date.now() < reactingUntil.current) return
+    if ((st.zone === 'belly' || st.zone === 'body') && st.turns >= 3) {
+      st.turns = 0
+      touchReact('tickle', 'tickle')
+    } else if (st.zone === 'head' && st.moved - st.patted > 140) {
+      st.patted = st.moved
+      touchReact('pat', 'pat')
+    }
+  }
+  function onPointerUp() {
+    window.clearTimeout(pressTimer.current)
+    const st = stroke.current
+    stroke.current = null
+    if (!st || longPressed.current || st.moved > 12) return
     touched()
+    // A tap: on the nose = poke, on the head = pat, anywhere else = a happy little reaction.
+    if (st.zone === 'face') return touchReact('poke', 'poke')
+    if (st.zone === 'head') return touchReact('pat', 'pat')
+    tapReaction()
+  }
+  const cancelPress = () => {
+    window.clearTimeout(pressTimer.current)
+    stroke.current = null
+  }
+  function tapReaction() {
     onTapProp?.()
+    onTouch?.('tap')
     if (nightRef.current) return busy.current ? undefined : react('yawn')
-    // A playing reaction is never cut off; a burst of taps makes the pet shy away for a moment (#104).
+    // A playing reaction is never cut off; a burst of taps makes the pet cross for a moment (#104).
     const r = tap(taps.current, Date.now(), Date.now() < reactingUntil.current)
     taps.current = r.state
     if (r.outcome === 'annoyed') return react('grumpy')
@@ -356,6 +421,12 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nig
     const next = pickOther(TAP_ACTIONS, lastTap.current as (typeof TAP_ACTIONS)[number] | null, rnd)
     lastTap.current = next
     react(next)
+  }
+  /** Keyboard (Enter / Space): a click with no pointer. */
+  function onClick(e: MouseEvent) {
+    if (e.detail !== 0) return
+    touched()
+    tapReaction()
   }
 
   const [mx, my] = spec.anchors.mouthIn?.[pose] ?? spec.anchors.mouth
@@ -368,7 +439,8 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nig
       type="button"
       onClick={onClick}
       onPointerDown={onPointerDown}
-      onPointerUp={cancelPress}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
       onPointerLeave={cancelPress}
       onPointerCancel={cancelPress}
       onContextMenu={(e) => e.preventDefault()}
@@ -378,6 +450,7 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nig
     >
       {/* The art box: room for every move is around it, inside the footprint. */}
       <span
+        ref={box}
         className="absolute"
         style={{
           left: `${(ROOM.side / (1 + 2 * ROOM.side)) * 100}%`,
@@ -393,8 +466,8 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nig
           <span ref={shadow} className="pet-shadow block size-full rounded-[50%] bg-black/10 dark:bg-black/40" />
         </span>
         <span aria-hidden="true" className={cn('pet-alive absolute inset-0', asleep ? 'pet-sleeping' : spec.alive === 'float' ? 'pet-float' : 'pet-breathe')}>
-          <span ref={move} className="pet-move absolute inset-0">
-            {POSES.filter((p) => p !== 'blink').map((p) => (
+          <span ref={move} className={cn('pet-move absolute inset-0', walking && 'is-walking', walking === 'left' && 'is-left', walking && !hasOwnArt(poses, 'walkA') && 'is-hopping')}>
+            {POSES.filter((p) => p !== 'blink' && p !== 'walkA' && p !== 'walkB').map((p) => (
               <img
                 key={p}
                 src={poses[p]}
@@ -402,9 +475,15 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nig
                 draggable={false}
                 decoding="async"
                 className="pet-layer absolute inset-0 size-full"
-                style={{ opacity: p === pose && eatFrame === null ? 1 : 0, zIndex: p === pose ? 2 : 0 }}
+                style={{ opacity: p === pose && eatFrame === null && !walking ? 1 : 0, zIndex: p === pose ? 2 : 0 }}
               />
             ))}
+            {walking && (
+              <>
+                <img src={poses.walkA} alt="" draggable={false} className="pet-layer pet-walk-a absolute inset-0 size-full" style={{ zIndex: 2 }} />
+                <img src={poses.walkB} alt="" draggable={false} className="pet-layer pet-walk-b absolute inset-0 size-full" style={{ zIndex: 2 }} />
+              </>
+            )}
             {spec.eatFrames?.map((src, i) => (
               <img
                 key={src}

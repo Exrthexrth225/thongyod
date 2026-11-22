@@ -698,9 +698,14 @@ Many phones in one game. Only the server knows everyone's role; each phone gets 
 - เซียมซี "เขย่าใหม่ (ปุ่มทดสอบ)" button under the fortune card (`FortunePage.tsx`, `forgetTodayForTesting` in `features/fortune/storage.ts`, i18n `fortune.testRedraw`). Earth asked for it on 2026-11-22 for testing; the real rule stays one stick per Bangkok day.
 - Pet tab "โหมดทดสอบ" panel (`components/pet/PetTestPanel.tsx`, `setStageForTesting` in growth.ts, `/welcome?step=egg&again=1`, i18n `pet.test.*`): hatch again, change age, +3 h, neglect, +100 coins, day/night, all moves. Shown on dev and the demo site only (#119); Earth asked for it.
 
-## Waiting for Earth's art (pet care, #119/#120)
-- 35-pet-items.png (not in the folder yet) → more foods, bowl, ball (CSS ball now), sponge, mud (should ride inside Pet's move layer), coin, foam.
-- Rooms 32–34, care poses 36/37 and cup frames 31 are wired (#120).
+## Waiting for Earth's art (pet care, #119–#121)
+- 35-pet-items.png → more foods, bowl, ball (CSS ball now), sponge, mud (should ride inside Pet's move layer), coin, foam.
+- 38/39 touch (bliss, laugh, surprised), 40/41 walk (step A, step B, beg), 42/43 tricks (sit pretty, high five, play dead), 44/45 eat with empty hands (open, chew, done) — per species, 3×3 by stage; cut like `care.py` and add to species.ts (pose slots already exist with stand-ins, `withExtras`). With 44/45: hold any food in the empty hands instead of the happy face.
+- 46 accessories, 47 room decor → coin shop (not built yet: needs the art).
+- Pet tab test panel grew: wish now, +60 bond, more trick tries, reset personality (remove before release with the rest).
+
+### Frontend request for Codex — pet sync (later)
+Pet state lives on the device: needs (`thongyod-pet-needs`), coins, bond, tricks, care log/personality, wishes, growth. To sync across phones and let friends visit a pet, the backend needs a per-user pet record with these fields; propose a contract when the room/social work starts.
 
 ## Earth's art (2026-11-22) — all wired
 - Game stickers (image/17), racers (image/18), second run frame + win pose (image/23, 24): assets/games, assets/racers, racers-run2, racers-win (`tools/pet-art/grid.py`).

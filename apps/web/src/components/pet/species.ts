@@ -104,8 +104,31 @@ export type PetSpecies = {
 type StagePoses = { main: string; blink: string; happy: string; eat: string; sleep: string; shy: string; sad: string; bath: string; refuse: string }
 /** A younger stage has 9 drawings (6 + care poses, #120); waving, playing and celebrating use the happy one, yawning the eyes-closed one. */
 function fill(p: StagePoses): Record<PoseId, string> {
-  return { ...p, wave: p.happy, play1: p.happy, play2: p.main, play3: p.happy, celebrate: p.happy, yawn: p.blink }
+  return withExtras({ ...p, wave: p.happy, play1: p.happy, play2: p.main, play3: p.happy, celebrate: p.happy, yawn: p.blink })
 }
+
+/** Poses drawn later (#121): until Earth's sheets 38–45 arrive they reuse the closest drawing. */
+type Extra = 'bliss' | 'laugh' | 'surprised' | 'walkA' | 'walkB' | 'beg' | 'sitPretty' | 'highFive' | 'playDead' | 'eatOpen' | 'eatChew' | 'eatDone'
+function withExtras(p: Omit<Record<PoseId, string>, Extra> & Partial<Record<Extra, string>>): Record<PoseId, string> {
+  return {
+    bliss: p.happy,
+    laugh: p.happy,
+    surprised: p.shy,
+    walkA: p.main,
+    walkB: p.main,
+    beg: p.happy,
+    sitPretty: p.happy,
+    highFive: p.wave,
+    playDead: p.sleep,
+    eatOpen: p.happy,
+    eatChew: p.happy,
+    eatDone: p.happy,
+    ...p,
+  }
+}
+
+/** True when this pose has its own drawing (not a stand-in). */
+export const hasOwnArt = (poses: Record<PoseId, string>, pose: PoseId) => !(['walkA', 'walkB'].includes(pose) && poses[pose] === poses.main) && !(pose.startsWith('eat') && pose !== 'eat' && poses[pose] === poses.happy)
 
 /** The poses to draw for this species at this stage (falls back to the adult art). */
 export function posesFor(spec: PetSpecies, stage: Stage): Record<PoseId, string> {
@@ -116,7 +139,7 @@ export const PET_SPECIES: Record<PetSpeciesId, PetSpecies> = {
   dragon: {
     id: 'dragon',
     aspect: 306 / 247,
-    poses: { sad: dragonSad, bath: dragonBath, refuse: dragonRefuse, main: dragonMain, blink: dragonBlink, happy: dragonHappy, wave: dragonWave, shy: dragonShy, play1: dragonPlay1, play2: dragonPlay2, play3: dragonPlay3, sleep: dragonSleep, eat: dragonEat, celebrate: dragonCelebrate, yawn: dragonYawn },
+    poses: withExtras({ sad: dragonSad, bath: dragonBath, refuse: dragonRefuse, main: dragonMain, blink: dragonBlink, happy: dragonHappy, wave: dragonWave, shy: dragonShy, play1: dragonPlay1, play2: dragonPlay2, play3: dragonPlay3, sleep: dragonSleep, eat: dragonEat, celebrate: dragonCelebrate, yawn: dragonYawn }),
     alive: 'breathe',
     moves: {
       play1: { motion: 'fly', overlay: 'none', ms: 1900 },
@@ -133,7 +156,7 @@ export const PET_SPECIES: Record<PetSpeciesId, PetSpecies> = {
   fish: {
     id: 'fish',
     aspect: 314 / 275,
-    poses: { sad: fishSad, bath: fishBath, refuse: fishRefuse, main: fishMain, blink: fishBlink, happy: fishHappy, wave: fishWave, shy: fishShy, play1: fishPlay1, play2: fishPlay2, play3: fishPlay3, sleep: fishSleep, eat: fishEat, celebrate: fishCelebrate, yawn: fishYawn },
+    poses: withExtras({ sad: fishSad, bath: fishBath, refuse: fishRefuse, main: fishMain, blink: fishBlink, happy: fishHappy, wave: fishWave, shy: fishShy, play1: fishPlay1, play2: fishPlay2, play3: fishPlay3, sleep: fishSleep, eat: fishEat, celebrate: fishCelebrate, yawn: fishYawn }),
     alive: 'float',
     moves: {
       play1: { motion: 'dash', overlay: 'bubbles', ms: 1700 },

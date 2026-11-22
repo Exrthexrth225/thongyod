@@ -24,6 +24,15 @@
 .pet-crumb { animation: pet-crumb 0.8s ease-in forwards; }
 .pet-confetti { animation: pet-confetti 1.6s cubic-bezier(0.2, 0.7, 0.4, 1) forwards; }
 .pet-z { animation: pet-z 2.4s ease-in-out infinite; }
+/* Walking (#121): two drawings flipped like a flipbook; mirrored when going left. No walk drawing yet → it hops. */
+.pet-walk-a { animation: pet-walk-a 0.42s steps(1) infinite; }
+.pet-walk-b { animation: pet-walk-b 0.42s steps(1) infinite; }
+@keyframes pet-walk-a { 0% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes pet-walk-b { 0% { opacity: 0; } 50% { opacity: 1; } }
+.pet-move.is-left .pet-walk-a, .pet-move.is-left .pet-walk-b { scale: -1 1; }
+.pet-move.is-hopping .pet-walk-a, .pet-move.is-hopping .pet-walk-b { animation: pet-hop-walk 0.42s ease-in-out infinite; opacity: 1; }
+.pet-move.is-hopping .pet-walk-b { opacity: 0; animation: none; }
+@keyframes pet-hop-walk { 0%, 100% { translate: 0 0; } 50% { translate: 0 -7%; } }
 .pet-held { translate: -50% -55%; z-index: 4; transform-origin: 50% 50%; animation: pet-held 2s steps(1, end) forwards; }
 /* Held food: three bites (it gets smaller with a little jerk each time), then gone. */
 @keyframes pet-held {
@@ -47,7 +56,8 @@
 .pet-paused, .pet-paused * { animation-play-state: paused !important; }
 
 @media (prefers-reduced-motion: reduce) {
-  .pet-breathe, .pet-sleeping, .pet-float, .pet-shadow-float, .pet-spark, .pet-heart, .pet-puff, .pet-bubble, .pet-crumb, .pet-confetti, .pet-anger, .pet-held { animation: none; }
+  .pet-breathe, .pet-sleeping, .pet-float, .pet-shadow-float, .pet-spark, .pet-heart, .pet-puff, .pet-bubble, .pet-crumb, .pet-confetti, .pet-anger, .pet-held, .pet-walk-a, .pet-walk-b { animation: none; }
+  .pet-walk-b { opacity: 0; }
   .pet-fx { opacity: 0; }
   .pet-z { animation: none; opacity: 0.8; }
 }
