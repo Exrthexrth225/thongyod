@@ -3,7 +3,9 @@ import { useLocation, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useImmersive } from '@/lib/immersive'
 import { wantsBack } from '@/lib/nav'
+import { cn } from '@/lib/utils'
 
 type PageHeaderProps = {
   title: string
@@ -20,6 +22,8 @@ export function PageHeader({ title, subtitle, action, backTo }: PageHeaderProps)
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
+  // Full screen in a game (#123): a slim bar with only back and the game's buttons, so the game gets the height.
+  const immersive = useImmersive()
 
   // Each page gets its own browser/search title (Google: unique titles per page).
   useEffect(() => {
@@ -36,15 +40,15 @@ export function PageHeader({ title, subtitle, action, backTo }: PageHeaderProps)
   }
 
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between gap-2 bg-background/90 px-4 backdrop-saturate-150 pt-[calc(env(safe-area-inset-top)+1rem)] pb-2 backdrop-blur">
+    <header className={cn('sticky top-0 z-20 flex items-center justify-between gap-2 bg-background/90 px-4 backdrop-saturate-150 backdrop-blur', immersive ? 'pt-[calc(env(safe-area-inset-top)+0.25rem)] pb-0' : 'pt-[calc(env(safe-area-inset-top)+1rem)] pb-2')}>
       {showBack && (
         <Button variant="ghost" size="icon" className="-ml-3" aria-label={t('common.back')} onClick={goBack}>
           <ChevronLeft className="size-6" />
         </Button>
       )}
-      <div className="min-w-0 flex-1">
+      <div className={cn('min-w-0 flex-1', immersive && 'sr-only')}>
         <h1 className={showBack ? 'truncate text-xl font-semibold' : 'truncate text-[30px] leading-tight font-bold'}>{title}</h1>
-        {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+        {subtitle && !immersive && <p className="text-sm text-muted-foreground">{subtitle}</p>}
       </div>
       {action}
     </header>

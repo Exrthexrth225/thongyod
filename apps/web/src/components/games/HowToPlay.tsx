@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronRight, CircleHelp, Play, Target } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CircleHelp, Maximize, Minimize, Pin, PinOff, Play, Target } from 'lucide-react'
 import { SoundToggle } from '@/components/common/SoundToggle'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Button } from '@/components/ui/button'
@@ -9,6 +9,10 @@ import { HOW_TO } from '@/config/howTo'
 import { tintClass } from '@/lib/tones'
 import { cn } from '@/lib/utils'
 import { markGameOpened } from '@/features/firstRun/firstRun'
+import { noteOpened, pinStore, togglePin } from '@/features/games/library'
+import { canRealFullscreen, setImmersive, useImmersive } from '@/lib/immersive'
+import { isStandalone } from '@/lib/standalone'
+import { toastManager } from '@/lib/toast'
 import './games.css'
 
 type SheetProps = { game: GameId; open: boolean; onOpenChange: (open: boolean) => void }
@@ -95,14 +99,47 @@ export function HowToButton({ game }: { game: GameId }) {
   )
 }
 
-/** Right side of every game's PageHeader: วิธีเล่น + sound. */
-export function GameHeaderActions({ game, sound = true }: { game: GameId; sound?: boolean }) {
-  // Every game page shows these actions, so this is where "tried a game" is noted for the first-run card (#96).
-  useEffect(markGameOpened, [])
+/** Pin this game to the top of the games list (#123). */
+export function PinButton({ game }: { game: GameId }) {
+  const { t } = useTranslation()
+  const pinned = pinStore.use().includes(game)
   return (
-    <span className="flex items-center">
+    <Button variant="ghost" size="icon" aria-pressed={pinned} aria-label={t(pinned ? 'games.unpin' : 'games.pin')} onClick={() => pinStore.set(togglePin(pinStore.get(), game))}>
+      {pinned ? <PinOff /> : <Pin />}
+    </Button>
+  )
+}
+
+/** Full screen while playing (#123); leaving the game turns it off. */
+export function FullscreenButton() {
+  const { t } = useTranslation()
+  const on = useImmersive()
+  useEffect(() => () => setImmersive(false), [])
+  return (
+    <Button variant="ghost" size="icon" aria-pressed={on} aria-label={t(on ? 'games.fullscreenOff' : 'games.fullscreen')} onClick={() => {
+        // iPhone Safari cannot hide its bars for a page: say once how to get the real thing.
+        if (!on && !canRealFullscreen() && !isStandalone()) toastManager.add({ title: t('games.fullscreenIos') })
+        setImmersive(!on)
+      }}>
+      {on ? <Minimize /> : <Maximize />}
+    </Button>
+  )
+}
+
+/** Right side of every game's PageHeader: วิธีเล่น, sound, pin, full screen. */
+export function GameHeaderActions({ game, sound = true }: { game: GameId; sound?: boolean }) {
+  // Every game page shows these actions, so this is where "tried a game" is noted for the first-run card (#96)
+  // and the game goes into "เล่นล่าสุด" (#123).
+  useEffect(() => {
+    markGameOpened()
+    noteOpened(game)
+  }, [game])
+  return (
+    <span className="-mr-2 flex items-center">
       <HowToButton game={game} />
       {sound && <SoundToggle game={game} />}
+      <PinButton game={game} />
+      <FullscreenButton />
     </span>
   )
 }

@@ -32,7 +32,11 @@ export function GameTile({ game, className }: { game: Game; className?: string }
   const tags = gameTags(game)
   const body = (
     <>
-      <img src={game.art} alt="" draggable={false} className="-mt-1 -ml-1 size-16 drop-shadow-[0_2px_0_rgb(0_0_0/0.12)]" />
+      {game.art ? (
+        <img src={game.art} alt="" draggable={false} className="-mt-1 -ml-1 size-16 drop-shadow-[0_2px_0_rgb(0_0_0/0.12)]" />
+      ) : (
+        <game.icon className="size-14 p-1.5" aria-hidden="true" />
+      )}
       <span className="mt-1.5 font-heading text-lg leading-snug font-bold">{t(`games.list.${game.id}.title`)}</span>
       <span className="line-clamp-2 text-[13px] leading-snug opacity-85">{t(`games.list.${game.id}.desc`)}</span>
       <span className="mt-auto flex w-full flex-wrap items-center gap-x-2 gap-y-1 pt-2 text-xs opacity-85">
