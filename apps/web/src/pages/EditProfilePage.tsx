@@ -7,12 +7,13 @@ import type { Me } from '@/api/types'
 import { ErrorState } from '@/components/common/ErrorState'
 import { LoadingState } from '@/components/common/LoadingState'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { AvatarEditor } from '@/components/profile/AvatarEditor'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { BIO_MAX, charCount, checkDisplayName, NAME_MAX, NAME_MIN } from '@/features/profile/validation'
 import { showErrorToast, toastManager } from '@/lib/toast'
 
-// /me/edit — change app name and short bio.
+// /me/edit — profile picture, app name and short bio.
 export function EditProfilePage() {
   const { t } = useTranslation()
   const me = useMe()
@@ -25,7 +26,10 @@ export function EditProfilePage() {
       ) : me.isError ? (
         <ErrorState onRetry={() => void me.refetch()} />
       ) : (
-        <EditForm me={me.data} />
+        <>
+          <AvatarEditor me={me.data} />
+          <EditForm me={me.data} />
+        </>
       )}
     </div>
   )

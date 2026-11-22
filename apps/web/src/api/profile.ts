@@ -42,7 +42,7 @@ export function useSetPhoto(kind: PhotoKind) {
     mutationFn: (file: Blob | null) => {
       if (file === null) return apiFetch<Me>(`/me/${kind}`, { method: 'DELETE' })
       const form = new FormData()
-      form.append('file', file, `${kind}.webp`)
+      form.append('file', file, `${kind}.${file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'}`)
       return apiFetch<Me>(`/me/${kind}`, { method: 'POST', body: form })
     },
     onSuccess: (me) => {
