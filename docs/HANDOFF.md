@@ -704,6 +704,10 @@ Many phones in one game. Only the server knows everyone's role; each phone gets 
 - Pet HUD redesign (#122) is parked on branch `wip/pet-hud` (not merged); its long-press fix (no save-image / copy callout app-wide) is on main.
 - Waiting for Earth's GPT art: แมวอ้วง card back, card faces / rank art, game sticker (now the Cat icon). Next games: Ito, ศิลปินตัวปลอม, ใบ้คำลูกโซ่ (reuse DrawCanvas), คำต้องห้ามแบบคำตัวเอง, finger "ช็อต" mode, then truth-or-drink / swipe cards with heat levels (น่ารัก / เอาเรื่อง / 18+), then role games (werewolf + Avalon-like need ElevenLabs narration: one file per voice with breaks, Claude cuts it).
 
+## Later, when the app is finished — PWA (Earth, 2026-11-22)
+- manifest (standalone), Workbox service worker (offline for one-phone games), install button (Android prompt / iPhone "Add to Home Screen" steps), update banner, iOS meta + icons. Earth sends a 1024×1024 GPT app icon (no text, safe margin for maskable).
+- Demo caveat: MSW's mock worker owns the scope on GitHub Pages, so the demo gets install + standalone only; full offline on the real site. Installed iPhone apps do not share Safari's localStorage (pet, circle, rule sets start fresh) until backend sync.
+
 ## Waiting for Earth's art (pet care, #119–#121)
 - 35-pet-items.png → more foods, bowl, ball (CSS ball now), sponge, mud (should ride inside Pet's move layer), coin, foam.
 - 38/39 touch (bliss, laugh, surprised), 40/41 walk (step A, step B, beg), 42/43 tricks (sit pretty, high five, play dead), 44/45 eat with empty hands (open, chew, done) — per species, 3×3 by stage; cut like `care.py` and add to species.ts (pose slots already exist with stand-ins, `withExtras`). With 44/45: hold any food in the empty hands instead of the happy face.
