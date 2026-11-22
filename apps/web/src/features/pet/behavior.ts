@@ -1,7 +1,7 @@
 // What the pet does and when (DECISIONS #80). Pure: no timers, no DOM. Tested in behavior.test.ts.
 // The <Pet> component runs these plans with timers and CSS; this file decides.
 
-export const POSES = ['main', 'blink', 'happy', 'wave', 'shy', 'play1', 'play2', 'play3', 'sleep', 'eat', 'celebrate', 'yawn'] as const
+export const POSES = ['main', 'blink', 'happy', 'wave', 'shy', 'play1', 'play2', 'play3', 'sleep', 'eat', 'celebrate', 'yawn', 'sad', 'bath', 'refuse'] as const
 export type PoseId = (typeof POSES)[number]
 
 /** One-shot body motion (CSS keyframes in pet.css, transform only). */
@@ -43,8 +43,8 @@ export function planFor(action: PetAction, moves: SpeciesMoves): Plan {
     case 'fidget':
       return { pose: 'main', ...FIDGETS[0] }
     case 'refuse':
-      // Full (#119): shakes its head. Uses Earth's "refuse" pose once it is drawn (image/36, 37).
-      return { pose: 'main', motion: 'wiggle', overlay: 'none', ms: 1200 }
+      // Full (#119): turns its head away, pushing the food off (image/36, 37).
+      return { pose: 'refuse', motion: 'wiggle', overlay: 'none', ms: 1300 }
     case 'grumpy':
       // Poked too fast (#115): a cross-popping anger mark and a cross little shake, no pose change.
       return { pose: 'main', motion: 'wiggle', overlay: 'anger', ms: 1300 }

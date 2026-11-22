@@ -49,3 +49,5 @@ python3 tools/pet-art/grid.py image/28-race-props.png apps/web/src/assets/race-p
 ```
 
 Eggs (image/10, 11) and effects (image/09) were cut once with small scripts (tight crop per cell / per connected piece) into `assets/eggs` and `assets/effects` (#115).
+
+Care poses (sad, bath, refuse per stage, #120): `python3 tools/pet-art/care.py image/36-dragon-care.png dragon apps/web/src/assets/pets/v2` (same for fish with image/37). Rooms: image/32–34 resized to 768×1152 WebP into `assets/rooms`. Cup frames: `grid.py image/31-cup-lift.png apps/web/src/assets/party 3 1 cup0,cup1,cup2 --size 256 --baseline --min 0.005`.

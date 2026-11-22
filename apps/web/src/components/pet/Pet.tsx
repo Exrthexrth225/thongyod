@@ -48,7 +48,8 @@ import './pet.css'
 
 /** Anything a parent can trigger (pet page buttons, celebrations). */
 export type PetAct = PetAction | 'idle'
-export type PetHandle = { run: (act: PetAct) => void }
+/** `food`: what it is eating (#120). A cookie plays Earth's cookie flipbook; anything else is held and bitten. */
+export type PetHandle = { run: (act: PetAct, opts?: { food?: string; isCookie?: boolean }) => void }
 
 type PetProps = {
   species: PetSpeciesId
@@ -60,8 +61,10 @@ type PetProps = {
   onTap?: () => void
   /** Night (#119): the pet sleeps; a tap only makes it yawn and go back to sleep. */
   nightMode?: boolean
-  /** Sad (a need is low, #119): no playful idle moves, only small fidgets and yawns. */
+  /** Sad (a need is low, #119): no playful idle moves, only small fidgets and yawns; rests on the sad drawing. */
   mood?: 'happy' | 'ok' | 'sad'
+  /** In the bath (#120): sits in the foam (bath drawing) and stays put. */
+  bathing?: boolean
 }
 
 /**
@@ -73,7 +76,7 @@ const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia('
 const rnd = (n: number) => Math.floor(Math.random() * n)
 const eased = (frames: Keyframe[]) => frames.map((k) => ({ ...k, easing: 'ease-in-out' }))
 
-export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nightMode = false, mood = 'happy' }: PetProps) {
+export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nightMode = false, mood = 'happy', bathing = false }: PetProps) {
   const { t } = useTranslation()
   const spec = PET_SPECIES[species]
   // Baby / teen: their own drawings when the species has them, and smaller (#105).
@@ -85,6 +88,7 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nig
   const [blink, setBlink] = useState(false)
   /** Eating flipbook frame on screen (adult with Earth's 4 frames), or null. */
   const [eatFrame, setEatFrame] = useState<number | null>(null)
+  const [held, setHeld] = useState<{ src: string; key: number } | null>(null)
   const [asleep, setAsleep] = useState(false)
   const [paused, setPaused] = useState(false)
   const move = useRef<HTMLSpanElement>(null)
@@ -155,18 +159,22 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nig
   }, [after])
 
   // run() and the idle clock call each other, so both live in refs that are refreshed every render.
-  const runRef = useRef<(act: PetAct) => void>(() => {})
+  const runRef = useRef<(act: PetAct, opts?: { food?: string; isCookie?: boolean }) => void>(() => {})
   const nightRef = useRef(nightMode)
   const moodRef = useRef(mood)
+  const bathingRef = useRef(bathing)
+  /** The pose it goes back to after a move: sad when a need is low, the foam in the bath. */
+  const rest = (): PoseId => (bathingRef.current ? 'bath' : moodRef.current === 'sad' ? 'sad' : 'main')
   useEffect(() => {
     nightRef.current = nightMode
     moodRef.current = mood
+    bathingRef.current = bathing
   })
   const scheduleIdle = useCallback(function schedule() {
     window.clearTimeout(idleTimer.current)
     idleTimer.current = window.setTimeout(
       () => {
-        if (document.hidden || busy.current) return schedule()
+        if (document.hidden || busy.current || bathingRef.current) return schedule()
         // Night: whatever woke it, it goes back to sleep.
         if (nightRef.current) return runRef.current('sleep')
         const hour = new Date().getHours()
@@ -181,13 +189,13 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nig
   }, [])
 
   const run = useCallback(
-    (act: PetAct) => {
+    (act: PetAct, opts?: { food?: string; isCookie?: boolean }) => {
       clearTimers()
       if (act === 'idle') {
         busy.current = false
         setAsleep(false)
         setOverlay({ name: 'none', key: Date.now() })
-        moveTo('main', 'none')
+        moveTo(rest(), 'none')
         scheduleIdle()
         return
       }
@@ -198,9 +206,16 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nig
         plan = { pose: 'main', ...fid }
       }
       busy.current = true
-      // Eating: play Earth's frames (mouth opens, bites, chews twice, smiles) instead of one still drawing (#108).
+      // Eating something that is not a cookie (#120): the eat drawings hold a cookie, so it holds the real food in
+      // front of its mouth and takes bites out of it on the happy face instead.
+      const holding = act === 'eat' && !!opts?.food && !opts.isCookie
+      if (holding) {
+        plan = { ...plan, pose: 'happy' }
+        setHeld({ src: opts.food!, key: Date.now() })
+      }
+      // Eating a cookie: play Earth's frames (mouth opens, bites, chews twice, smiles) instead of one still drawing (#108).
       const frames = stage === 'adult' ? spec.eatFrames : undefined
-      if (act === 'eat' && frames && !reducedMotion()) {
+      if (act === 'eat' && !holding && frames && !reducedMotion()) {
         for (const step of EAT_FLIP) after(step.at, () => setEatFrame(step.frame))
         after(plan.ms, () => setEatFrame(null))
       }
@@ -210,7 +225,8 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nig
       if (plan.ms > 0) {
         after(plan.ms, () => {
           busy.current = false
-          moveTo('main', 'none')
+          setHeld(null)
+          moveTo(rest(), 'none')
           setOverlay((o) => ({ ...o, name: 'none' }))
           scheduleIdle()
         })
@@ -250,6 +266,13 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nig
       clearTimers()
     }
   }, [scheduleIdle])
+
+  // Into / out of the bath, or becoming sad / cheered up: settle on the new resting drawing.
+  const restNow: PoseId = bathing ? 'bath' : mood === 'sad' ? 'sad' : 'main'
+  useEffect(() => {
+    if (busy.current || poseRef.current === restNow) return
+    moveTo(restNow, poseRef.current === 'main' && restNow === 'sad' ? 'none' : 'squish')
+  }, [restNow, moveTo])
 
   // Night starts / ends while the page is open.
   const wasNight = useRef(nightMode)
@@ -300,7 +323,7 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nig
     return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [])
 
-  useImperativeHandle(ref, () => ({ run: (act) => runRef.current(act) }), [])
+  useImperativeHandle(ref, () => ({ run: (act, opts) => runRef.current(act, opts) }), [])
 
   function touched() {
     lastTouch.current = Date.now()
@@ -401,6 +424,7 @@ export function Pet({ species, size = 240, ref, className, onTap: onTapProp, nig
               className="pet-layer absolute inset-0 size-full"
               style={{ opacity: blink && pose === 'main' ? 1 : 0, zIndex: 3, transition: 'opacity 45ms linear' }}
             />
+            {held && <img key={held.key} src={held.src} alt="" draggable={false} className="pet-held absolute" style={{ ...at(mx, my), width: '24%' }} />}
             {/* Inside the move layer, so puffs, bubbles and hearts start from the mouth / head wherever the body goes. */}
             <PetOverlay key={overlay.key} name={asleep ? 'z' : overlay.name} mouth={at(mx, my)} head={at(hx, hy)} />
           </span>

@@ -58,6 +58,24 @@ import fishEat1 from '@/assets/pets/v2/fish/eat1.webp'
 import fishEat2 from '@/assets/pets/v2/fish/eat2.webp'
 import fishEat3 from '@/assets/pets/v2/fish/eat3.webp'
 import fishEat4 from '@/assets/pets/v2/fish/eat4.webp'
+import dragonSad from '@/assets/pets/v2/dragon/sad.webp'
+import dragonBath from '@/assets/pets/v2/dragon/bath.webp'
+import dragonRefuse from '@/assets/pets/v2/dragon/refuse.webp'
+import dragonBabySad from '@/assets/pets/v2/dragon-baby/sad.webp'
+import dragonBabyBath from '@/assets/pets/v2/dragon-baby/bath.webp'
+import dragonBabyRefuse from '@/assets/pets/v2/dragon-baby/refuse.webp'
+import dragonTeenSad from '@/assets/pets/v2/dragon-teen/sad.webp'
+import dragonTeenBath from '@/assets/pets/v2/dragon-teen/bath.webp'
+import dragonTeenRefuse from '@/assets/pets/v2/dragon-teen/refuse.webp'
+import fishSad from '@/assets/pets/v2/fish/sad.webp'
+import fishBath from '@/assets/pets/v2/fish/bath.webp'
+import fishRefuse from '@/assets/pets/v2/fish/refuse.webp'
+import fishBabySad from '@/assets/pets/v2/fish-baby/sad.webp'
+import fishBabyBath from '@/assets/pets/v2/fish-baby/bath.webp'
+import fishBabyRefuse from '@/assets/pets/v2/fish-baby/refuse.webp'
+import fishTeenSad from '@/assets/pets/v2/fish-teen/sad.webp'
+import fishTeenBath from '@/assets/pets/v2/fish-teen/bath.webp'
+import fishTeenRefuse from '@/assets/pets/v2/fish-teen/refuse.webp'
 import type { PoseId, SpeciesMoves } from '@/features/pet/behavior'
 import type { Stage } from '@/features/pet/growth'
 
@@ -83,8 +101,8 @@ export type PetSpecies = {
   eatFrames?: [string, string, string, string]
 }
 
-type StagePoses = { main: string; blink: string; happy: string; eat: string; sleep: string; shy: string }
-/** A younger stage has 6 drawings; waving, playing and celebrating use the happy one, yawning the eyes-closed one. */
+type StagePoses = { main: string; blink: string; happy: string; eat: string; sleep: string; shy: string; sad: string; bath: string; refuse: string }
+/** A younger stage has 9 drawings (6 + care poses, #120); waving, playing and celebrating use the happy one, yawning the eyes-closed one. */
 function fill(p: StagePoses): Record<PoseId, string> {
   return { ...p, wave: p.happy, play1: p.happy, play2: p.main, play3: p.happy, celebrate: p.happy, yawn: p.blink }
 }
@@ -98,7 +116,7 @@ export const PET_SPECIES: Record<PetSpeciesId, PetSpecies> = {
   dragon: {
     id: 'dragon',
     aspect: 306 / 247,
-    poses: { main: dragonMain, blink: dragonBlink, happy: dragonHappy, wave: dragonWave, shy: dragonShy, play1: dragonPlay1, play2: dragonPlay2, play3: dragonPlay3, sleep: dragonSleep, eat: dragonEat, celebrate: dragonCelebrate, yawn: dragonYawn },
+    poses: { sad: dragonSad, bath: dragonBath, refuse: dragonRefuse, main: dragonMain, blink: dragonBlink, happy: dragonHappy, wave: dragonWave, shy: dragonShy, play1: dragonPlay1, play2: dragonPlay2, play3: dragonPlay3, sleep: dragonSleep, eat: dragonEat, celebrate: dragonCelebrate, yawn: dragonYawn },
     alive: 'breathe',
     moves: {
       play1: { motion: 'fly', overlay: 'none', ms: 1900 },
@@ -107,15 +125,15 @@ export const PET_SPECIES: Record<PetSpeciesId, PetSpecies> = {
     },
     anchors: { mouth: [0.34, 0.74], head: [0.42, 0.08] },
     stages: {
-      baby: fill({ main: dragonBabyMain, blink: dragonBabyBlink, happy: dragonBabyHappy, eat: dragonBabyEat, sleep: dragonBabySleep, shy: dragonBabyShy }),
-      teen: fill({ main: dragonTeenMain, blink: dragonTeenBlink, happy: dragonTeenHappy, eat: dragonTeenEat, sleep: dragonTeenSleep, shy: dragonTeenShy }),
+      baby: fill({ main: dragonBabyMain, blink: dragonBabyBlink, happy: dragonBabyHappy, eat: dragonBabyEat, sleep: dragonBabySleep, shy: dragonBabyShy, sad: dragonBabySad, bath: dragonBabyBath, refuse: dragonBabyRefuse }),
+      teen: fill({ main: dragonTeenMain, blink: dragonTeenBlink, happy: dragonTeenHappy, eat: dragonTeenEat, sleep: dragonTeenSleep, shy: dragonTeenShy, sad: dragonTeenSad, bath: dragonTeenBath, refuse: dragonTeenRefuse }),
     },
     eatFrames: [dragonEat1, dragonEat2, dragonEat3, dragonEat4],
   },
   fish: {
     id: 'fish',
     aspect: 314 / 275,
-    poses: { main: fishMain, blink: fishBlink, happy: fishHappy, wave: fishWave, shy: fishShy, play1: fishPlay1, play2: fishPlay2, play3: fishPlay3, sleep: fishSleep, eat: fishEat, celebrate: fishCelebrate, yawn: fishYawn },
+    poses: { sad: fishSad, bath: fishBath, refuse: fishRefuse, main: fishMain, blink: fishBlink, happy: fishHappy, wave: fishWave, shy: fishShy, play1: fishPlay1, play2: fishPlay2, play3: fishPlay3, sleep: fishSleep, eat: fishEat, celebrate: fishCelebrate, yawn: fishYawn },
     alive: 'float',
     moves: {
       play1: { motion: 'dash', overlay: 'bubbles', ms: 1700 },
@@ -124,8 +142,8 @@ export const PET_SPECIES: Record<PetSpeciesId, PetSpecies> = {
     },
     anchors: { mouth: [0.32, 0.62], head: [0.48, 0.1], mouthIn: { play1: [0.22, 0.71], play3: [0.33, 0.35], eat: [0.33, 0.7] } },
     stages: {
-      baby: fill({ main: fishBabyMain, blink: fishBabyBlink, happy: fishBabyHappy, eat: fishBabyEat, sleep: fishBabySleep, shy: fishBabyShy }),
-      teen: fill({ main: fishTeenMain, blink: fishTeenBlink, happy: fishTeenHappy, eat: fishTeenEat, sleep: fishTeenSleep, shy: fishTeenShy }),
+      baby: fill({ main: fishBabyMain, blink: fishBabyBlink, happy: fishBabyHappy, eat: fishBabyEat, sleep: fishBabySleep, shy: fishBabyShy, sad: fishBabySad, bath: fishBabyBath, refuse: fishBabyRefuse }),
+      teen: fill({ main: fishTeenMain, blink: fishTeenBlink, happy: fishTeenHappy, eat: fishTeenEat, sleep: fishTeenSleep, shy: fishTeenShy, sad: fishTeenSad, bath: fishTeenBath, refuse: fishTeenRefuse }),
     },
     eatFrames: [fishEat1, fishEat2, fishEat3, fishEat4],
   },

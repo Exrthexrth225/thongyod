@@ -3,7 +3,9 @@ import { useTranslation } from 'react-i18next'
 import { Play, RotateCcw, Trophy } from 'lucide-react'
 import candyArt from '@/assets/party/candy.webp'
 import cookieArt from '@/assets/party/cookie.webp'
-import cupArt from '@/assets/party/cup.webp'
+import cup0 from '@/assets/party/cup0.webp'
+import cup1 from '@/assets/party/cup1.webp'
+import cup2 from '@/assets/party/cup2.webp'
 import donutArt from '@/assets/party/donut.webp'
 import thongyodArt from '@/assets/party/thongyod.webp'
 import { Button } from '@/components/ui/button'
@@ -139,7 +141,12 @@ export function CupsGame() {
                 className="relative mx-auto block w-[86%] max-w-28 transition-transform ease-out disabled:cursor-default motion-reduce:transition-none"
                 style={{ transform: `translate(${(arc[cupId] ?? 0) * 0.4}px, ${up ? LIFT : (arc[cupId] ?? 0)}px)`, transitionDuration: up ? '380ms' : `${speed * 0.5}ms` }}
               >
-                <img src={cupArt} alt="" draggable={false} className={cn('w-full drop-shadow-sm', phase === 'pick' && 'active:scale-95')} />
+                {/* Earth's cup (image/31): resting, then two frames tipping back to show the hollow when lifted. */}
+                <span className={cn('cup-frames relative block', up && 'is-up', phase === 'pick' && 'active:scale-95')}>
+                  <img src={cup0} alt="" draggable={false} className="cup-f0 block w-full drop-shadow-sm" />
+                  <img src={cup1} alt="" draggable={false} className="cup-f1 absolute inset-0 w-full" />
+                  <img src={cup2} alt="" draggable={false} className="cup-f2 absolute inset-0 w-full" />
+                </span>
               </button>
             </div>
           )

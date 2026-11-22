@@ -494,6 +494,8 @@ export const en: Messages = {
     save: 'Save',
     saved: 'Profile saved',
     photo: {
+      undo: 'Undo',
+      pending: 'Not saved yet. Press "Save" below to change it',
       add: 'Add a profile picture',
       change: 'Change picture',
       remove: 'Remove',
@@ -501,8 +503,6 @@ export const en: Messages = {
       cropHint: 'Drag to move; pinch or use the slider to zoom',
       zoom: 'Zoom',
       use: 'Use this picture',
-      saved: 'Profile picture updated',
-      removed: 'Profile picture removed',
       tooBig: 'That picture is too big. Try another one',
       unsupported: 'Only image files work here',
       loadError: "Couldn't open that picture. Try another one",
