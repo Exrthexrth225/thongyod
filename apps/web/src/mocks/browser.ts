@@ -1,22 +1,15 @@
-import { setupWorker } from 'msw/browser'
-import { http, HttpResponse } from 'msw/http'
+import { getResponse } from 'msw'
+import { HttpResponse } from 'msw/http'
 import { handlers } from './handlers'
 
-const worker = setupWorker(
-  ...handlers,
-  // A missing demo handler must never fall through to a real API.
-  http.all(/\/api(?:\/|$)/, () => HttpResponse.json(
+// Resolve the deployed demo inside the page. A stopped/unsupported service worker
+// must not send API requests to GitHub Pages, which has no backend.
+export async function demoResponse(request: Request): Promise<Response> {
+  request.signal.throwIfAborted()
+  const response = await getResponse(handlers, request, { baseUrl: new URL(request.url).origin })
+  request.signal.throwIfAborted()
+  return response ?? HttpResponse.json(
     { error: { code: 'DEMO_API_NOT_IMPLEMENTED' } },
     { status: 501 },
-  )),
-)
-
-export async function startDemoMocks(): Promise<void> {
-  await worker.start({
-    serviceWorker: {
-      url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
-      options: { scope: import.meta.env.BASE_URL },
-    },
-    quiet: true,
-  })
+  )
 }

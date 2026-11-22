@@ -10,13 +10,6 @@ import './index.css'
 import { router } from './router'
 
 async function mount() {
-  // Only the deployed demo runs mocks in the browser. Local development keeps
-  // its existing Vite mocks/proxy and can still connect to the backend.
-  if (import.meta.env.VITE_DEPLOY_MOCKS === 'true') {
-    const { startDemoMocks } = await import('./mocks/browser')
-    await startDemoMocks()
-  }
-
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>

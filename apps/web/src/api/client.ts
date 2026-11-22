@@ -1,5 +1,6 @@
 // Small fetch wrapper for our API. All requests go to /api/* :
-// - development with mocks: answered by MSW (src/mocks)
+// - deployed demo: resolved in-page by the existing MSW handlers
+// - development with mocks: answered by the Vite mock middleware
 // - development without mocks: Vite proxies to the NestJS backend (vite.config.ts)
 
 export class ApiError extends Error {
@@ -14,12 +15,15 @@ export class ApiError extends Error {
 }
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(`/api${path}`, {
+  const options: RequestInit = {
     ...init,
     // JSON bodies get a JSON content type. FormData (file upload) must set its own boundary.
     headers: typeof init.body === 'string' ? { 'Content-Type': 'application/json', ...init.headers } : init.headers,
     credentials: 'include',
-  })
+  }
+  const response = import.meta.env.VITE_DEPLOY_MOCKS === 'true'
+    ? await (await import('../mocks/browser')).demoResponse(new Request(new URL(`/api${path}`, window.location.origin), options))
+    : await fetch(`/api${path}`, options)
   if (!response.ok) {
     let code: string | undefined
     try {
