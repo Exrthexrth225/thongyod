@@ -26,7 +26,7 @@ export function TitleSheet({ title, onClose, holderLink }: TitleSheetProps) {
   return (
     <BottomSheet open={title !== null} onOpenChange={(open) => !open && onClose()} title={t('titles.sheetTitle')}>
       {title && (
-        <div className="flex flex-col gap-4 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+        <div className="flex flex-col gap-4 px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
           <div className="flex flex-col items-center gap-2 text-center">
             <span className="num-pop grid size-20 place-items-center rounded-full bg-yolk text-on-slab ring-4 ring-ink">
               <Award className="size-10" aria-hidden="true" />

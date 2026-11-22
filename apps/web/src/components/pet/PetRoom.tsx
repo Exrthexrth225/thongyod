@@ -1,11 +1,14 @@
 import type { ReactNode } from 'react'
+import bathArt from '@/assets/rooms/bath.webp'
+import gardenArt from '@/assets/rooms/garden.webp'
+import livingArt from '@/assets/rooms/living.webp'
 import { cn } from '@/lib/utils'
 import './pet-room.css'
 
 export type RoomScene = 'living' | 'bath' | 'garden'
 
-/** Earth's drawn scenes (image/32–34) go here; missing ones use the CSS stand-ins in pet-room.css. */
-const SCENE_ART: Partial<Record<RoomScene, string>> = {}
+/** Earth's drawn scenes (image/32–34). A missing one would fall back to the CSS stand-in in pet-room.css. */
+const SCENE_ART: Partial<Record<RoomScene, string>> = { living: livingArt, bath: bathArt, garden: gardenArt }
 
 type PetRoomProps = {
   scene: RoomScene

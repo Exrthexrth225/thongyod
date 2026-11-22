@@ -142,3 +142,15 @@
   .die-cube, .bottle-spin { transition: none; }
   .die-hop { animation: none; }
 }
+
+/* ขนมอยู่ไหน cup (#120): frame 0 resting; when lifted it tips back through frame 1 to frame 2 (hollow showing). */
+.cup-frames .cup-f1, .cup-frames .cup-f2 { opacity: 0; }
+.cup-frames.is-up .cup-f0 { opacity: 0; }
+.cup-frames.is-up .cup-f1 { animation: cup-f1 0.24s steps(1, end) forwards; }
+.cup-frames.is-up .cup-f2 { animation: cup-f2 0.24s steps(1, end) forwards; }
+@keyframes cup-f1 { 0% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes cup-f2 { 0% { opacity: 0; } 100% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .cup-frames.is-up .cup-f1 { animation: none; }
+  .cup-frames.is-up .cup-f2 { animation: none; opacity: 1; }
+}

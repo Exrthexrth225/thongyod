@@ -2,12 +2,12 @@ import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { ApiError } from '@/api/client'
-import { useMe, useUpdateMe } from '@/api/profile'
+import { useMe, useSetPhoto, useUpdateMe } from '@/api/profile'
 import type { Me } from '@/api/types'
 import { ErrorState } from '@/components/common/ErrorState'
 import { LoadingState } from '@/components/common/LoadingState'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { AvatarEditor } from '@/components/profile/AvatarEditor'
+import { AvatarEditor, type PhotoDraft } from '@/components/profile/AvatarEditor'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { BIO_MAX, charCount, checkDisplayName, NAME_MAX, NAME_MIN } from '@/features/profile/validation'
@@ -26,10 +26,7 @@ export function EditProfilePage() {
       ) : me.isError ? (
         <ErrorState onRetry={() => void me.refetch()} />
       ) : (
-        <>
-          <AvatarEditor me={me.data} />
-          <EditForm me={me.data} />
-        </>
+        <EditForm me={me.data} />
       )}
     </div>
   )
@@ -39,6 +36,8 @@ function EditForm({ me }: { me: Me }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const update = useUpdateMe()
+  const setPhoto = useSetPhoto('avatar')
+  const [photo, setPhotoDraft] = useState<PhotoDraft>({ kind: 'keep' })
   const [name, setName] = useState(me.displayName)
   const [bio, setBio] = useState(me.bio ?? '')
   const [serverNameError, setServerNameError] = useState<string | null>(null)
@@ -52,29 +51,37 @@ function EditForm({ me }: { me: Me }) {
         ? t('profile.errors.nameChars')
         : null)
   const bioTooLong = charCount(bio.trim()) > BIO_MAX
-  const changed = name.trim() !== me.displayName || bio.trim() !== (me.bio ?? '')
+  const textChanged = name.trim() !== me.displayName || bio.trim() !== (me.bio ?? '')
+  const changed = textChanged || photo.kind !== 'keep'
+  const saving = update.isPending || setPhoto.isPending
 
-  function onSubmit(event: FormEvent) {
+  // บันทึก saves everything on the page: the picture first (#116), then name and bio.
+  async function onSubmit(event: FormEvent) {
     event.preventDefault()
-    if (nameError || bioTooLong || !changed) return
-    update.mutate(
-      { displayName: name.trim(), bio: bio.trim() === '' ? null : bio.trim() },
-      {
-        onSuccess: () => {
-          toastManager.add({ title: t('profile.saved') })
-          void navigate('/me')
-        },
-        onError: (error) => {
-          if (error instanceof ApiError && error.code === 'DISPLAY_NAME_TAKEN') setServerNameError(t('profile.errors.nameTaken'))
-          else if (error instanceof ApiError && error.code === 'INVALID_DISPLAY_NAME') setServerNameError(t('profile.errors.nameChars'))
-          else showErrorToast(t('common.saveError'))
-        },
-      },
-    )
+    if (nameError || bioTooLong || !changed || saving) return
+    try {
+      if (photo.kind !== 'keep') {
+        await setPhoto.mutateAsync(photo.kind === 'new' ? photo.picture : null)
+        setPhotoDraft({ kind: 'keep' })
+      }
+    } catch (error) {
+      const code = error instanceof ApiError ? error.code : null
+      return showErrorToast(t(code === 'FILE_TOO_LARGE' ? 'profile.photo.tooBig' : code === 'UNSUPPORTED_IMAGE' ? 'profile.photo.unsupported' : 'common.saveError'))
+    }
+    try {
+      if (textChanged) await update.mutateAsync({ displayName: name.trim(), bio: bio.trim() === '' ? null : bio.trim() })
+      toastManager.add({ title: t('profile.saved') })
+      void navigate('/me')
+    } catch (error) {
+      if (error instanceof ApiError && error.code === 'DISPLAY_NAME_TAKEN') setServerNameError(t('profile.errors.nameTaken'))
+      else if (error instanceof ApiError && error.code === 'INVALID_DISPLAY_NAME') setServerNameError(t('profile.errors.nameChars'))
+      else showErrorToast(t('common.saveError'))
+    }
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4 px-4" noValidate>
+    <form onSubmit={(e) => void onSubmit(e)} className="flex flex-col gap-4 px-4" noValidate>
+      <AvatarEditor me={me} value={photo} onChange={setPhotoDraft} />
       <label className="flex flex-col gap-1.5">
         <span className="text-sm font-medium">{t('profile.name')}</span>
         <Input
@@ -106,7 +113,7 @@ function EditForm({ me }: { me: Me }) {
         </span>
       </label>
 
-      <Button type="submit" size="lg" disabled={!changed || !!nameError || bioTooLong || update.isPending}>
+      <Button type="submit" size="lg" disabled={!changed || !!nameError || bioTooLong || saving}>
         {t('profile.save')}
       </Button>
     </form>

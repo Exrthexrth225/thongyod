@@ -64,7 +64,6 @@ export function PetPage() {
   const night = nightTest ?? isNightAt(now)
   const [mode, setMode] = useState<Mode>('home')
   const [foodOpen, setFoodOpen] = useState(false)
-  const [bite, setBite] = useState<{ art: string; key: number } | null>(null)
   const [throwKey, setThrowKey] = useState(0)
   const throwing = useRef(false)
   const [scrub, setScrub] = useState(0)
@@ -104,8 +103,7 @@ export function PetPage() {
     const r = feed(food)
     setFoodOpen(false)
     if (r === 'fed') {
-      setBite((b) => ({ art: food.art, key: (b?.key ?? 0) + 1 }))
-      pet.current?.run('eat')
+      pet.current?.run('eat', { food: food.art, isCookie: food.id === 'cookie' })
     } else if (r === 'full') {
       pet.current?.run('refuse')
       toastManager.add({ title: t('pet.food.full', { name }) })
@@ -157,8 +155,6 @@ export function PetPage() {
     }
   }
 
-  const dirt = mode === 'bath' ? Math.max(0, (50 - needs.clean) / 50) * (1 - scrub) : Math.max(0, (50 - needs.clean) / 50)
-
   return (
     <>
       <PageHeader
@@ -173,17 +169,7 @@ export function PetPage() {
       <div className="flex flex-col items-center gap-3 px-4 pt-2 pb-8">
         <PetRoom scene={SCENE[mode]} night={night} say={say} className="aspect-[4/5] w-full">
           <div className="absolute inset-x-0 bottom-[3%] flex justify-center">
-            <div className="relative">
-              <Pet species={myPet.species} size={300} ref={pet} onTap={() => markDone('pet')} nightMode={night} mood={moodOf(needs)} />
-              {dirt > 0 &&
-                [
-                  [44, 66, 9],
-                  [58, 74, 7],
-                  [50, 82, 6],
-                ].map(([x, y, w], i) => (
-                  <span key={i} className="pet-mud" style={{ left: `${x}%`, top: `${y}%`, width: `${w}%`, height: `${w * 0.8}%`, opacity: dirt * 0.85 }} aria-hidden="true" />
-                ))}
-            </div>
+            <Pet species={myPet.species} size={300} ref={pet} onTap={() => markDone('pet')} nightMode={night} mood={moodOf(needs)} bathing={mode === 'bath'} />
           </div>
           {mode === 'play' && <span key={throwKey} className={cn('pet-ball', throwKey > 0 && 'is-thrown')} aria-hidden="true" />}
           {mode === 'bath' && (
@@ -193,7 +179,6 @@ export function PetPage() {
               ))}
             </div>
           )}
-          {bite && <img key={bite.key} src={bite.art} alt="" className="pet-bite" draggable={false} onAnimationEnd={() => setBite(null)} />}
         </PetRoom>
 
         <NeedsBars needs={needs} />
