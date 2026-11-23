@@ -1,5 +1,14 @@
 # Backend handoff
 
+## Dependency security patches — 2026-11-23
+
+- Re-ran npm audit: the current baseline was 17 moderate package findings, rather than the 6 reported during the previous install. Two underlying advisories propagate through their parent tools: [esbuild development-server CORS](https://github.com/evanw/esbuild/security/advisories/GHSA-67mh-4wv8-2f99) and [minimatch pattern amplification](https://github.com/advisories/GHSA-g3hv-75wg-m249).
+- Applied compatible tool updates: `@nestjs/cli` 12.0.11 → 12.0.15, `eslint` 10.14.0 → 10.15.0 and `typescript-eslint` 8.72.1 → 8.73.0, with their related transitive dependencies. Raised the corresponding workspace minimum versions. No application source, UI, API, schema, migration SQL or database data was changed.
+- Audit now reports 8 moderate package findings (0 high/critical), all from the two remaining chains: drizzle-kit → @esbuild-kit/esm-loader → core-utils → esbuild 0.18.20; shadcn → ts-morph → @ts-morph/common → minimatch 10.2.6. These are not eight separate underlying vulnerabilities. Do not use `npm audit fix --force`: its proposed drizzle-kit 0.18.1/shadcn 1.0.0 downgrades are outside the approved scope.
+- The approved plan explicitly requires another approval for breaking/major dependency changes. The remaining proposal is scoped root overrides: only `@esbuild-kit/core-utils`'s esbuild to 0.28.2, and only `@ts-morph/common`'s minimatch to 11.0.9. No such override has been applied. Review compatibility first: minimatch 11 removes makeRe/AST and changes matching internals; the installed ts-morph consumer uses the retained minimatch(path, pattern) function. Esbuild 0.25+ deliberately changes dev-server behavior. References: [minimatch changelog](https://github.com/isaacs/minimatch/blob/main/changelog.md), [esbuild changelog](https://github.com/evanw/esbuild/blob/main/CHANGELOG-2025.md).
+- Verified compatible updates: all 22 API tests passed with no skips; all 288 frontend tests passed; web TypeScript/production build and full frontend ESLint passed; API development/production builds passed; drizzle-kit check passed without generating migrations. npm dependency tree is valid after pruning four extraneous optional packages from the local install. The web build retains its existing large-bundle warning.
+- Further override validation, after approval: audit and npm tree, the old loader's TypeScript transforms, ts-morph glob matching (including exclusions), drizzle-kit check/config loading, both builds/lint and existing test suites. Modify root package.json/package-lock.json plus this handoff only; preserve existing schemas, assets, application behavior and unrelated user work.
+
 ## Approved backend plan: implemented scope and deployment — 2026-11-22
 
 This section supersedes older statements that the endpoints below are unavailable. GitHub Pages remains the mock demo; a push does not deploy NestJS/PostgreSQL to Pages.
