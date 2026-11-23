@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { FortuneCard } from '@/features/fortune/FortuneCard'
 import { LEVEL_TONE } from '@/features/fortune/levelTone'
-import { HISTORY_DAYS, levelOf, type Draw } from '@/features/fortune/logic'
+import { HISTORY_DAYS, isOldStick, levelOf, type Draw } from '@/features/fortune/logic'
 import { loadHistory } from '@/features/fortune/storage'
 import { parseDayKey } from '@/features/calendar/month'
 import { formatDayLabel } from '@/lib/date'
@@ -37,11 +37,14 @@ export function FortuneHistoryPage() {
           />
         ) : (
           history.map((draw) => {
+            // Sticks 29–40 were in the old student-life set (#131): kept as a date, with no paper to open.
+            const old = isOldStick(draw.stick)
             const level = levelOf(draw.stick)
             return (
               <button
                 key={draw.day}
                 type="button"
+                disabled={old}
                 onClick={() => setOpen(draw)}
                 className="flex min-h-14 w-full items-center gap-3 py-2 text-left active:opacity-70 [&+&]:border-t"
               >
@@ -52,7 +55,11 @@ export function FortuneHistoryPage() {
                   <span className="block truncate text-sm font-medium">{t('fortune.stickNo', { n: draw.stick })}</span>
                   <span className="block truncate text-xs text-muted-foreground">{formatDayLabel(parseDayKey(draw.day) ?? now, now)}</span>
                 </span>
-                <Badge tone={LEVEL_TONE[level]}>{t(`fortune.levels.${level}`)}</Badge>
+                {old ? (
+                  <span className="text-xs text-muted-foreground">{t('fortune.oldStick')}</span>
+                ) : (
+                  <Badge tone={LEVEL_TONE[level]}>{t(`fortune.levels.${level}`)}</Badge>
+                )}
               </button>
             )
           })

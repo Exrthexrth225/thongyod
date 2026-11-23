@@ -9,6 +9,8 @@ type Props = {
   state: 'idle' | 'shaking' | 'out' | 'rest'
   /** Number on the stick (out / rest). */
   stick?: number
+  /** Two sticks fell at once (no number: they go back into the cup). */
+  two?: boolean
   className?: string
 }
 
@@ -23,14 +25,19 @@ const SPARKLES = [
 
 // The เซียมซี cup from Earth's art: one picture moved with smooth transforms (no frame swapping),
 // plus a separate stick that slides out of the cup mouth and drops in front of it.
-export function FortuneCup({ state, stick, className }: Props) {
-  const showStick = (state === 'out' || state === 'rest') && stick !== undefined
+export function FortuneCup({ state, stick, two, className }: Props) {
+  const showStick = (state === 'out' || state === 'rest') && (stick !== undefined || two)
   return (
     <div className={cn('fortune-stage', className)} aria-hidden="true">
       {showStick && (
         <div className={cn('fortune-stick', state === 'out' ? 'is-out' : 'is-rest')}>
           <img src={stickImg} alt="" draggable={false} />
-          <span className="fortune-stick-no">{stick}</span>
+          {!two && <span className="fortune-stick-no">{stick}</span>}
+        </div>
+      )}
+      {showStick && two && (
+        <div className={cn('fortune-stick is-second', state === 'out' ? 'is-out' : 'is-rest')}>
+          <img src={stickImg} alt="" draggable={false} />
         </div>
       )}
       <img src={cup} alt="" draggable={false} className={cn('fortune-cup', state === 'idle' && 'is-idle', state === 'shaking' && 'is-shaking', state === 'out' && 'is-out')} />

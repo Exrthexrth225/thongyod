@@ -146,3 +146,56 @@
   .fortune-cup.is-idle, .fortune-cup.is-shaking, .fortune-cup.is-out, .fortune-sparkle.is-out, .fortune-paper, .fortune-paper .verse-line { animation: none; }
   .fortune-stick.is-out { animation: none; opacity: 1; transform: translate(-1rem, 11.55rem) rotate(-82deg); z-index: 3; }
 }
+
+/* #131: two sticks can fall together; the second lands a little to the right. */
+.fortune-stick.is-second.is-out { animation-name: fortune-drop-2; animation-delay: 0.32s; }
+.fortune-stick.is-second.is-rest { transform: translate(0.9rem, 11.2rem) rotate(-66deg); }
+@keyframes fortune-drop-2 {
+  0% { opacity: 1; transform: translate(0, 2rem) rotate(0); z-index: 1; }
+  30% { opacity: 1; transform: translate(0.6rem, -5rem) rotate(-15deg); z-index: 1; }
+  45% { transform: translate(1.4rem, -4rem) rotate(-35deg); z-index: 3; }
+  78% { transform: translate(0.9rem, 11.6rem) rotate(-68deg); z-index: 3; }
+  88% { transform: translate(0.9rem, 10.9rem) rotate(-64deg); z-index: 3; }
+  100% { opacity: 1; transform: translate(0.9rem, 11.2rem) rotate(-66deg); z-index: 3; }
+}
+
+/* Moon blocks: tumble while in the air, then drop and settle. */
+.poe-toss { animation: poe-toss 0.45s ease-in-out infinite alternate; }
+@keyframes poe-toss {
+  from { transform: translateY(0) rotate(-12deg); }
+  to { transform: translateY(-22px) rotate(14deg); }
+}
+.poe-land { animation: poe-land 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) both; }
+@keyframes poe-land {
+  0% { transform: translateY(-40px) scale(0.9); opacity: 0.4; }
+  70% { transform: translateY(4px) scale(1.04, 0.96); opacity: 1; }
+  100% { transform: none; }
+}
+
+/* Tearing a bad slip: the paper splits down a jagged line and both halves fall away. */
+.fortune-tear { display: grid; }
+.fortune-tear > * { grid-area: 1 / 1; }
+.fortune-tear .fortune-paper, .fortune-tear .verse-line { animation: none; }
+.fortune-tear-left {
+  clip-path: polygon(0 0, 52% 0, 47% 9%, 54% 18%, 46% 27%, 53% 36%, 47% 45%, 54% 54%, 46% 63%, 53% 72%, 47% 81%, 54% 90%, 49% 100%, 0 100%);
+  animation: tear-left 0.95s cubic-bezier(0.5, 0, 0.75, 0.4) 0.15s both;
+}
+.fortune-tear-right {
+  clip-path: polygon(52% 0, 100% 0, 100% 100%, 49% 100%, 54% 90%, 47% 81%, 53% 72%, 46% 63%, 54% 54%, 47% 45%, 53% 36%, 46% 27%, 54% 18%, 47% 9%);
+  animation: tear-right 0.95s cubic-bezier(0.5, 0, 0.75, 0.4) 0.15s both;
+}
+@keyframes tear-left {
+  0% { transform: none; }
+  20% { transform: translateX(-6px) rotate(-2deg); }
+  100% { transform: translate(-35%, 70%) rotate(-28deg); opacity: 0; }
+}
+@keyframes tear-right {
+  0% { transform: none; }
+  20% { transform: translateX(6px) rotate(2deg); }
+  100% { transform: translate(35%, 75%) rotate(24deg); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .poe-toss, .poe-land, .fortune-stick.is-second.is-out { animation: none; }
+  .fortune-stick.is-second.is-out { opacity: 1; transform: translate(0.9rem, 11.2rem) rotate(-66deg); z-index: 3; }
+  .fortune-tear-left, .fortune-tear-right { animation-duration: 0.01s; }
+}

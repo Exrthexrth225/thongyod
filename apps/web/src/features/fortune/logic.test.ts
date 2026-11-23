@@ -1,29 +1,25 @@
 import { describe, expect, it } from 'vitest'
-import { STICK_COUNT, addToHistory, bangkokDayKey, createShakeDetector, drawForToday, isStickNo, levelOf, type Draw, nextDrawAt } from './logic'
+import { DOUBLE_ODDS, POE_MAX, STICK_COUNT, addToHistory, bangkokDayKey, createShakeDetector, levelOf, nextDrawAt, shakeOnce, throwPoe, todaysDraw, type Draw } from './logic'
 
-describe('levels', () => {
-  it('has a level for every stick, with the planned mix', () => {
-    const count = { great: 0, good: 0, fair: 0, careful: 0 }
-    for (let n = 1; n <= STICK_COUNT; n++) {
-      if (!isStickNo(n)) throw new Error('bad stick')
-      count[levelOf(n)]++
-    }
-    expect(STICK_COUNT).toBe(40)
-    expect(count).toEqual({ great: 9, good: 15, fair: 9, careful: 7 })
+describe('the 28 sticks', () => {
+  it('has the planned mix: 10 good, 9 middling, 9 bad', () => {
+    const count = { good: 0, fair: 0, bad: 0 }
+    for (let n = 1; n <= STICK_COUNT; n++) count[levelOf(n)]++
+    expect(STICK_COUNT).toBe(28)
+    expect(count).toEqual({ good: 10, fair: 9, bad: 9 })
   })
 
-  it('keeps the levels of the first 28 sticks (saved history refers to them)', () => {
-    const first = Array.from({ length: 28 }, (_, i) => levelOf(i + 1))
-    expect(first.filter((l) => l === 'great')).toHaveLength(6)
-    expect([levelOf(1), levelOf(4), levelOf(26), levelOf(28)]).toEqual(['great', 'careful', 'great', 'careful'])
-  })
-
-  it('every fortune is complete', async () => {
+  it('every slip is 4 บท that open with its number and close with เอย; bad ones carry a remedy', async () => {
     const { FORTUNES } = await import('@/config/fortunes')
-    for (const f of FORTUNES) {
-      expect(f.poem.every((line) => line.trim().length > 0)).toBe(true)
-      for (const field of [f.meaning, f.study, f.money, f.love, f.friends, f.lucky]) expect(field.trim().length).toBeGreaterThan(3)
-    }
+    FORTUNES.forEach((f, i) => {
+      expect(f.verse).toHaveLength(16)
+      expect(f.verse[0].startsWith('ใบ')).toBe(true)
+      expect(f.verse[15].endsWith('เอย')).toBe(true)
+      expect(f.verse.every((v) => v.trim().length >= 7 && !v.includes(' '))).toBe(true)
+      expect(f.meaning.trim().length).toBeGreaterThan(10)
+      expect(Boolean(f.remedy), `stick ${i + 1}`).toBe(f.level === 'bad')
+    })
+    expect(new Set(FORTUNES.flatMap((f) => f.verse)).size).toBe(28 * 16)
   })
 })
 
@@ -34,25 +30,39 @@ describe('bangkokDayKey', () => {
   })
 })
 
-describe('drawForToday', () => {
+describe('todaysDraw', () => {
   const now = new Date('2026-11-04T05:00:00Z')
-  it('draws a new stick (1–40) when nothing is saved', () => {
-    const r = drawForToday(now, null, () => 11)
-    expect(r).toEqual({ draw: { day: '2026-11-04', stick: 12 }, isNew: true })
+  it("is today's saved reading, nothing otherwise", () => {
+    expect(todaysDraw(now, { day: '2026-11-04', stick: 7 })).toEqual({ day: '2026-11-04', stick: 7 })
+    expect(todaysDraw(now, { day: '2026-11-03', stick: 7 })).toBeNull()
+    expect(todaysDraw(now, { day: '2026-11-04', stick: 33 })).toBeNull() // old 40-stick set: draw again
+    expect(todaysDraw(now, null)).toBeNull()
   })
-  it('keeps the same stick for the rest of the day', () => {
-    const r = drawForToday(now, { day: '2026-11-04', stick: 7 }, () => 0)
-    expect(r).toEqual({ draw: { day: '2026-11-04', stick: 7 }, isNew: false })
-  })
-  it('draws again the next day', () => {
-    const r = drawForToday(now, { day: '2026-11-03', stick: 7 }, () => 27)
-    expect(r.draw.stick).toBe(28)
-    expect(r.isNew).toBe(true)
-  })
-  it('covers every stick', () => {
+})
+
+describe('shakeOnce', () => {
+  it('drops two sticks about 1 in 8 times, otherwise one stick 1–28', () => {
+    expect(shakeOnce(() => 0)).toEqual({ kind: 'two' })
+    expect(shakeOnce((max) => (max === DOUBLE_ODDS ? 3 : 27))).toEqual({ kind: 'one', stick: 28 })
     const seen = new Set<number>()
-    for (let i = 0; i < 2000; i++) seen.add(drawForToday(now, null).draw.stick)
+    let twos = 0
+    for (let i = 0; i < 4000; i++) {
+      const r = shakeOnce()
+      if (r.kind === 'one') seen.add(r.stick)
+      else twos++
+    }
     expect(seen.size).toBe(STICK_COUNT)
+    expect(twos).toBeGreaterThan(300)
+    expect(twos).toBeLessThan(700)
+  })
+})
+
+describe('throwPoe', () => {
+  it('reads the blocks: half yes, a quarter no, a quarter laugh', () => {
+    expect([0, 1, 2, 3].map((r) => throwPoe(0, () => r))).toEqual(['yes', 'yes', 'no', 'laugh'])
+  })
+  it('the third throw for a stick always says yes', () => {
+    expect(throwPoe(POE_MAX - 1, () => 3)).toBe('yes')
   })
 })
 
@@ -85,7 +95,7 @@ describe('createShakeDetector', () => {
 describe('addToHistory', () => {
   const d = (day: string, stick: number) => ({ day, stick }) as Draw
   it('keeps one entry per day, newest first', () => {
-    const h = addToHistory([d('2026-11-03', 5), d('2026-11-01', 2)], d('2026-11-04', 9))
+    const h = addToHistory([d('2026-11-03', 3), d('2026-11-01', 1)], d('2026-11-04', 9))
     expect(h.map((x) => x.day)).toEqual(['2026-11-04', '2026-11-03', '2026-11-01'])
     expect(addToHistory(h, d('2026-11-04', 9))).toHaveLength(3)
   })
@@ -93,6 +103,11 @@ describe('addToHistory', () => {
     const many = Array.from({ length: 70 }, (_, i) => d(`2026-08-${String((i % 28) + 1).padStart(2, '0')}-${i}`, 1))
     expect(addToHistory(many, d('2026-11-04', 1), 60)).toHaveLength(60)
     expect(addToHistory([d('2026-11-01', 99)], d('2026-11-02', 3))).toEqual([d('2026-11-02', 3)])
+  })
+  it('never keeps a bad slip; old sticks 29–40 stay as ใบเก่า', () => {
+    expect(levelOf(2)).toBe('bad')
+    expect(addToHistory([d('2026-11-01', 1)], d('2026-11-02', 2))).toEqual([d('2026-11-01', 1)])
+    expect(addToHistory([d('2026-11-01', 35), d('2026-10-30', 5)], d('2026-11-02', 3))).toEqual([d('2026-11-02', 3), d('2026-11-01', 35)])
   })
 })
 
