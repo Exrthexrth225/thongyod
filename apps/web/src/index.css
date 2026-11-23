@@ -297,6 +297,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* One step heavier than 400 (#128): small grey text read too thin next to the bold headings. */
+    font-weight: 450;
     -webkit-tap-highlight-color: transparent;
     /* App feel (Earth, #122): a long press never opens "save image" or selects text while playing.
        Fields and anything marked .selectable stay selectable. */
