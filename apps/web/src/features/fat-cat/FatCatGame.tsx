@@ -453,7 +453,8 @@ function Board({ table }: { table: Table }) {
           </div>
         ) : (
           <button
-            key={card ? `u${table.drawn - 1}` : `d${table.drawn}`}
+            // Same key face down and face up, so the card turns over instead of being replaced.
+            key={`c${card ? table.drawn - 1 : table.drawn}`}
             type="button"
             onClick={tap}
             aria-label={
@@ -473,7 +474,7 @@ function Board({ table }: { table: Table }) {
                   <span />
                 )
               }
-              className="size-full"
+              className="fat-flip size-full"
             />
           </button>
         )}

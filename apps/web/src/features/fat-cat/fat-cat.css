@@ -9,3 +9,13 @@
 @media (prefers-reduced-motion: reduce) {
   .fat-deal, .fat-shuffle-card { animation: none; }
 }
+
+/* Turning a card over (#129): the 3D flip from FlipCard, lifted a little at the halfway point like a real card. */
+.fat-flip .flip-card-inner { transition: transform 700ms cubic-bezier(0.45, 0, 0.2, 1.15); }
+.fat-flip[data-flipped='true'] { animation: fat-lift 700ms ease-in-out; }
+@keyframes fat-lift {
+  45% { transform: translateY(-10px) scale(1.06); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fat-flip[data-flipped='true'] { animation: none; }
+}
