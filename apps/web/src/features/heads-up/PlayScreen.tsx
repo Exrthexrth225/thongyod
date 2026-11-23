@@ -8,7 +8,8 @@ import { buzz, playSound, type SoundName } from '@/lib/sound'
 import { TONE_CLASS } from '@/lib/tones'
 import { cn } from '@/lib/utils'
 import { createTiltDetector, secondsLeft, type Answer, type Verdict } from './logic'
-import { useTiltStream, useWakeLock } from './useTilt'
+import { useTiltStream } from './useTilt'
+import { useWakeLock } from '@/lib/wakeLock'
 
 type Props = {
   words: string[]

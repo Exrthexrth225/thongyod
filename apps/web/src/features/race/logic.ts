@@ -5,6 +5,8 @@ import { secureRandomInt, shuffle } from '@/lib/random'
 
 export const RACER_IDS = ['cat', 'shiba', 'bunny', 'duck', 'frog', 'penguin', 'panda', 'koala'] as const
 export type RacerId = (typeof RACER_IDS)[number]
+/** Order new runners get their animal in: the most different-looking first (cat and shiba are both orange, QA BUG-009). */
+export const PICK_ORDER: readonly RacerId[] = ['cat', 'frog', 'penguin', 'duck', 'bunny', 'panda', 'shiba', 'koala']
 export const MIN_RUNNERS = 2
 export const MAX_RUNNERS = RACER_IDS.length
 

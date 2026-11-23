@@ -11,7 +11,14 @@ export function loadRunners(): Runner[] | null {
     const list = parsed.filter(
       (r): r is Runner => typeof r?.name === 'string' && (RACER_IDS as readonly string[]).includes(r?.racer),
     )
-    return list.length >= MIN_RUNNERS ? list.slice(0, MAX_RUNNERS) : null
+    // Two runners never share an animal (QA BUG-009): a repeat gets the next free one.
+    const used = new Set<RacerId>()
+    const unique = list.slice(0, MAX_RUNNERS).map((r) => {
+      const racer = used.has(r.racer) ? RACER_IDS.find((id) => !used.has(id) && !list.some((o) => o.racer === id))! : r.racer
+      used.add(racer)
+      return { ...r, racer }
+    })
+    return unique.length >= MIN_RUNNERS ? unique : null
   } catch {
     return null
   }

@@ -13,7 +13,7 @@ import { playSound, unlockSound } from '@/lib/sound'
 import { useGameSound } from '@/lib/soundPrefs'
 import { useMediaQuery } from '@/lib/useMediaQuery'
 import { cn } from '@/lib/utils'
-import { MAX_RUNNERS, MIN_RUNNERS, RACER_IDS, eventAt, makeRace, positionAt, type EventKind, type Race } from './logic'
+import { MAX_RUNNERS, MIN_RUNNERS, PICK_ORDER, RACER_IDS, eventAt, makeRace, positionAt, type EventKind, type Race } from './logic'
 import { RaceFx, RaceProp } from './RaceFx'
 import { RaceRunner } from './RaceRunner'
 import { loadRunners, saveRunners, type Runner } from './storage'
@@ -44,7 +44,7 @@ export function RaceGame() {
     () =>
       loadRunners() ?? [
         { name: t('race.defaultName', { n: 1 }), racer: 'cat' },
-        { name: t('race.defaultName', { n: 2 }), racer: 'shiba' },
+        { name: t('race.defaultName', { n: 2 }), racer: 'frog' },
       ],
   )
   const [goal, setGoal] = useState<Goal>('first')
@@ -96,7 +96,7 @@ export function RaceGame() {
   }
   function addRunner() {
     const used = new Set(runners.map((r) => r.racer))
-    const racer = RACER_IDS.find((id) => !used.has(id))
+    const racer = PICK_ORDER.find((id) => !used.has(id))
     if (!racer || runners.length >= MAX_RUNNERS) return
     setRunners((list) => [...list, { name: t('race.defaultName', { n: list.length + 1 }), racer }])
   }
@@ -345,10 +345,15 @@ export function RaceGame() {
             <div ref={(el) => void (runnerEls.current[i] = el)} className="race-slot absolute left-2 z-[2] will-change-transform" style={{ transform: 'translateX(0)' }}>
               <RaceRunner racer={r.racer} initial={String(i + 1)} running={phase === 'running' && place === -1} won={place === 0} className="size-full" />
               <RaceFx />
-              <span className="race-tag pointer-events-none absolute max-w-24 truncate rounded-full bg-ink/85 px-2 text-[11px] leading-5 font-semibold text-ink-foreground">{r.name}</span>
-              {place !== -1 && (
-                <span className="num-pop absolute -top-0.5 -right-0.5 grid size-5 place-items-center rounded-full bg-yolk text-[11px] font-bold text-on-slab ring-2 ring-ink">{place + 1}</span>
-              )}
+              {/* The place rides on the name tag behind the animal, never on its face (QA BUG-010). */}
+              <span className="race-tag pointer-events-none absolute flex max-w-28 items-center gap-1 rounded-full bg-ink/85 py-0.5 pr-2 pl-0.5 text-[11px] leading-4 font-semibold whitespace-nowrap text-ink-foreground">
+                {place !== -1 ? (
+                  <span className="num-pop grid size-4 shrink-0 place-items-center rounded-full bg-yolk text-[10px] font-bold text-on-slab">{place + 1}</span>
+                ) : (
+                  <span className="w-1" />
+                )}
+                <span className="min-w-0 truncate">{r.name}</span>
+              </span>
             </div>
           </div>
         )
@@ -389,6 +394,8 @@ export function RaceGame() {
           <li key={runner}>{runners[runner].name}</li>
         ))}
       </ol>
+      {/* For the next round only: this result stays as it is (QA BUG-011). */}
+      <p className="-mb-1 text-xs font-semibold text-muted-foreground">{t('race.nextGoal')}</p>
       <SegmentedChoice<Goal>
         label={t('race.nextGoal')}
         value={goal}
@@ -420,12 +427,13 @@ export function RaceGame() {
   }
 
   return (
-    <div className="flex flex-col gap-3 px-4 pb-48">
+    <div className="flex flex-col gap-3 px-4 pb-8">
       {field}
       {phase !== 'result' && (
         <div className="flex min-h-8 items-center justify-center">{callLine || <p className="text-center text-sm text-muted-foreground">{t('race.tapToSkip')}</p>}</div>
       )}
-      {result && <BottomAction className="flex-col">{result}</BottomAction>}
+      {/* Right under the track, not pinned to the bottom: no empty half screen in between (QA BUG-008). */}
+      {result}
     </div>
   )
 }

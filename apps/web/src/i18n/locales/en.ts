@@ -1539,7 +1539,7 @@ export const en: Messages = {
     rotateHint: 'Turn your phone sideways during the race for a full-screen track',
     exit: 'Leave the track',
     order: 'Finishing order',
-    nextGoal: 'Next round',
+    nextGoal: 'Rule for the next round',
     ev: {
       trip: '{{name}} trips on a rock!',
       banana: '{{name}} slips on a banana peel!',

@@ -48,7 +48,8 @@ export const th = {
   },
   time: {
     // Weekday short names, Sunday first (matches Date.getDay()).
-    weekdaysShort: 'อา,จ,อ,พ,พฤ,ศ,ส',
+    // Dotted like official Thai abbreviations: in the loopless font a bare พ reads as an English W (QA BUG-001).
+    weekdaysShort: 'อา.,จ.,อ.,พ.,พฤ.,ศ.,ส.',
     today: 'วันนี้',
     todaySuffix: ' (วันนี้)',
     tomorrow: 'พรุ่งนี้',
@@ -1540,7 +1541,7 @@ export const th = {
     rotateHint: 'แข่งตอนหมุนมือถือเป็นแนวนอน สนามจะเต็มจอ',
     exit: 'ออกจากสนาม',
     order: 'ลำดับเข้าเส้นชัย',
-    nextGoal: 'รอบหน้า',
+    nextGoal: 'กติการอบหน้า',
     ev: {
       trip: '{{name}} สะดุดหินล้มหน้าคว่ำ!',
       banana: '{{name}} เหยียบเปลือกกล้วย หมุนติ้ว!',
