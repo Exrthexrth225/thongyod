@@ -102,11 +102,7 @@ export function HomePage() {
               }}
               onOpen={(m) => openInvite(m.id)}
               renderCard={(m) => (
-                <InviteCard
-                  meetup={m}
-                  now={now}
-                  onOpen={() => openInvite(m.id)}
-                />
+                <InviteCard meetup={m} now={now} />
               )}
               renderFooter={(m) => (canHide(m, me.data?.userId) ? <HideMeetupButton onClick={() => actions.hide(m, true)} /> : null)}
             />
@@ -114,8 +110,8 @@ export function HomePage() {
           </div>
         )}
 
-        {/* This week: one dark block (#97) with the days and the chosen day's meetups. */}
-        <div className="on-ink mx-4 mt-3 flex flex-col gap-2 rounded-[28px] bg-ink pt-2 pb-3">
+        {/* This week (#97; light since #128 so it does not stack a black block under the orange deck). */}
+        <div className="mx-4 mt-3 flex flex-col gap-2 rounded-[28px] bg-card pt-2 pb-2">
           <SectionHeader title={t('home.thisWeek')} count={t('home.weekCount', { count: weekMeetups.length })} action={<SeeAllLink to="/calendar" label={t('calendar.open')} />} />
           <div className="-mx-1">
             <WeekStrip today={now} selected={selectedDay} onSelect={setSelectedDay} markedDays={weekMeetups.map((m) => new Date(m.startsAt))} />
@@ -125,7 +121,7 @@ export function HomePage() {
           ) : meetupsQuery.isError ? (
             <ErrorState onRetry={() => void meetupsQuery.refetch()} />
           ) : (
-            <Card className="mx-3 rounded-[20px] px-3 py-1">
+            <div className="mx-1 border-t px-3 pt-1">
               {agenda.length > 0 ? (
                 agenda.map((m) => <MeetupRow key={m.id} meetup={m} />)
               ) : (
@@ -135,7 +131,7 @@ export function HomePage() {
                   })}
                 />
               )}
-            </Card>
+            </div>
           )}
         </div>
 

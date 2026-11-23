@@ -131,7 +131,7 @@ export const en: Messages = {
     hasMeetup: ', has meetups',
     waitingTitle: 'Waiting for your answer · {{count}}',
     deckLabel: 'Invites waiting for your answer',
-    swipeHint: 'Swipe right = going · left = can’t go · up = maybe',
+    swipeHint: 'Swipe right = going · left = can’t go · maybe = the middle button',
     agendaTitle: 'Plans · {{day}}',
     noMeetupOnDay: 'No meetups {{day}}',
     onlyWaitingOnDay: 'Meetups {{day}} are waiting for your answer above',

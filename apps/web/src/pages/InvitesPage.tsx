@@ -59,12 +59,7 @@ export function InvitesPage() {
             onSwipe={(m, dir) => actions.answer(m, SWIPE_TO_RESPONSE[dir])}
             onOpen={(m) => open(m.id)}
             renderCard={(m) => (
-              <InviteCard
-                tall
-                meetup={m}
-                now={now}
-                onOpen={() => open(m.id)}
-              />
+              <InviteCard tall meetup={m} now={now} />
             )}
             renderFooter={(m) => (canHide(m, me.data?.userId) ? <HideMeetupButton onClick={() => actions.hide(m, true)} /> : null)}
           />

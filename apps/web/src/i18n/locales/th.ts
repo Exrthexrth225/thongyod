@@ -132,7 +132,7 @@ export const th = {
     hasMeetup: ' มีนัด',
     waitingTitle: 'รอคุณตอบ · {{count}}',
     deckLabel: 'คำชวนที่รอคุณตอบ',
-    swipeHint: 'ปัดขวา = ไป · ปัดซ้าย = ไม่ไป · ปัดขึ้น = อาจจะ',
+    swipeHint: 'ปัดขวา = ไป · ปัดซ้าย = ไม่ไป · อาจจะ = ปุ่มตรงกลาง',
     agendaTitle: 'นัด{{day}}',
     noMeetupOnDay: '{{day}} ยังไม่มีนัด',
     onlyWaitingOnDay: 'นัด{{day}} รอคุณตอบอยู่ด้านบน',
