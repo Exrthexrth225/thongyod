@@ -20,6 +20,9 @@ import fingerArt from '@/assets/games/finger.webp'
 import raceArt from '@/assets/games/race.webp'
 import fatCatArt from '@/assets/games/fatCat.webp'
 
+// Stickers of the coming-soon games (image/51-game-stickers-2.png, #129).
+const SOON_ART = import.meta.glob<string>('@/assets/games/*.webp', { eager: true, import: 'default' })
+
 export type GameId = 'headsUp' | 'spy' | 'insider' | 'spectrum' | 'codewords' | 'taboo' | 'draw' | 'bomb' | 'mostLikely' | 'neverHave' | 'dice' | 'cups' | 'wheel' | 'fortune' | 'finger' | 'race' | 'fatCat'
   // Coming soon (#124): shown locked as กำลังพัฒนา until built.
   | 'swipe' | 'truthDrink' | 'horseBet' | 'mines' | 'stroop' | 'speedTap' | 'werewolf' | 'mission' | 'roach' | 'throne' | 'ito' | 'fakeArtist' | 'chain' | 'myWord'
@@ -85,7 +88,9 @@ const SOON: [GameId, GameKind, LucideIcon, number, [number, number]][] = [
   ['chain', 'party', Link, 8, [4, 12]],
   ['myWord', 'party', MessageSquareX, 1, [3, 12]],
 ]
-GAMES.push(...SOON.map(([id, kind, icon, tint, players]): Game => ({ id, kind, icon, tint, mode: 'onePhone', players, status: 'soon', to: '' })))
+GAMES.push(
+  ...SOON.map(([id, kind, icon, tint, players]): Game => ({ id, kind, icon, art: SOON_ART[`/src/assets/games/${id}.webp`], tint, mode: 'onePhone', players, status: 'soon', to: '' })),
+)
 
 /** Can be opened (done or in testing). */
 export const isPlayable = (g: Game) => g.status !== 'soon'
