@@ -18,7 +18,8 @@ type SwipeDeckProps<T> = {
   items: T[]
   getKey: (item: T) => string
   renderCard: (item: T) => ReactNode
-  /** 2 or 3 actions (left / up / right). Buttons always do the same as swiping (WCAG 2.5.7). */
+  /** 2 or 3 actions (left / up / right). Buttons always do the same as swiping (WCAG 2.5.7). "up" is a button (and the
+   * ↑ key) only: dragging up would fight scrolling the page (#128). */
   actions: SwipeAction[]
   onSwipe: (item: T, dir: SwipeDir) => void
   /** Tap (not drag) on the top card, or Enter: open its full details (Tinder-style). */
@@ -47,6 +48,8 @@ const MAX_ROTATE = 12
 const FLY_MS = 280
 /** Letting go short of a swipe: the card springs back with a small overshoot. */
 const SPRING_MS = 420
+/** Movement before deciding between "drag the card" (sideways) and "scroll the page" (up/down). */
+const LOCK_PX = 8
 /** A press shorter/smaller than this is a tap, not a drag. */
 const TAP_MS = 300
 const TAP_PX = 6
@@ -70,6 +73,7 @@ export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOp
   const start = useRef({ x: 0, y: 0, t: 0, moved: 0 })
   const top = items[0]
   const allowed = new Set(actions.map((a) => a.dir))
+  const lock = useRef<'x' | 'y' | null>(null)
 
   function commit(dir: SwipeDir) {
     if (!top || flying) return
@@ -90,6 +94,7 @@ export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOp
 
   function onPointerDown(e: PointerEvent<HTMLDivElement>) {
     if (flying || (e.target as HTMLElement).closest('a,button')) return
+    lock.current = null
     e.currentTarget.setPointerCapture(e.pointerId)
     start.current = { x: e.clientX, y: e.clientY, t: e.timeStamp, moved: 0 }
     const box = e.currentTarget.getBoundingClientRect()
@@ -101,25 +106,31 @@ export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOp
     const dx = e.clientX - start.current.x
     const dy = e.clientY - start.current.y
     start.current.moved = Math.max(start.current.moved, Math.hypot(dx, dy))
-    // Up only when "อาจจะ" exists; downward barely moves (there is no "down" answer).
-    const y = allowed.has('up') && dy < 0 ? rubber(dy, drag.h * FREE_SHARE) : Math.min(dy * 0.08, 12)
-    setDrag((d) => ({ ...d, x: rubber(dx, d.w * FREE_SHARE), y }))
+    // Which way did the finger start? Mostly up/down = the person is scrolling the page (#128, Earth): the card stays
+    // put and the browser scrolls (touch-action: pan-y). Only a sideways start drags the card.
+    if (!lock.current) {
+      if (Math.hypot(dx, dy) < LOCK_PX) return
+      lock.current = Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y'
+    }
+    if (lock.current === 'y') {
+      if (drag.x !== 0) setDrag((d) => ({ ...d, x: 0, y: 0 }))
+      return
+    }
+    setDrag((d) => ({ ...d, x: rubber(dx, d.w * FREE_SHARE), y: Math.max(-12, Math.min(dy * 0.08, 12)) }))
   }
 
   function onPointerUp(e: PointerEvent<HTMLDivElement>) {
     if (!drag.active) return
     const ms = Math.max(1, e.timeStamp - start.current.t)
+    if (lock.current === 'y') return cancelDrag()
     if (onOpen && top && ms < TAP_MS && start.current.moved < TAP_PX) {
       setDrag((d) => ({ ...d, x: 0, y: 0, active: false }))
       onOpen(top)
       return
     }
     const vx = drag.x / ms
-    const vy = drag.y / ms
-    if (allowed.has('up') && -drag.y > drag.h * COMMIT_SHARE && -drag.y > Math.abs(drag.x)) return commit('up')
     if (drag.x > drag.w * COMMIT_SHARE || vx > COMMIT_VELOCITY) return commit('right')
     if (-drag.x > drag.w * COMMIT_SHARE || vx < -COMMIT_VELOCITY) return commit('left')
-    if (allowed.has('up') && vy < -COMMIT_VELOCITY && -drag.y > Math.abs(drag.x)) return commit('up')
     setDrag((d) => ({ ...d, x: 0, y: 0, active: false })) // spring back
   }
 
@@ -223,7 +234,7 @@ export function SwipeDeck<T>({ items, getKey, renderCard, actions, onSwipe, onOp
           onPointerUp={onPointerUp}
           onPointerCancel={cancelDrag}
           onLostPointerCapture={cancelDrag}
-          className={cn('relative z-10 flex touch-none flex-col rounded-3xl select-none', !bare && surface, onOpen && 'cursor-pointer', tall && 'min-h-[58dvh]')}
+          className={cn('relative z-10 flex touch-pan-y flex-col rounded-3xl select-none', !bare && surface, onOpen && 'cursor-pointer', tall && 'min-h-[58dvh]')}
           style={{
             transform,
             opacity: flying ? 0 : 1,
