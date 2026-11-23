@@ -1,11 +1,17 @@
 /* เซียมซี with Earth's art (image/12-fortune.png → src/assets/fortune). DECISIONS #77.
    The cup shakes as one picture with smooth transforms; one stick slides out of the cup mouth and drops in front. */
 
-/* The cup sits in a dark block lit warmly from behind, like a temple at night. */
+/* The cup sits on a warm cream wash with a soft gold glow behind it, in the cup's own red and gold (#128: the dark
+   block did not match the rest of the app). Dark mode keeps a dark, warmly lit block. */
 .fortune-temple {
   background:
+    radial-gradient(circle at 50% 62%, color-mix(in oklab, var(--yolk) 45%, transparent), transparent 60%),
+    color-mix(in oklab, var(--tangerine) 12%, var(--card));
+}
+[data-mode='dark'] .fortune-temple {
+  background:
     radial-gradient(circle at 50% 62%, color-mix(in oklab, var(--yolk) 30%, transparent), transparent 58%),
-    var(--ink);
+    var(--card);
 }
 .fortune-stage {
   position: relative;

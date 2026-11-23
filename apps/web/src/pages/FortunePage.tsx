@@ -114,7 +114,7 @@ export function FortunePage() {
         {phase !== 'card' ? (
           <>
             {/* Night-temple block (#97 look). pt-20 = room for the stick's jump above the cup, so it is never cut off. */}
-            <div className="fortune-temple mt-1 flex w-full justify-center rounded-[32px] bg-ink pt-20">
+            <div className="fortune-temple mt-1 flex w-full justify-center rounded-[32px] pt-20">
               <button type="button" onClick={shake} aria-label={t('fortune.cylinder')} className="touch-manipulation">
                 <FortuneCup state={phase === 'shaking' ? 'shaking' : phase === 'stick' ? 'out' : 'idle'} stick={draw?.stick} />
               </button>

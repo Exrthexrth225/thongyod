@@ -10,7 +10,7 @@ export function AppShell() {
   return (
     <div className="mx-auto min-h-dvh max-w-md bg-background">
       {/* Bottom padding = tab bar height + phone safe area, so content is never hidden. */}
-      <main className="pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
+      <main className="pb-[calc(7.75rem+env(safe-area-inset-bottom))]">
         <div key={pathname}>
           <Outlet />
         </div>
