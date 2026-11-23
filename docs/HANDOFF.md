@@ -1,5 +1,13 @@
 # Backend handoff
 
+## Scoped security overrides completed — 2026-11-23
+
+- User approved the additional breaking-version compatibility work. Root overrides now select esbuild 0.28.2 only beneath `@esbuild-kit/core-utils`, and minimatch 11.0.9 only beneath `@ts-morph/common`. This supersedes the pending override proposal below. Drizzle, shadcn and their application-facing contracts keep their existing versions; no application source, UI, database data or schemas changed.
+- Updated the lockfile and verified a clean `npm ci --ignore-scripts --no-audit` install. npm's existing lock initially retained the nested old esbuild; the final lock removes that stale subtree. Runtime resolution from the consumers selects exactly 0.28.2/11.0.9, and the full npm dependency tree is valid. There were no unrelated version updates.
+- `npm audit` reports 0 findings at every severity (previously 8 moderate package findings, 2 underlying advisories). This is the current advisory result, not a guarantee against future vulnerabilities. Sources checked before changes: [esbuild advisory](https://github.com/evanw/esbuild/security/advisories/GHSA-67mh-4wv8-2f99), [esbuild breaking changes](https://github.com/evanw/esbuild/blob/main/CHANGELOG-2025.md), [minimatch 11 changelog](https://github.com/isaacs/minimatch/blob/main/changelog.md).
+- Compatibility verified through the actual consumers: synchronous/asynchronous core-utils TypeScript transforms execute correctly and produce source maps; the legacy ESM loader imports typed TypeScript enums; ts-morph includes/excludes nested .ts/.tsx files correctly and reports no diagnostics. Drizzle config loading/snapshot check passed without generating migrations.
+- All 22 API tests passed with no skips; all 288 frontend tests passed; frontend TypeScript/production build and full frontend lint passed; development/production API builds passed. The web build retains its existing bundle-size warning. Real external deployment and LINE-channel testing still require service accounts/credentials as documented below.
+
 ## Dependency security patches — 2026-11-23
 
 - Re-ran npm audit: the current baseline was 17 moderate package findings, rather than the 6 reported during the previous install. Two underlying advisories propagate through their parent tools: [esbuild development-server CORS](https://github.com/evanw/esbuild/security/advisories/GHSA-67mh-4wv8-2f99) and [minimatch pattern amplification](https://github.com/advisories/GHSA-g3hv-75wg-m249).
