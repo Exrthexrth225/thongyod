@@ -1,4 +1,4 @@
-// แมวอ้วง (#123, reworked #126): the drinking-circle card game (rules after Ohana / King's Cup, written by us). The app
+// เกมโดเรม่อน (id fatCat; was แมวอ้วง, #123, reworked #126, art #129): the drinking-circle card game (rules after Ohana / King's Cup, written by us). The app
 // only draws cards and says what each one means; the circle sorts out who drinks. Content is Thai only, like the
 // party cards. A rule set = what each card means; groups copy the standard set and edit it (also mid-game).
 
@@ -24,7 +24,7 @@ export const BIG_CARDS: readonly Rank[] = ['5', 'K']
 export const STANDARD_SET: RuleSet = {
   id: 'standard',
   name: 'มาตรฐาน',
-  always: 'กำมือเป็นอุ้งเท้าแมวไว้ ห้ามชี้นิ้ว ห้ามปรบมือ ใครเผลอโดน',
+  always: 'กำมือกลมๆ แบบโดเรม่อน ห้ามชี้นิ้ว ห้ามปรบมือ ใครเผลอโดน',
   rules: {
     A: { title: 'โดนเอง', text: 'คนเปิดโดนคนเดียว' },
     '2': { title: 'แจก 1', text: 'คนเปิดเลือกเพื่อน 1 คนให้โดน' },

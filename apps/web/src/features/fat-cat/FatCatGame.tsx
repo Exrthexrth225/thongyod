@@ -3,23 +3,17 @@ import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeftRight,
-  Cat,
   Check,
   ChevronRight,
-  Club,
-  Crown,
-  Diamond,
   Gamepad2,
-  Heart,
+  HandFist,
   History,
   Pencil,
   Play,
   Plus,
   RotateCcw,
-  ScrollText,
   Shuffle,
   SkipForward,
-  Spade,
   Users,
   X,
   type LucideIcon,
@@ -41,7 +35,6 @@ import {
   type Rank,
   type Rule,
   type RuleSet,
-  type Suit,
 } from "@/config/games/fatCat";
 import { markDone } from "@/features/daily/daily";
 import { circleStore } from "@/features/games/circle";
@@ -76,26 +69,20 @@ import {
   shuffled,
   skip,
   undoLast,
-  type Card,
   type KMode,
   type Table,
 } from "./logic";
 import { allSets, setById, setsStore, tableStore } from "./store";
+import { CardBack, CardFace } from "./CardArt";
+import { isRed, kingBadge, pipArt, queenBadge } from "./cardImages";
 import "./fat-cat.css";
 
 const TINT = 3;
-const SUIT_ICON: Record<Suit, LucideIcon> = {
-  spade: Spade,
-  heart: Heart,
-  diamond: Diamond,
-  club: Club,
-};
-const RED: readonly Suit[] = ["heart", "diamond"];
 const newSetId = () => `g${secureRandomInt(1_000_000_000)}`;
 /** The card is as big as its box allows (5:7): the box takes whatever height the status line and controls leave. */
 const CARD_SIZE = "aspect-[5/7] w-[min(100cqw,calc(100cqh*5/7))]";
 
-// แมวอ้วง (#126): a card drawer for the circle. The phone sits in the middle; the card back says whose turn it is,
+// เกมโดเรม่อน (id fatCat) (#126): a card drawer for the circle. The phone sits in the middle; the card back says whose turn it is,
 // a tap turns it over and the card says what to do. The app never picks who drinks and keeps no score. It does
 // remember the queen and the king rule, and keeps a history; undo, skip, reverse and AFK are always at hand.
 export function FatCatGame() {
@@ -352,32 +339,23 @@ function Board({ table }: { table: Table }) {
   const away = allAway(table);
   const undoCount = tableStore.get()?.undo.length ?? 0;
 
+  const isQueen = !!me && me.name === table.queen;
   const back = (
-    <span
-      className={cn(
-        "flex size-full flex-col items-center justify-center gap-3 rounded-[1.4rem] border-[6px] border-white/70 p-5 text-center shadow-lg",
-        tintClass(TINT),
-      )}
+    <CardBack
+      above={me ? t("games.fatCat.turnOf") : undefined}
+      below={t("games.fatCat.tapToOpen")}
     >
-      <Cat className="size-16" strokeWidth={1.5} aria-hidden="true" />
-      {me ? (
-        <>
-          <span className="text-sm font-semibold opacity-80">
-            {t("games.fatCat.turnOf")}
-          </span>
-          <span className="line-clamp-2 font-heading text-[clamp(28px,9vw,44px)] leading-tight font-extrabold break-words">
-            {me.name}
-          </span>
-        </>
-      ) : (
-        <span className="font-heading text-2xl font-bold">
-          {t("games.fatCat.turnAnyone")}
-        </span>
+      {isQueen && (
+        <img
+          src={queenBadge}
+          alt={t("games.fatCat.queenBadge")}
+          className="size-[11cqh] shrink-0"
+        />
       )}
-      <span className="text-sm font-semibold opacity-80">
-        {t("games.fatCat.tapToOpen")}
+      <span className="line-clamp-1 min-w-0 font-heading text-[clamp(24px,9cqw,40px)] leading-tight font-extrabold break-words">
+        {me ? me.name : t("games.fatCat.turnAnyone")}
       </span>
-    </span>
+    </CardBack>
   );
 
   return (
@@ -393,30 +371,37 @@ function Board({ table }: { table: Table }) {
         </Button>
         <div className="flex min-w-0 flex-1 flex-wrap gap-1">
           <StatusChip
-            icon={Cat}
+            icon={HandFist}
             text={set.always}
             className="bg-ink text-ink-foreground"
           />
-          {table.queen && (
-            <StatusChip
-              icon={Crown}
-              text={t("games.fatCat.status.queen", { name: table.queen })}
-              className={tintClass(6)}
-            />
-          )}
-          {table.kRules.map((r, i) => (
-            <StatusChip
-              key={i}
-              icon={ScrollText}
-              text={t("games.fatCat.status.king", { rule: r })}
-              className={tintClass(4)}
-            />
-          ))}
         </div>
         <span className="shrink-0 text-xs font-semibold text-muted-foreground tabular-nums">
           {t("games.fatCat.left", { n: cardsLeft(table) })}
         </span>
       </div>
+
+      {(table.queen || table.kRules.length > 0) && (
+        <div className="flex flex-col gap-1.5">
+          {table.queen && (
+            <RoyalRow
+              badge={queenBadge}
+              label={t("games.fatCat.status.queenOf", { name: table.queen })}
+              text={t("games.fatCat.status.queenRule")}
+              className={tintClass(6)}
+            />
+          )}
+          {table.kRules.map((r, i) => (
+            <RoyalRow
+              key={i}
+              badge={kingBadge}
+              label={t("games.fatCat.status.kingRule")}
+              text={r}
+              className={tintClass(4)}
+            />
+          ))}
+        </div>
+      )}
 
       <div className="relative grid min-h-0 flex-1 place-items-center [container-type:size]">
         {table.phase === "shuffling" ? (
@@ -593,41 +578,6 @@ function Board({ table }: { table: Table }) {
   );
 }
 
-function CardFace({ card, rule }: { card: Card; rule: Rule }) {
-  const Icon = SUIT_ICON[card.suit];
-  const corner = (
-    <span className="flex flex-col items-center leading-none">
-      <span className="font-heading text-3xl font-bold">{card.rank}</span>
-      <Icon className="size-5" fill="currentColor" aria-hidden="true" />
-    </span>
-  );
-  return (
-    <span
-      className={cn(
-        "relative flex size-full flex-col items-center justify-center gap-3 rounded-[1.4rem] border bg-card px-6 py-14 text-center shadow-lg",
-        RED.includes(card.suit)
-          ? "text-tone-danger-foreground"
-          : "text-foreground",
-      )}
-    >
-      <span className="absolute top-3 left-3">{corner}</span>
-      <span className="absolute right-3 bottom-3 rotate-180">{corner}</span>
-      <Icon
-        className="size-14 opacity-90"
-        fill="currentColor"
-        strokeWidth={1.25}
-        aria-hidden="true"
-      />
-      <span className="font-heading text-[clamp(26px,8vw,40px)] leading-tight font-extrabold text-balance text-foreground">
-        {rule.title}
-      </span>
-      <span className="text-[clamp(15px,4.3vw,19px)] leading-relaxed text-pretty text-foreground">
-        {rule.text}
-      </span>
-    </span>
-  );
-}
-
 function KingInput({
   table,
   onSave,
@@ -695,6 +645,42 @@ function StatusChip({
   );
 }
 
+/** Queen and king rules stay big on top of the table (#129): the badge, who or what, and the rule in full. */
+function RoyalRow({
+  badge,
+  label,
+  text,
+  className,
+}: {
+  badge: string;
+  label: string;
+  text: string;
+  className: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-2.5 rounded-2xl py-1.5 pr-3 pl-1.5 [@media(max-height:700px)]:py-1",
+        className,
+      )}
+    >
+      <img
+        src={badge}
+        alt=""
+        className="size-10 shrink-0 [@media(max-height:700px)]:size-7"
+      />
+      <p className="min-w-0 flex-1 leading-tight">
+        <span className="block font-heading text-[15px] font-bold">
+          {label}
+        </span>
+        <span className="line-clamp-2 text-[13px] [@media(max-height:700px)]:line-clamp-1">
+          {text}
+        </span>
+      </p>
+    </div>
+  );
+}
+
 function ControlButton({
   icon: Icon,
   label,
@@ -754,7 +740,6 @@ function HistorySheet({
         ) : (
           <ol className="flex flex-col gap-1.5">
             {rows.map((d) => {
-              const Icon = SUIT_ICON[d.card.suit];
               return (
                 <li
                   key={d.turn}
@@ -765,16 +750,15 @@ function HistorySheet({
                   </span>
                   <span
                     className={cn(
-                      "flex w-11 shrink-0 items-center justify-center gap-0.5 rounded-lg border bg-background py-1 font-heading font-bold",
-                      RED.includes(d.card.suit) &&
-                        "text-tone-danger-foreground",
+                      "flex w-12 shrink-0 items-center justify-center gap-0.5 rounded-lg bg-white py-1 font-heading font-bold",
+                      isRed(d.card.suit) ? "text-[#c8232c]" : "text-[#2a1f1d]",
                     )}
                   >
                     {d.card.rank}
-                    <Icon
-                      className="size-3"
-                      fill="currentColor"
-                      aria-label={t(`games.fatCat.suits.${d.card.suit}`)}
+                    <img
+                      src={pipArt(d.card.suit)}
+                      className="size-4"
+                      alt={t(`games.fatCat.suits.${d.card.suit}`)}
                     />
                   </span>
                   <span className="min-w-0 flex-1">

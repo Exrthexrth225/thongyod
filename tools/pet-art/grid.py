@@ -24,7 +24,8 @@ solid = al >= 96
 lab, n = ndimage.label(ndimage.binary_closing(solid, iterations=2))
 sizes = ndimage.sum(solid, lab, range(1, n + 1))
 centres = ndimage.center_of_mass(solid, lab, range(1, n + 1))
-cell_of = [min(rows - 1, int(cy // ch)) * cols + min(cols - 1, int(cx // cw)) for cy, cx in centres]
+# A closed-up piece can hold no solid pixel at all (centre = NaN): it belongs to no cell.
+cell_of = [-1 if sizes[i] == 0 else min(rows - 1, int(cy // ch)) * cols + min(cols - 1, int(cx // cw)) for i, (cy, cx) in enumerate(centres)]
 ratio = float(sys.argv[sys.argv.index('--min') + 1]) if '--min' in sys.argv else 0.01
 crops = []
 for k, name in enumerate(names):

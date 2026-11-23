@@ -1,4 +1,4 @@
-// แมวอ้วง (#126): a card drawer for the circle. Pure functions over one `Table`, driven as a state machine:
+// เกมโดเรม่อน (id fatCat) (#126): a card drawer for the circle. Pure functions over one `Table`, driven as a state machine:
 //   shuffling (1.5 s, the screen's timer) → down (the current player's name on the card back) → up (the card and its rule)
 //   → down for the next player … and when the deck is empty, reshuffle → shuffling.
 // Every turn-changing action (draw, skip) first saves a snapshot on the undo stack (memento), so undo can step back

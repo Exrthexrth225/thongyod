@@ -18,6 +18,7 @@ import wheelArt from '@/assets/games/wheel.webp'
 import fortuneArt from '@/assets/games/fortune.webp'
 import fingerArt from '@/assets/games/finger.webp'
 import raceArt from '@/assets/games/race.webp'
+import fatCatArt from '@/assets/games/fatCat.webp'
 
 export type GameId = 'headsUp' | 'spy' | 'insider' | 'spectrum' | 'codewords' | 'taboo' | 'draw' | 'bomb' | 'mostLikely' | 'neverHave' | 'dice' | 'cups' | 'wheel' | 'fortune' | 'finger' | 'race' | 'fatCat'
   // Coming soon (#124): shown locked as กำลังพัฒนา until built.
@@ -47,7 +48,7 @@ export type Game = {
 }
 
 export const GAMES: Game[] = [
-  { id: 'fatCat', kind: 'drink', icon: Cat, tint: 3, mode: 'onePhone', players: [2, 20], status: 'beta', to: '/games/fat-cat' },
+  { id: 'fatCat', kind: 'drink', icon: Cat, art: fatCatArt, tint: 3, mode: 'onePhone', players: [2, 20], status: 'beta', to: '/games/fat-cat' },
   { id: 'headsUp', kind: 'party', icon: Smartphone, art: headsUpArt, tint: 8, mode: 'onePhone', players: [2, 20], status: 'ready', to: '/head-guess' },
   { id: 'spy', kind: 'board', icon: VenetianMask, art: spyArt, tint: 6, mode: 'onePhone', rooms: true, players: [3, 12], status: 'ready', to: '/games/spy' },
   { id: 'insider', kind: 'board', icon: Eye, art: insiderArt, tint: 7, mode: 'onePhone', players: [4, 12], status: 'ready', to: '/games/insider' },
