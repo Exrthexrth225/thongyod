@@ -57,7 +57,7 @@ const ALL_TOOLS: Tool[] = [
   { id: 'randomRestaurant', icon: Shuffle, group: 'solo', status: 'ready', to: '/random-restaurant', art: toolArt('randomFood'), tint: 2 },
   { id: 'playPet', icon: PawPrint, group: 'solo', status: 'ready', to: '/pet', tint: 1 },
   { id: 'luckyColor', icon: Palette, group: 'solo', status: 'ready', to: '/lucky-color', art: toolArt('luckyColor'), tint: 4 },
-  { id: 'myMeetups', icon: CalendarDays, group: 'solo', status: 'ready', to: '/meetups', art: toolArt('noPlans'), tint: 5 },
+  { id: 'myMeetups', icon: CalendarDays, group: 'solo', status: 'ready', to: '/plan', art: toolArt('noPlans'), tint: 5 },
   { id: 'gradeCalculator', icon: Calculator, group: 'solo', status: 'soon', tint: 3 },
   { id: 'focusTimer', icon: Timer, group: 'solo', status: 'soon', tint: 6 },
   { id: 'flashcards', icon: Layers, group: 'solo', status: 'ready', to: '/flashcards', art: toolArt('flashcards'), tint: 8 },

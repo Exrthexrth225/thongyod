@@ -828,6 +828,13 @@ export const th = {
     again: 'หมุนอีกครั้ง',
     removeWinner: 'ตัดอันนี้ออกแล้วหมุนต่อ',
   },
+  plan: {
+    timeUnit: 'น.',
+    goingCount: '{{count}} คนไป',
+    tools: 'เครื่องมือนัด',
+    openBills: 'บิลที่ยังไม่จบ',
+    showMore: 'ดูอีก {{count}} นัด',
+  },
   myMeetups: {
     title: 'นัดของฉัน',
     upcoming: 'กำลังจะมา',

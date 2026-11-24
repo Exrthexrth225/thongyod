@@ -826,6 +826,13 @@ export const en: Messages = {
     again: 'Spin again',
     removeWinner: 'Remove this one and spin again',
   },
+  plan: {
+    timeUnit: '',
+    goingCount: '{{count}} going',
+    tools: 'Planning tools',
+    openBills: 'Bills still open',
+    showMore: 'Show {{count}} more',
+  },
   myMeetups: {
     title: 'My meetups',
     upcoming: 'Upcoming',

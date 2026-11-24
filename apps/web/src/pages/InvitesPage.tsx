@@ -40,7 +40,7 @@ export function InvitesPage() {
             title={t('invites.allDone')}
             hint={t('invites.allDoneHint')}
             action={
-              <Link to="/meetups" className={buttonVariants({ variant: 'outline' })}>
+              <Link to="/plan" className={buttonVariants({ variant: 'outline' })}>
                 {t('myMeetups.title')}
               </Link>
             }

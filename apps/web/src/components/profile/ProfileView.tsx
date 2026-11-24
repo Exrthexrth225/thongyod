@@ -66,7 +66,7 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
           {[
             { key: 'friends', value: profile.stats.friends, label: t('profile.stats.friends'), to: isSelf ? '/gangs/friends' : profile.mutualFriends > 0 ? `/u/${profile.userId}/mutual` : null },
             { key: 'gangs', value: profile.stats.gangs, label: t('profile.stats.gangs'), to: isSelf ? '/gangs' : null },
-            { key: 'attended', value: profile.stats.meetupsAttended, label: t('profile.stats.attended'), to: isSelf ? '/meetups?view=past' : null },
+            { key: 'attended', value: profile.stats.meetupsAttended, label: t('profile.stats.attended'), to: isSelf ? '/plan?view=past' : null },
           ].map((s) => {
             const body = (
               <>

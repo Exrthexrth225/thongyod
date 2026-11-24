@@ -44,7 +44,7 @@ import { LuckyColorPage } from '@/pages/LuckyColorPage'
 import { InvitesPage } from '@/pages/InvitesPage'
 import { MeetupDetailPage } from '@/pages/MeetupDetailPage'
 import { MutualFriendsPage } from '@/pages/MutualFriendsPage'
-import { MyMeetupsPage } from '@/pages/MyMeetupsPage'
+import { PlanPage } from '@/pages/PlanPage'
 import { MePage } from '@/pages/MePage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { NotificationSettingsPage } from '@/pages/NotificationSettingsPage'
@@ -66,7 +66,7 @@ import { OnboardingGate } from '@/features/onboarding/OnboardingGate'
 import { LoginPage, SignupPage } from '@/pages/LoginPage'
 
 /** Paths that already have their own page (tabs). */
-const TAB_PATHS = ['/', '/gangs', '/explore', '/pet', '/me']
+const TAB_PATHS = ['/', '/plan', '/games', '/gangs', '/explore', '/pet', '/me']
 
 // Ready tools without a real page yet get a placeholder.
 // When a tool page is built, add its route above this list and it will be skipped here.
@@ -95,8 +95,7 @@ export const router = createRouter([
         ],
       },
       { path: 'explore', element: <ExplorePage /> },
-      // #132: the นัด tab; its own page comes with the next redesign step.
-      { path: 'plan', element: <MyMeetupsPage /> },
+      { path: 'plan', element: <PlanPage /> },
       { path: 'pet', element: <PetPage /> },
       { path: 'me', element: <MePage /> },
     ],
@@ -143,7 +142,7 @@ export const router = createRouter([
       { path: 'pending', element: <PendingPage /> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'updates', element: <UpdatesPage /> },
-      { path: 'meetups', element: <MyMeetupsPage /> },
+      { path: 'meetups', element: <Navigate to="/plan" replace /> }, // old "นัดของฉัน" page, now the นัด tab (#132)
       { path: 'calendar', element: <CalendarPage /> },
       { path: 'invites', element: <InvitesPage /> },
       { path: 'meetups/new', element: <CreateMeetupPage /> },
