@@ -37,6 +37,18 @@ export interface FeedItem {
   createdAt: string
 }
 
+// DRAFT — GET /feed is proposed only. Existing /home and FeedItem are unchanged.
+// The frontend groups UTC instants by the viewer's local calendar day.
+export type DraftFeedItem = Omit<FeedItem, 'kind'> & { gangId: string } & (
+  | { kind: 'meetup_created'; target: { type: 'meetup'; id: string } }
+  | { kind: Exclude<FeedKind, 'meetup_created'>; target: { type: 'gang'; id: string } }
+)
+export interface DraftListFeedRequest { limit?: number; cursor?: string }
+export interface DraftListFeedResponse { items: DraftFeedItem[]; nextCursor: string | null }
+export interface DraftFeedErrorResponse {
+  error: { code: 'INVALID_REQUEST' | 'UNAUTHENTICATED' | 'AUTH_UNAVAILABLE' | 'ACTIVITY_UNAVAILABLE' }
+}
+
 export type PetMood = 'happy' | 'normal' | 'missing_you' | 'sulking' | 'wilting'
 
 export interface PetSummary {

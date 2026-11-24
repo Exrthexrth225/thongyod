@@ -3,6 +3,8 @@ import { useHome } from '@/api/home'
 import { useTranslation } from 'react-i18next'
 import { useGangList } from '@/api/gangs'
 import { EmptyState } from '@/components/common/EmptyState'
+import { ErrorState } from '@/components/common/ErrorState'
+import { LoadingState } from '@/components/common/LoadingState'
 import { InfiniteList } from '@/components/common/InfiniteList'
 import { ListRow } from '@/components/common/ListRow'
 import { SearchInput } from '@/components/common/SearchInput'
@@ -50,15 +52,21 @@ function FriendsActivity() {
     () => [...(home.data?.feed ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, FEED_SHOWN),
     [home.data],
   )
-  if (items.length === 0) return null
+  if (home.isSuccess && items.length === 0) return null
   return (
     <section>
       <SectionHeader title={t('gang.friendsActivity')} action={<SeeAllLink to="/updates" />} />
-      <Card className="mx-4 px-4 py-1">
-        {items.map((item) => (
-          <FeedRow key={item.id} item={item} now={now} />
-        ))}
-      </Card>
+      {home.isPending ? (
+        <LoadingState rows={3} />
+      ) : home.isError ? (
+        <ErrorState onRetry={() => void home.refetch()} />
+      ) : (
+        <Card className="mx-4 px-4 py-1">
+          {items.map((item) => (
+            <FeedRow key={item.id} item={item} now={now} />
+          ))}
+        </Card>
+      )}
     </section>
   )
 }

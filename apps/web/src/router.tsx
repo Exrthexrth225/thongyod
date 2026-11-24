@@ -1,4 +1,4 @@
-import { createBrowserRouter, createHashRouter, Navigate, type RouteObject } from 'react-router'
+import { createBrowserRouter, createHashRouter, Navigate, replace, type LoaderFunctionArgs, type RouteObject } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { SubPageShell } from '@/components/layout/SubPageShell'
 import { TOOLS } from '@/config/tools'
@@ -74,6 +74,10 @@ const placeholderToolRoutes: RouteObject[] = TOOLS.filter(
   (tool) => tool.status === 'ready' && tool.to && !TAB_PATHS.includes(tool.to) && !BUILT_TOOL_PATHS.includes(tool.to),
 ).map((tool) => ({ path: tool.to!.slice(1), element: <ToolPlaceholderPage toolId={tool.id} /> }))
 
+function redirectToPlan({ request }: LoaderFunctionArgs) {
+  return replace(`/plan${new URL(request.url).search}`)
+}
+
 // Paths are English; labels shown to users come from i18n.
 const createRouter = import.meta.env.VITE_DEPLOY_MOCKS === 'true' ? createHashRouter : createBrowserRouter
 export const router = createRouter([
@@ -93,8 +97,9 @@ export const router = createRouter([
           { path: 'friends', element: <FriendsPage /> },
         ],
       },
-      { path: 'explore', element: <Navigate to="/plan" replace /> }, // ทำอะไรดี was split into นัด, เกม and ฉัน (#132)
+      { path: 'explore', loader: redirectToPlan }, // retired list route (#132)
       { path: 'plan', element: <PlanPage /> },
+      { path: 'games', element: <GamesPage /> },
       { path: 'pet', element: <PetPage /> },
       { path: 'me', element: <MePage /> },
     ],
@@ -105,7 +110,6 @@ export const router = createRouter([
     children: [
       { path: 'quick-vote', element: <QuickVotePage /> },
       { path: 'wheel', element: <WheelPage /> },
-      { path: 'games', element: <GamesPage /> },
       { path: 'games/most-likely', element: <MostLikelyPage /> },
       { path: 'games/never', element: <NeverHavePage /> },
       { path: 'games/spy', element: <SpyPage /> },
@@ -141,7 +145,7 @@ export const router = createRouter([
       { path: 'pending', element: <PendingPage /> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'updates', element: <UpdatesPage /> },
-      { path: 'meetups', element: <Navigate to="/plan" replace /> }, // old "นัดของฉัน" page, now the นัด tab (#132)
+      { path: 'meetups', loader: redirectToPlan }, // retired list route (#132)
       { path: 'calendar', element: <CalendarPage /> },
       { path: 'invites', element: <InvitesPage /> },
       { path: 'meetups/new', element: <CreateMeetupPage /> },

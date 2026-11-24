@@ -117,6 +117,7 @@ export const th = {
     waitingHeading: 'รอเราตอบ',
     hello: 'หวัดดี {{name}}',
     oneByOne: 'ตอบทีละใบ',
+    otherPending: 'งานอื่น ({{count}})',
     invitedBy: '{{name}}ชวน · {{when}}',
     doNow: 'ทำเลย',
     keepPlaying: 'เล่นต่อ',

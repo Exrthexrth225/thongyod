@@ -1,5 +1,12 @@
 export type { PersonCard, Friend, UserCard, FriendRequest, FriendRequests, GangSummary, CursorPage, BlockUserRequest, SendFriendRequest, SocialMutationErrorResponse } from './social.js'
 export type {
+  DraftGangSummary,
+  DraftListGangsResponse,
+  DraftReadGangActivityRequest,
+  DraftReadGangActivityResponse,
+  DraftGangActivityErrorResponse,
+} from './social.js'
+export type {
   Me,
   UpdateMeRequest,
   UpdateMeResponse,
@@ -46,6 +53,10 @@ export type {
 export type {
   FeedItem,
   FeedKind,
+  DraftFeedItem,
+  DraftListFeedRequest,
+  DraftListFeedResponse,
+  DraftFeedErrorResponse,
   HomeSummary,
   LuckyColorKey,
   PendingItem,

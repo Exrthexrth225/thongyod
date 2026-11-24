@@ -115,6 +115,7 @@ export const en: Messages = {
     waitingHeading: 'Waiting for you',
     hello: 'Hi {{name}}',
     oneByOne: 'One by one',
+    otherPending: 'Other tasks ({{count}})',
     invitedBy: '{{name}} invited you · {{when}}',
     doNow: 'Do it now',
     keepPlaying: 'Keep playing',

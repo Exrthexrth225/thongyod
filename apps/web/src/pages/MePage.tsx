@@ -54,24 +54,23 @@ export function MePage() {
               </Link>
             </>
           }
-        >
-          <section>
-            <SectionHeader title={t('me.mine')} />
-            <Card className="mx-4 p-1.5">
-              {MINE.map((item) => (
-                <Link key={item.key} to={item.to} state={SHOW_BACK} className="pressable flex items-center gap-3 rounded-2xl p-2.5">
-                  {item.art && <img src={item.art} alt="" draggable={false} className="size-11 shrink-0" />}
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[15px] font-semibold">{t(`me.items.${item.key}.title`)}</span>
-                    <span className="block truncate text-sm text-muted-foreground">{t(`me.items.${item.key}.desc`)}</span>
-                  </span>
-                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                </Link>
-              ))}
-            </Card>
-          </section>
-        </ProfileView>
+        />
       )}
+      <section>
+        <SectionHeader title={t('me.mine')} />
+        <Card className="mx-4 p-1.5">
+          {MINE.map((item) => (
+            <Link key={item.key} to={item.to} state={SHOW_BACK} className="pressable flex items-center gap-3 rounded-2xl p-2.5">
+              {item.art && <img src={item.art} alt="" draggable={false} className="size-11 shrink-0" />}
+              <span className="min-w-0 flex-1">
+                <span className="block text-[15px] font-semibold">{t(`me.items.${item.key}.title`)}</span>
+                <span className="block truncate text-sm text-muted-foreground">{t(`me.items.${item.key}.desc`)}</span>
+              </span>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            </Link>
+          ))}
+        </Card>
+      </section>
     </div>
   )
 }
