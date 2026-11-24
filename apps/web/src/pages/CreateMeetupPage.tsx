@@ -74,7 +74,7 @@ export function CreateMeetupPage() {
       <PageHeader
         title={t('createMeetup.title')}
         subtitle={friend.data ? t('createMeetup.withFriend', { name: friend.data.displayName }) : undefined}
-        backTo="/explore"
+        backTo="/plan"
       />
       {loading ? (
         <LoadingState rows={3} />

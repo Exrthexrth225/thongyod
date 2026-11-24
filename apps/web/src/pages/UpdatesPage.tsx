@@ -24,7 +24,7 @@ export function UpdatesPage() {
 
   return (
     <div className="flex flex-col gap-1 pb-8">
-      <PageHeader title={t('home.friendsUpdates')} backTo="/" />
+      <PageHeader title={t('home.friendsUpdates')} backTo="/gangs" />
       {home.isPending ? (
         <LoadingState rows={4} />
       ) : home.isError ? (

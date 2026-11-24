@@ -134,7 +134,7 @@ export function RandomRestaurantPage() {
   if (places.length === 0) {
     return (
       <>
-        <PageHeader title={t('restaurants.title')} subtitle={t('restaurants.subtitle')} backTo="/explore" />
+        <PageHeader title={t('restaurants.title')} subtitle={t('restaurants.subtitle')} backTo="/plan" />
         <Card className="mx-4">
           <EmptyState
             title={t('restaurants.empty')}
@@ -162,7 +162,7 @@ export function RandomRestaurantPage() {
       <PageHeader
         title={t('restaurants.title')}
         subtitle={t('restaurants.subtitle')}
-        backTo="/explore"
+        backTo="/plan"
         action={
           <span className="flex items-center">
             <SoundToggle game="restaurants" />

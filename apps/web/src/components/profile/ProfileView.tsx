@@ -11,7 +11,11 @@ import { MeetupRow } from '@/components/meetup/MeetupRow'
 import { Card } from '@/components/ui/card'
 import { formatMonthYear } from '@/lib/date'
 import { SHOW_BACK } from '@/lib/nav'
+import { cn } from '@/lib/utils'
 import { TitleSheet } from './TitleSheet'
+
+/** The title chip under the name: one quiet colour, the award icon carries the brand (#132). */
+const TITLE_CHIP = 'mt-1 flex items-center gap-1 rounded-xl bg-card px-2.5 py-0.5 text-[13px] font-semibold'
 
 /** Chip sections (titles, shared gangs) show this many; the rest are behind "ดูทั้งหมด". */
 const CHIP_PREVIEW = 6
@@ -20,11 +24,13 @@ type ProfileViewProps = {
   profile: Profile
   /** Buttons under the name: "แก้ไขโปรไฟล์ + QR" for me; friend actions for others. */
   actions: ReactNode
+  /** Extra sections at the end, e.g. "ของฉัน" on my own tab. */
+  children?: ReactNode
 }
 
 // Profile page body (decisions #36, #44, #45). Same view for me, friends and non-friends;
 // sections appear only when the API sends them (non-friends get less).
-export function ProfileView({ profile, actions }: ProfileViewProps) {
+export function ProfileView({ profile, actions, children }: ProfileViewProps) {
   const { t } = useTranslation()
   const isSelf = profile.relationship === 'self'
   const limited = !isSelf && profile.relationship !== 'friend'
@@ -35,23 +41,26 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
   return (
     <div className="flex flex-col gap-3 pb-6">
       {/* Cover: uploaded photo, or the theme color. */}
-      <div className="mx-4 h-28 overflow-hidden rounded-3xl bg-lilac" aria-hidden="true">
+      <div className="mx-4 h-[132px] overflow-hidden rounded-[28px] bg-lilac/45" aria-hidden="true">
         {profile.coverUrl && <img src={profile.coverUrl} alt="" className="size-full object-cover" />}
       </div>
-      <div className="-mt-12 flex flex-col items-center gap-1 px-4 text-center">
-        <Avatar name={profile.displayName} src={profile.avatarUrl} className="size-20 text-2xl ring-4 ring-background" />
-        <h2 className="mt-1 text-xl font-medium">{profile.displayName}</h2>
+      <div className="-mt-[52px] flex flex-col items-center gap-1 px-4 text-center">
+        <Avatar name={profile.displayName} src={profile.avatarUrl} className="size-24 text-[40px] ring-[5px] ring-background" />
+        <h2 className="mt-1.5 font-heading text-2xl leading-tight font-bold">{profile.displayName}</h2>
         <p className="text-sm text-muted-foreground">@{profile.handle}</p>
         {profile.title &&
           (mainTitle ? (
-            <button type="button" onClick={() => setOpenTitle(mainTitle)} className="pressable flex items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
-              <Award className="size-3.5" aria-hidden="true" />
+            <button type="button" onClick={() => setOpenTitle(mainTitle)} className={cn(TITLE_CHIP, 'pressable')}>
+              <Award className="size-3.5 text-brand" aria-hidden="true" />
               {profile.title}
             </button>
           ) : (
-            <span className="rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">{profile.title}</span>
+            <span className={TITLE_CHIP}>
+              <Award className="size-3.5 text-brand" aria-hidden="true" />
+              {profile.title}
+            </span>
           ))}
-        {profile.bio && <p className="max-w-xs text-sm">{profile.bio}</p>}
+        {profile.bio && <p className="mt-1 max-w-xs text-sm">{profile.bio}</p>}
         {profile.friendsSince && (
           <p className="text-xs text-muted-foreground">
             {t('profile.friendsSince', { date: formatMonthYear(new Date(profile.friendsSince)) })}
@@ -59,10 +68,10 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
         )}
       </div>
 
-      <div className="flex justify-center gap-2 px-4">{actions}</div>
+      <div className="flex justify-center gap-2 px-4 pt-1">{actions}</div>
 
       {profile.stats && (
-        <Card className="mx-4 grid grid-cols-3 divide-x overflow-hidden p-0 text-center">
+        <div className="mx-4 grid grid-cols-3 gap-2.5 text-center">
           {[
             { key: 'friends', value: profile.stats.friends, label: t('profile.stats.friends'), to: isSelf ? '/gangs/friends' : profile.mutualFriends > 0 ? `/u/${profile.userId}/mutual` : null },
             { key: 'gangs', value: profile.stats.gangs, label: t('profile.stats.gangs'), to: isSelf ? '/gangs' : null },
@@ -70,7 +79,7 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
           ].map((s) => {
             const body = (
               <>
-                <span className="block text-lg font-medium tabular-nums">{s.value}</span>
+                <span className="block font-heading text-2xl leading-tight font-bold tabular-nums">{s.value}</span>
                 <span className="flex items-center justify-center gap-0.5 text-xs text-muted-foreground">
                   {s.label}
                   {s.to && <ChevronRight className="size-3" aria-hidden="true" />}
@@ -78,16 +87,16 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
               </>
             )
             return s.to ? (
-              <Link key={s.key} to={s.to} state={SHOW_BACK} className="py-3 active:bg-muted/60">
+              <Link key={s.key} to={s.to} state={SHOW_BACK} className="pressable rounded-[20px] bg-card py-3">
                 {body}
               </Link>
             ) : (
-              <div key={s.key} className="py-3">
+              <div key={s.key} className="rounded-[20px] bg-card py-3">
                 {body}
               </div>
             )
           })}
-        </Card>
+        </div>
       )}
 
       {limited && (
@@ -163,6 +172,8 @@ export function ProfileView({ profile, actions }: ProfileViewProps) {
           </div>
         </section>
       )}
+
+      {children}
 
       <TitleSheet title={openTitle} onClose={() => setOpenTitle(null)} />
     </div>

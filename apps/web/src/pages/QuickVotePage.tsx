@@ -26,7 +26,7 @@ export function QuickVotePage() {
       <PageHeader
         title={t('quickVote.setupTitle')}
         subtitle={session ? undefined : t('quickVote.setupSubtitle')}
-        backTo="/explore"
+        backTo="/plan"
       />
 
       {!session && (
@@ -57,7 +57,7 @@ export function QuickVotePage() {
       )}
 
       {(session?.phase === 'result' || session?.phase === 'decided') && (
-        <ResultView session={session} onNewVote={() => setSession(null)} onDone={() => void navigate('/explore')} />
+        <ResultView session={session} onNewVote={() => setSession(null)} onDone={() => void navigate('/plan')} />
       )}
 
       {session?.phase === 'result' && (

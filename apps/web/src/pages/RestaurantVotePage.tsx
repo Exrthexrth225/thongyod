@@ -69,7 +69,7 @@ export function RestaurantVotePage() {
   if (session && !outcome) {
     return (
       <>
-        <PageHeader title={t('restaurantVote.title')} backTo="/explore" />
+        <PageHeader title={t('restaurantVote.title')} backTo="/plan" />
         {session.phase === 'handoff' ? (
           <HandoffScreen session={session} onNext={() => dispatch({ type: 'next' })} onUndo={() => dispatch({ type: 'undo' })} onCloseNow={() => dispatch({ type: 'closeEarly' })} />
         ) : (
@@ -83,7 +83,7 @@ export function RestaurantVotePage() {
     const name = (i: number) => session.options[i]
     return (
       <>
-        <PageHeader title={t('restaurantVote.title')} backTo="/explore" />
+        <PageHeader title={t('restaurantVote.title')} backTo="/plan" />
         <div className="flex flex-col gap-3 px-4 pb-8">
           {outcome.kind === 'agreed' ? (
             <div className="flex flex-col items-center gap-2 pt-4 text-center">
@@ -144,7 +144,7 @@ export function RestaurantVotePage() {
 
   return (
     <div className="flex flex-col gap-3 pb-28">
-      <PageHeader title={t('restaurantVote.title')} subtitle={t('restaurantVote.subtitle')} backTo="/explore" />
+      <PageHeader title={t('restaurantVote.title')} subtitle={t('restaurantVote.subtitle')} backTo="/plan" />
 
       <section>
         <SectionHeader

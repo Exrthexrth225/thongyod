@@ -24,7 +24,7 @@ export function BillsPage() {
 
   return (
     <>
-      <PageHeader title={t('billSplit.title')} subtitle={t('billSplit.subtitle')} backTo="/explore" />
+      <PageHeader title={t('billSplit.title')} subtitle={t('billSplit.subtitle')} backTo="/plan" />
       <div className="flex flex-col gap-4 px-4 pb-8">
         <Button size="lg" onClick={start}>
           <Plus data-icon="inline-start" />

@@ -6,7 +6,7 @@ import { doneToday, MISSIONS, useDaily, type MissionId } from '@/features/daily/
 import { SHOW_BACK } from '@/lib/nav'
 import { cn } from '@/lib/utils'
 
-const MISSION_TO: Record<MissionId, string> = { fortune: '/fortune', pet: '/pet', tool: '/explore' }
+const MISSION_TO: Record<MissionId, string> = { fortune: '/fortune', pet: '/pet', tool: '/plan' }
 
 // "ภารกิจกับน้อง" (#54): a mint block with the pet, a done/total counter that pops when it changes,
 // and the 3 missions as chips that link to where you do them. Done chips turn dark and draw their tick (#98).

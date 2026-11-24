@@ -1,5 +1,13 @@
 # Backend handoff
 
+## Frontend redesign (#132) — 2026-11-24 — Claude (frontend)
+
+Frontend only, no API change. Tabs are now หน้าหลัก / นัด (`/plan`) / เกม (`/games`) / แก๊ง / ฉัน; `/explore` and `/meetups`
+redirect to `/plan`. Work is on branch `claude/redesign` until Earth approves the merge.
+
+Would help later (not blocking): the gang list on the แก๊ง tab would like each gang's next meetup and an unread count
+(spec §6.1, the gang activity API already on the backlog), and a paged feed for เพื่อนทำอะไรอยู่ (it reads `/home` feed now).
+
 ## Scoped security overrides completed — 2026-11-23
 
 - User approved the additional breaking-version compatibility work. Root overrides now select esbuild 0.28.2 only beneath `@esbuild-kit/core-utils`, and minimatch 11.0.9 only beneath `@ts-morph/common`. This supersedes the pending override proposal below. Drizzle, shadcn and their application-facing contracts keep their existing versions; no application source, UI, database data or schemas changed.

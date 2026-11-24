@@ -1690,6 +1690,7 @@ export const en: Messages = {
     },
   },
   gang: {
+    friendsActivity: 'What friends are up to',
     title: 'Gang',
     memberCount: '{{count}} members',
     members: 'Members · {{count}}',
@@ -1794,6 +1795,15 @@ export const en: Messages = {
     black: 'Black',
     white: 'White',
     gray: 'Gray',
+  },
+  me: {
+    mine: 'Mine',
+    items: {
+      flashcards: { title: 'Flashcards', desc: 'My decks, to review or play guessing games' },
+      fortune: { title: 'My fortune sticks', desc: 'Slips I have drawn' },
+      luckyColor: { title: "Today's lucky colour", desc: 'Just for fun' },
+      restaurants: { title: 'My restaurants', desc: 'Places I added for random picks' },
+    },
   },
   pages: {
     gangs: { title: 'Gangs', placeholder: 'Your gangs will be here (M1)' },

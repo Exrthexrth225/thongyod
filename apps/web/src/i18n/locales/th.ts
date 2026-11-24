@@ -1692,6 +1692,7 @@ export const th = {
     },
   },
   gang: {
+    friendsActivity: 'เพื่อนทำอะไรอยู่',
     title: 'แก๊ง',
     memberCount: 'สมาชิก {{count}} คน',
     members: 'สมาชิก · {{count}}',
@@ -1796,6 +1797,15 @@ export const th = {
     black: 'ดำ',
     white: 'ขาว',
     gray: 'เทา',
+  },
+  me: {
+    mine: 'ของฉัน',
+    items: {
+      flashcards: { title: 'แฟลชการ์ด', desc: 'ชุดคำของฉัน ใช้ทวนหรือเล่นทายคำ' },
+      fortune: { title: 'เซียมซีของฉัน', desc: 'ใบที่เคยเสี่ยง' },
+      luckyColor: { title: 'สีมงคลวันนี้', desc: 'ดูเพื่อความบันเทิง' },
+      restaurants: { title: 'ร้านของฉัน', desc: 'ร้านที่ใส่ไว้ให้สุ่ม' },
+    },
   },
   pages: {
     gangs: { title: 'แก๊ง', placeholder: 'รายชื่อแก๊งจะอยู่ตรงนี้ (M1)' },

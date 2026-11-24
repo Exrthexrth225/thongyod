@@ -23,7 +23,7 @@ export function LoginPage() {
       {options.isPending ? <LoadingState rows={1} /> : options.data?.lineAvailable ? (
         <Button size="lg" onClick={() => window.location.assign('/api/auth/line?returnTo=' + encodeURIComponent(returnTo))}>{t('auth.withLine')}</Button>
       ) : <p role="status" className="text-muted-foreground">{t('auth.unavailable')}</p>}
-      <Link className="min-h-11 py-3 text-center underline underline-offset-4" to="/explore">{t('auth.browse')}</Link>
+      <Link className="min-h-11 py-3 text-center underline underline-offset-4" to="/games">{t('auth.browse')}</Link>
     </main>
   )
 }

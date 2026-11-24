@@ -8,7 +8,7 @@ export function ToolPlaceholderPage({ toolId }: { toolId: ToolId }) {
   const { t } = useTranslation()
   return (
     <>
-      <PageHeader title={t(`tools.${toolId}.title`)} backTo="/explore" />
+      <PageHeader title={t(`tools.${toolId}.title`)} backTo="/plan" />
       <Placeholder text={t('common.underConstruction')} />
     </>
   )

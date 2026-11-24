@@ -42,7 +42,7 @@ export function LuckyColorPage() {
 
   return (
     <div className="flex flex-col gap-3 pb-10">
-      <PageHeader title={t('luckyColor.title')} subtitle={t('luckyColor.disclaimer')} backTo="/explore" />
+      <PageHeader title={t('luckyColor.title')} subtitle={t('luckyColor.disclaimer')} backTo="/me" />
 
       <div className="px-4">
         <SegmentedChoice<Mode>

@@ -33,7 +33,7 @@ export function FlashcardsPage() {
 
   return (
     <div className="flex flex-col gap-3 pb-28">
-      <PageHeader title={t('flashcards.title')} subtitle={t('flashcards.onDevice')} backTo="/explore" />
+      <PageHeader title={t('flashcards.title')} subtitle={t('flashcards.onDevice')} backTo="/me" />
       {decks.length === 0 ? (
         <Card className="mx-4">
           <EmptyState

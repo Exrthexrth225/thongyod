@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/common/EmptyState'
 import { ErrorState } from '@/components/common/ErrorState'
 import { LoadingState } from '@/components/common/LoadingState'
 import { SectionHeader } from '@/components/common/SectionHeader'
+import { SeeAllLink } from '@/components/common/SeeAllLink'
 import { SegmentedChoice } from '@/components/common/SegmentedChoice'
 import { ROUND_BUTTON, TabHeader } from '@/components/layout/TabHeader'
 import { MeetupCard } from '@/components/meetup/MeetupCard'
@@ -127,11 +128,7 @@ export function PlanPage() {
         <section>
           <SectionHeader
             title={t('plan.openBills')}
-            action={
-              <Link to="/bills" className="text-sm text-muted-foreground">
-                {t('common.seeAll')}
-              </Link>
-            }
+            action={<SeeAllLink to="/bills" />}
           />
           <ul className="flex flex-col gap-2 px-4">
             {openBills.map((bill) => (

@@ -3,7 +3,6 @@ import { AppShell } from '@/components/layout/AppShell'
 import { SubPageShell } from '@/components/layout/SubPageShell'
 import { TOOLS } from '@/config/tools'
 import { EditProfilePage } from '@/pages/EditProfilePage'
-import { ExplorePage } from '@/pages/ExplorePage'
 import { AddFriendPage } from '@/pages/AddFriendPage'
 import { BillPage } from '@/pages/BillPage'
 import { BillsPage } from '@/pages/BillsPage'
@@ -66,7 +65,7 @@ import { OnboardingGate } from '@/features/onboarding/OnboardingGate'
 import { LoginPage, SignupPage } from '@/pages/LoginPage'
 
 /** Paths that already have their own page (tabs). */
-const TAB_PATHS = ['/', '/plan', '/games', '/gangs', '/explore', '/pet', '/me']
+const TAB_PATHS = ['/', '/plan', '/games', '/gangs', '/pet', '/me']
 
 // Ready tools without a real page yet get a placeholder.
 // When a tool page is built, add its route above this list and it will be skipped here.
@@ -94,7 +93,7 @@ export const router = createRouter([
           { path: 'friends', element: <FriendsPage /> },
         ],
       },
-      { path: 'explore', element: <ExplorePage /> },
+      { path: 'explore', element: <Navigate to="/plan" replace /> }, // ทำอะไรดี was split into นัด, เกม and ฉัน (#132)
       { path: 'plan', element: <PlanPage /> },
       { path: 'pet', element: <PetPage /> },
       { path: 'me', element: <MePage /> },
