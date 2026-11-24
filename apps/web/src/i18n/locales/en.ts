@@ -15,6 +15,8 @@ export const en: Messages = {
     label: 'Main menu',
     home: 'Home',
     gangs: 'Gangs',
+    plan: 'Plans',
+    games: 'Games',
     explore: 'Explore',
     pet: 'Pet',
     me: 'Me',

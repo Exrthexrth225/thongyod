@@ -15,6 +15,8 @@ export const th = {
     label: 'เมนูหลัก',
     home: 'หน้าหลัก',
     gangs: 'แก๊ง',
+    plan: 'นัด',
+    games: 'เกม',
     explore: 'ทำอะไรดี',
     pet: 'สัตว์เลี้ยง',
     me: 'ฉัน',

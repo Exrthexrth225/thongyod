@@ -1,6 +1,7 @@
 import { Outlet, ScrollRestoration, useLocation } from 'react-router'
 import { BottomNav } from './BottomNav'
 import { PetGrowthToast } from '@/components/pet/PetGrowthToast'
+import { PETS_ENABLED } from '@/config/features'
 
 // Page frame for every tab: content area + fixed bottom tab bar.
 // Content is limited to phone width and centered on larger screens.
@@ -10,7 +11,7 @@ export function AppShell() {
   return (
     <div className="mx-auto min-h-dvh max-w-md bg-background">
       {/* Bottom padding = tab bar height + phone safe area, so content is never hidden. */}
-      <main className="pb-[calc(7.75rem+env(safe-area-inset-bottom))]">
+      <main className="pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
         <div key={pathname}>
           <Outlet />
         </div>
@@ -18,7 +19,7 @@ export function AppShell() {
       <ScrollRestoration />
       </main>
       <BottomNav />
-      <PetGrowthToast />
+      {PETS_ENABLED && <PetGrowthToast />}
     </div>
   )
 }

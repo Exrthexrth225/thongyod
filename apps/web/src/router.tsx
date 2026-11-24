@@ -95,6 +95,8 @@ export const router = createRouter([
         ],
       },
       { path: 'explore', element: <ExplorePage /> },
+      // #132: the นัด tab; its own page comes with the next redesign step.
+      { path: 'plan', element: <MyMeetupsPage /> },
       { path: 'pet', element: <PetPage /> },
       { path: 'me', element: <MePage /> },
     ],

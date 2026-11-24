@@ -16,6 +16,10 @@ import {
   ThumbsUp,
   type LucideIcon,
 } from 'lucide-react'
+import { PETS_ENABLED } from '@/config/features'
+
+const TOOL_ART = import.meta.glob<string>('@/assets/tools/*.webp', { eager: true, import: 'default' })
+const toolArt = (name: string) => TOOL_ART[`/src/assets/tools/${name}.webp`]
 
 export type ToolId =
   | 'createMeetup'
@@ -41,18 +45,23 @@ export type Tool = {
   featured?: boolean
   /** Colour block of its icon (lib/tones tint 1–8, #97). */
   tint: number
+  /** Sticker from image/53-tool-stickers.png (#132); the line icon stays for small places. */
+  art?: string
 }
 
-export const TOOLS: Tool[] = [
-  { id: 'createMeetup', icon: CalendarPlus, group: 'friends', status: 'ready', to: '/meetups/new', featured: true, tint: 3 },
-  { id: 'quickVote', icon: CheckSquare, group: 'friends', status: 'ready', to: '/quick-vote', tint: 5 },
-  { id: 'restaurantVote', icon: ThumbsUp, group: 'friends', status: 'ready', to: '/restaurant-vote', tint: 2 },
-  { id: 'splitBill', icon: Receipt, group: 'friends', status: 'ready', to: '/bills', tint: 1 },
-  { id: 'randomRestaurant', icon: Shuffle, group: 'solo', status: 'ready', to: '/random-restaurant', tint: 2 },
+const ALL_TOOLS: Tool[] = [
+  { id: 'createMeetup', icon: CalendarPlus, group: 'friends', status: 'ready', to: '/meetups/new', featured: true, art: toolArt('invite'), tint: 3 },
+  { id: 'quickVote', icon: CheckSquare, group: 'friends', status: 'ready', to: '/quick-vote', art: toolArt('quickVote'), tint: 5 },
+  { id: 'restaurantVote', icon: ThumbsUp, group: 'friends', status: 'ready', to: '/restaurant-vote', art: toolArt('foodVote'), tint: 2 },
+  { id: 'splitBill', icon: Receipt, group: 'friends', status: 'ready', to: '/bills', art: toolArt('bill'), tint: 1 },
+  { id: 'randomRestaurant', icon: Shuffle, group: 'solo', status: 'ready', to: '/random-restaurant', art: toolArt('randomFood'), tint: 2 },
   { id: 'playPet', icon: PawPrint, group: 'solo', status: 'ready', to: '/pet', tint: 1 },
-  { id: 'luckyColor', icon: Palette, group: 'solo', status: 'ready', to: '/lucky-color', tint: 4 },
-  { id: 'myMeetups', icon: CalendarDays, group: 'solo', status: 'ready', to: '/meetups', tint: 5 },
+  { id: 'luckyColor', icon: Palette, group: 'solo', status: 'ready', to: '/lucky-color', art: toolArt('luckyColor'), tint: 4 },
+  { id: 'myMeetups', icon: CalendarDays, group: 'solo', status: 'ready', to: '/meetups', art: toolArt('noPlans'), tint: 5 },
   { id: 'gradeCalculator', icon: Calculator, group: 'solo', status: 'soon', tint: 3 },
   { id: 'focusTimer', icon: Timer, group: 'solo', status: 'soon', tint: 6 },
-  { id: 'flashcards', icon: Layers, group: 'solo', status: 'ready', to: '/flashcards', tint: 8 },
+  { id: 'flashcards', icon: Layers, group: 'solo', status: 'ready', to: '/flashcards', art: toolArt('flashcards'), tint: 8 },
 ]
+
+/** Every tool the app shows; the pet tile is hidden while PETS_ENABLED is off (#132). */
+export const TOOLS: Tool[] = ALL_TOOLS.filter((tool) => PETS_ENABLED || tool.id !== 'playPet')
