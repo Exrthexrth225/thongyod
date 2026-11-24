@@ -1,21 +1,9 @@
 import { NavLink } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { CalendarDays, Gamepad2, Home, User, Users, type LucideIcon } from 'lucide-react'
 import { useWaitingCount } from '@/features/meetups/useWaiting'
 import { CountBadge } from '@/components/common/CountBadge'
+import { TABS } from '@/config/tabs'
 import { cn } from '@/lib/utils'
-
-type TabKey = 'home' | 'plan' | 'games' | 'gangs' | 'me'
-type Tab = { to: string; key: TabKey; icon: LucideIcon }
-
-// The five jobs of the app (#132): today, plan a meetup, play, the people, me.
-const TABS: Tab[] = [
-  { to: '/', key: 'home', icon: Home },
-  { to: '/plan', key: 'plan', icon: CalendarDays },
-  { to: '/games', key: 'games', icon: Gamepad2 },
-  { to: '/gangs', key: 'gangs', icon: Users },
-  { to: '/me', key: 'me', icon: User },
-]
 
 // Bottom tab bar (#132): a flat full-width bar in the card colour, never floating over content.
 // The current tab sits in a yolk pill; the tab you land on gives a small hop (motion plan #5).
