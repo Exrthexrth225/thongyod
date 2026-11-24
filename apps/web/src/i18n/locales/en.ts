@@ -990,6 +990,12 @@ export const en: Messages = {
     source: 'Calculated with the traditional Thai taksa method, not copied from any fortune teller',
   },
   games: {
+    search: 'Search games',
+    searchClose: 'Close search',
+    searchPlaceholder: 'Game name',
+    noResults: 'No games match',
+    recent: 'Played lately',
+    count: '{{count}} games',
     locked: 'In development',
     lockedSuffix: ' (locked, in development)',
     beta: 'Testing',

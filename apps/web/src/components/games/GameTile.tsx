@@ -6,7 +6,7 @@ import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Button } from '@/components/ui/button'
 import type { Game } from '@/config/games'
 import { SHOW_BACK } from '@/lib/nav'
-import { tintClass } from '@/lib/tones'
+import { softTintClass, tintClass } from '@/lib/tones'
 import { cn } from '@/lib/utils'
 import { HowToPlaySheet } from './HowToPlay'
 
@@ -22,7 +22,8 @@ function gameTags(game: Game): Tag[] {
 // One game card: a full colour block since #97 (was white with a coloured icon, #85), name, one line, players, and a หลายเครื่อง tag
 // when the game can also be played on several phones (the section heading already says เครื่องเดียว / คนเดียว).
 // A game with both ways opens a sheet to choose; "เร็วๆ นี้" games are shown but not tappable.
-export function GameTile({ game, className }: { game: Game; className?: string }) {
+// soft (#132): a pale wash of the game's colour, for the scrolling rows on the เกม tab.
+export function GameTile({ game, className, soft = false }: { game: Game; className?: string; soft?: boolean }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [choose, setChoose] = useState(false)
@@ -66,7 +67,7 @@ export function GameTile({ game, className }: { game: Game; className?: string }
       </span>
     </>
   )
-  const classes = cn('flex min-h-40 flex-col items-start gap-0.5 rounded-3xl p-3.5 text-left', tintClass(game.tint), className)
+  const classes = cn('flex min-h-40 flex-col items-start gap-0.5 rounded-3xl p-3.5 text-left', soft ? softTintClass(game.tint) : tintClass(game.tint), className)
 
   if (game.status === 'soon') {
     return (

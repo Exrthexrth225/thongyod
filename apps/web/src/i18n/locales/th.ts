@@ -992,6 +992,12 @@ export const th = {
     source: 'คำนวณจากหลักทักษาแบบดั้งเดิม ไม่ได้นำตารางของหมอดูท่านใดมา',
   },
   games: {
+    search: 'ค้นหาเกม',
+    searchClose: 'ปิดการค้นหา',
+    searchPlaceholder: 'ชื่อเกม',
+    noResults: 'ไม่เจอเกมที่ตรงกัน',
+    recent: 'เล่นล่าสุด',
+    count: '{{count}} เกม',
     locked: 'กำลังพัฒนา',
     lockedSuffix: ' (ล็อกอยู่ กำลังพัฒนา)',
     beta: 'ช่วงทดสอบ',
