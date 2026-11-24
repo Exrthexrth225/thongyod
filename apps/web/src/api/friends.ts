@@ -48,11 +48,17 @@ export function useMyFriendLink() {
   return useQuery({ queryKey: friendKeys.link, queryFn: () => apiFetch<FriendLink>('/friends/link') })
 }
 
-function useFriendMutation<TVars, TResult>(fn: (vars: TVars) => Promise<TResult>) {
+function useFriendMutation<TVars, TResult>(fn: (vars: TVars) => Promise<TResult>, affectsActivity = false) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: fn,
-    onSettled: () => queryClient.invalidateQueries({ queryKey: friendKeys.all }),
+    onSettled: () => Promise.all([
+      queryClient.invalidateQueries({ queryKey: friendKeys.all }),
+      ...(affectsActivity ? [
+        queryClient.invalidateQueries({ queryKey: ['gangs'] }),
+        queryClient.invalidateQueries({ queryKey: ['feed'] }),
+      ] : []),
+    ]),
   })
 }
 
@@ -87,5 +93,5 @@ export function useUnfriend() {
 }
 
 export function useBlockUser() {
-  return useFriendMutation((userId: string) => apiFetch<void>('/blocks', { method: 'POST', body: JSON.stringify({ userId }) }))
+  return useFriendMutation((userId: string) => apiFetch<void>('/blocks', { method: 'POST', body: JSON.stringify({ userId }) }), true)
 }

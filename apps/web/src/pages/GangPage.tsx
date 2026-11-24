@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Award, CalendarPlus } from 'lucide-react'
 import { ApiError } from '@/api/client'
-import { useGang } from '@/api/gangs'
+import { useOpenGang } from '@/api/gangs'
 import { useMe } from '@/api/profile'
 import { Avatar } from '@/components/common/Avatar'
 import { EmptyState } from '@/components/common/EmptyState'
@@ -33,7 +33,7 @@ const MEMBER_PREVIEW = 10
 export function GangPage() {
   const { t } = useTranslation()
   const { gangId = '' } = useParams()
-  const gang = useGang(gangId)
+  const gang = useOpenGang(gangId)
   const me = useMe()
   const notFound = gang.error instanceof ApiError && gang.error.status === 404
   const g = gang.data

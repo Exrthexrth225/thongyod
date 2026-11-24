@@ -114,7 +114,11 @@ export function useSetMeetupHidden() {
     onError: (_error, _vars, context) => {
       context?.snapshot.forEach(([key, data]) => queryClient.setQueryData(key, data))
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: meetupKeys.all }),
+    onSettled: () => Promise.all([
+      queryClient.invalidateQueries({ queryKey: meetupKeys.all }),
+      queryClient.invalidateQueries({ queryKey: ['gangs'] }),
+      queryClient.invalidateQueries({ queryKey: ['feed'] }),
+    ]),
   })
 }
 
@@ -127,6 +131,7 @@ export function useCreateMeetup() {
     onSuccess: (meetup) => {
       queryClient.setQueryData(meetupKeys.detail(meetup.id), meetup)
       void queryClient.invalidateQueries({ queryKey: meetupKeys.all })
+      void queryClient.invalidateQueries({ queryKey: ['gangs'] })
     },
   })
 }

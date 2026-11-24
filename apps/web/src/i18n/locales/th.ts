@@ -1694,6 +1694,8 @@ export const th = {
   },
   gang: {
     friendsActivity: 'เพื่อนทำอะไรอยู่',
+    nextMeetup: '{{title}} · {{when}}',
+    unreadCount: 'อัปเดตใหม่ {{count}} รายการ',
     title: 'แก๊ง',
     memberCount: 'สมาชิก {{count}} คน',
     members: 'สมาชิก · {{count}}',

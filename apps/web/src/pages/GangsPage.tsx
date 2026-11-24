@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
-import { useHome } from '@/api/home'
+import { Link } from 'react-router'
+import { ChevronRight } from 'lucide-react'
+import { useFeedPreview } from '@/api/feed'
 import { useTranslation } from 'react-i18next'
 import { useGangList } from '@/api/gangs'
 import { EmptyState } from '@/components/common/EmptyState'
 import { ErrorState } from '@/components/common/ErrorState'
 import { LoadingState } from '@/components/common/LoadingState'
 import { InfiniteList } from '@/components/common/InfiniteList'
-import { ListRow } from '@/components/common/ListRow'
+import { Badge } from '@/components/common/Badge'
 import { SearchInput } from '@/components/common/SearchInput'
 import { SectionHeader } from '@/components/common/SectionHeader'
 import { SeeAllLink } from '@/components/common/SeeAllLink'
@@ -14,10 +16,11 @@ import { FeedRow } from '@/components/home/FeedRow'
 import { Card } from '@/components/ui/card'
 import { GangAvatar } from '@/components/gang/GangAvatar'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
+import { formatDayLabel, formatTime } from '@/lib/date'
 
 // Sub-tab "แก๊ง" (inside GangsLayout): my gangs, paged + search (#43). Tap = gang page.
 // Below (#132): "เพื่อนทำอะไรอยู่", the latest friends' updates (moved here from Home).
-// Latest activity / unread dots (spec §6.1) wait for a gang activity API.
+// Activity is server-derived; viewing this list never marks a gang read (#133).
 export function GangsPage() {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
@@ -33,7 +36,23 @@ export function GangsPage() {
         query={list}
         getKey={(g) => g.id}
         renderItem={(g) => (
-          <ListRow leading={<GangAvatar id={g.id} name={g.name} />} title={g.name} subtitle={t('gang.memberCount', { count: g.memberCount })} to={`/gangs/${g.id}`} />
+          <Link to={`/gangs/${g.id}`} className="pressable flex min-h-16 items-center gap-3 py-2.5">
+            <GangAvatar id={g.id} name={g.name} />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[15px] font-semibold">{g.name}</span>
+              <span className="block text-[13px] text-muted-foreground">{t('gang.memberCount', { count: g.memberCount })}</span>
+              <span className="block truncate text-[13px] text-muted-foreground">
+                {g.nextMeetup ? t('gang.nextMeetup', { title: g.nextMeetup.title, when: `${formatDayLabel(new Date(g.nextMeetup.startsAt))} ${formatTime(new Date(g.nextMeetup.startsAt))}` }) : t('gang.noUpcoming')}
+              </span>
+            </span>
+            {g.unreadCount > 0 && (
+              <Badge tone="info">
+                <span className="sr-only">{t('gang.unreadCount', { count: g.unreadCount })}</span>
+                <span aria-hidden="true">{g.unreadCount > 99 ? '99+' : g.unreadCount}</span>
+              </Badge>
+            )}
+            <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          </Link>
         )}
         empty={q === '' ? <EmptyState title={t('gang.empty')} hint={t('gang.emptyHint')} /> : <EmptyState title={t('gang.noMatch', { q })} />}
       />
@@ -42,24 +61,19 @@ export function GangsPage() {
   )
 }
 
-const FEED_SHOWN = 3
-
 function FriendsActivity() {
   const { t } = useTranslation()
   const now = useMemo(() => new Date(), [])
-  const home = useHome()
-  const items = useMemo(
-    () => [...(home.data?.feed ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, FEED_SHOWN),
-    [home.data],
-  )
-  if (home.isSuccess && items.length === 0) return null
+  const feed = useFeedPreview()
+  const items = feed.data?.items ?? []
+  if (feed.isSuccess && items.length === 0) return null
   return (
     <section>
       <SectionHeader title={t('gang.friendsActivity')} action={<SeeAllLink to="/updates" />} />
-      {home.isPending ? (
+      {feed.isPending ? (
         <LoadingState rows={3} />
-      ) : home.isError ? (
-        <ErrorState onRetry={() => void home.refetch()} />
+      ) : feed.isError ? (
+        <ErrorState onRetry={() => void feed.refetch()} />
       ) : (
         <Card className="mx-4 px-4 py-1">
           {items.map((item) => (

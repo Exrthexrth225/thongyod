@@ -1692,6 +1692,8 @@ export const en: Messages = {
   },
   gang: {
     friendsActivity: 'What friends are up to',
+    nextMeetup: '{{title}} · {{when}}',
+    unreadCount: '{{count}} new updates',
     title: 'Gang',
     memberCount: '{{count}} members',
     members: 'Members · {{count}}',
