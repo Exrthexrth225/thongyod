@@ -10,8 +10,8 @@ export interface FriendRequests { incoming: FriendRequest[]; outgoing: FriendReq
 export interface GangSummary { id: string; name: string; memberCount: number }
 export interface CursorPage<T> { items: T[]; nextCursor: string | null }
 
-// DRAFT — not implemented or returned by GET /gangs. See HANDOFF: #132 follow-up contracts.
-export interface DraftGangSummary extends GangSummary {
+// APPROVED — GET /gangs activity contract (DECISIONS #133). GangSummary stays compatible.
+export interface GangActivitySummary extends GangSummary {
   nextMeetup: { id: string; title: string; startsAt: string } | null
   unreadCount: number
   /** Server UTC timestamp; null until this membership has opened the gang. */
@@ -19,13 +19,13 @@ export interface DraftGangSummary extends GangSummary {
   /** Opaque snapshot watermark scoped to this user, gang and membership period. */
   readCursor: string
 }
-export type DraftListGangsResponse = CursorPage<DraftGangSummary>
-/** DRAFT PUT /gangs/:gangId/activity/read, sent only when the gang is opened. */
-export interface DraftReadGangActivityRequest { readThrough: string }
-export interface DraftReadGangActivityResponse { lastOpenedAt: string; readThrough: string }
-export interface DraftGangActivityErrorResponse {
+export type ListGangsResponse = CursorPage<GangActivitySummary>
+/** PUT /gangs/:gangId/activity/read, sent only when the gang is opened. */
+export interface ReadGangActivityRequest { readThrough: string }
+export interface ReadGangActivityResponse { lastOpenedAt: string; readThrough: string }
+export interface GangActivityErrorResponse {
   error: { code: 'INVALID_REQUEST' | 'UNAUTHENTICATED' | 'AUTH_UNAVAILABLE'
-    | 'ORIGIN_NOT_ALLOWED' | 'GANG_NOT_FOUND' | 'ACTIVITY_UNAVAILABLE' }
+    | 'ORIGIN_NOT_ALLOWED' | 'GANG_NOT_FOUND' | 'ACTIVITY_UNAVAILABLE' | 'SOCIAL_UNAVAILABLE' }
 }
 export interface BlockUserRequest { userId: string }
 export interface SendFriendRequest { userId: string }
@@ -34,3 +34,10 @@ export interface SocialMutationErrorResponse {
     | 'USER_NOT_FOUND' | 'REQUEST_NOT_FOUND' | 'NOT_FRIENDS' | 'SOCIAL_UNAVAILABLE'
     | 'CANNOT_ADD_SELF' | 'ALREADY_FRIENDS' | 'REQUEST_EXISTS' | 'DAILY_LIMIT_REACHED' | 'LINK_INVALID' | 'LINK_ROTATION_REQUIRED' }
 }
+
+// Deprecated draft names remain type-only aliases for existing consumers.
+export type DraftGangSummary = GangActivitySummary
+export type DraftListGangsResponse = ListGangsResponse
+export type DraftReadGangActivityRequest = ReadGangActivityRequest
+export type DraftReadGangActivityResponse = ReadGangActivityResponse
+export type DraftGangActivityErrorResponse = GangActivityErrorResponse
