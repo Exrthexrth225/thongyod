@@ -1,5 +1,13 @@
 # Backend handoff
 
+## Games tab footer and contextual back — 2026-11-25
+
+Earth approved the frontend navigation fix. Merged `origin/main` (`e9431f7`): retain its centralized tab registry, separate routes module and five tab-layout regression tests. Resolved the router conflict by keeping the new structure and moving our query-preserving legacy redirects into `routes.tsx`; the previous frontend/backend work remains intact.
+
+`TabHeader` now honors the existing `SHOW_BACK` navigation state, like `PageHeader`. Home's All games and Login's browse link pass this state; the first-run game link already did. Footer links leave state empty, including when tapping the current Games tab, so they keep the five-tab footer and hide the extra back button. Non-footer entries keep both footer and back; back restores the previous page, or Home when no app history exists. Individual game screens retain their existing full-screen layout. `SeeAllLink` accepts optional `linkState`; existing callers retain their behavior.
+
+Verified: frontend lint; 297 tests in 52 files in both Asia/Bangkok and UTC; all 24 API tests with no skips and development/production API builds; normal web and Pages-style mock builds. Headless Chromium at 390x844 tested both browser and hash routers: footer entry, Home All games, first-run entry, switching back to the footer, Login entry, reload, keyboard activation, 44px back target, history fallback and full-screen Dice. Legacy `/meetups?view=past` still redirects with its query intact. No JavaScript errors; the built demo made no real API requests. No backend, migration, workflow or dependency changes in this follow-up. Existing bundle-size/Node localStorage warnings remain; physical-device testing and live deployment were not run.
+
 ## Gang activity frontend integration — 2026-11-24
 
 Earth approved Codex completing the frontend/mocks after backend #133; this supersedes the earlier Claude-only integration handoff for this round. No backend, migration, dependency or money rule is changed here.
