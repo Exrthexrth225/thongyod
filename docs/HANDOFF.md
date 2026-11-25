@@ -1,5 +1,17 @@
 # Backend handoff
 
+## Flashcard file I/O logic — 2026-11-25
+
+Earth approved logic-only CSV/XLSX import/export on `codex/flashcards-io`. No screen, component, stylesheet, API, schema or storage format changes. `fileIO.ts` exports `parseDeckFile(file: File)` returning `{title,cards,skipped,errors}`, `exportDeckCsv(deck): Blob`, `exportDeckXlsx(deck): Promise<Blob>`, `templateCsv(): Blob`, and `templateXlsx(): Promise<Blob>`. Export input needs only a `cards` array with front/back strings. Callers handle saving/downloading later; importing does not mutate device storage.
+
+CSV accepts UTF-8 with/without BOM, comma/tab delimiters, escaped quotes and multiline quoted fields. The first nonblank row must contain exactly two headers: front/back or หน้า/หลัง, in either order (English case-insensitive). Blank rows are ignored. XLSX reads only the first worksheet as cell text, without evaluating formulas. Deck title comes from the filename without extension, trimmed to TITLE_MAX. Cards use existing makeCard/randomId and FRONT_MAX=80, BACK_MAX=200, CARDS_MAX=300. Errors contain physical source row numbers (0 for file-level failure) and codes INVALID_FILE, INVALID_HEADER, INVALID_ROW, TRUNCATED or LIMIT. Truncated cards are retained; skipped counts nonblank rejected data rows. Exports use Thai headers; CSV includes a UTF-8 BOM and quotes every field. Both templates contain two Thai example cards.
+
+ExcelJS 4.4.0 (MIT) is loaded only through dynamic import; no legacy npm xlsx package. References checked before implementation: https://github.com/exceljs/exceljs/blob/master/LICENSE and https://github.com/exceljs/exceljs/blob/master/README.md (browser workbook, XLSX load/writeBuffer). This module is intentionally not wired into pages yet, so normal application builds do not include it until consumed.
+
+Verification: 12 new file-I/O tests passed; frontend lint passed; all 309 frontend tests in 53 files passed in Asia/Bangkok and UTC; normal and Pages-style mock web builds passed. Cases include BOM, reversed headers, tabs, quoted multiline fields, physical error rows, Unicode truncation, excess cards, malformed/unsupported files, first-sheet-only XLSX, templates and CSV/XLSX round trips. API checks, browser smoke and physical-device checks: Not run (logic-only change).
+
+Known dependency issue: npm audit --omit=dev reports two moderate entries (exceljs via uuid, and uuid itself), GHSA-w5hq-g745-h8pq, concerning uuid v3/v5/v6 calls with a supplied output buffer. No automatic downgrade/override was applied. Existing web bundle-size and Node localStorage warnings remain.
+
 ## Games tab footer and contextual back — 2026-11-25
 
 Earth approved the frontend navigation fix. Merged `origin/main` (`e9431f7`): retain its centralized tab registry, separate routes module and five tab-layout regression tests. Resolved the router conflict by keeping the new structure and moving our query-preserving legacy redirects into `routes.tsx`; the previous frontend/backend work remains intact.
