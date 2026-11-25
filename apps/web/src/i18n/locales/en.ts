@@ -2,6 +2,17 @@ import type { Messages } from './th'
 
 // English UI text. Must have exactly the same keys as th.ts.
 export const en: Messages = {
+  guestAuth: {
+    title: 'Join the games', name: 'Nickname',
+    hint: 'Use 2–20 Thai or English characters',
+    scope: 'Guests can only use game rooms. Return within 3 hours using the same browser.',
+    play: 'Play as Guest', entering: 'Joining…',
+    failed: 'Could not join. Check your connection and try again.',
+    playingAs: 'Guest: {{name}}', continue: 'Return to game rooms',
+    logout: 'Log out', loggingOut: 'Logging out…',
+    logoutFailed: 'Could not log out. Please try again.',
+    lineUnavailable: 'LINE login is unavailable. Try again later, or play as a Guest below.',
+  },
   auth: {
     login: 'Log in', intro: 'Meet friends, make plans, and play together.', withLine: 'Continue with LINE',
     loginFailed: 'LINE login did not finish. Please try again.', unavailable: 'Login is not ready yet. Please try again later.', browse: 'Explore tools',

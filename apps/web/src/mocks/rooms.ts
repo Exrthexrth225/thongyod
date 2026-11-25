@@ -9,7 +9,7 @@ import { START_FINGERS, allVoted, foldFingers, tally, validVote, type PartyGame 
 import { dealSpy, maxSpies } from '@/features/spy/logic'
 import { spyPool } from '@/features/spy/settings'
 import { secureRandomInt, shuffle } from '@/lib/random'
-import { ME, person } from './db'
+import { mockPlayerId as ME, mockRoomPerson as person } from './auth'
 
 export const MAX_PLAYERS = 12
 const ROOM_TTL_MS = 3 * 3_600_000
@@ -278,3 +278,17 @@ function seed(code: string, game: RoomGame) {
 }
 seed('482913', 'spy')
 seed('305117', 'mostLikely')
+
+/** Exit all rooms when the demo identity logs out. No real backend is contacted. */
+export function logoutPlayer(id: string): void {
+  for (const r of rooms.values()) {
+    r.playerIds = r.playerIds.filter((player) => player !== id)
+    if (r.hostId === id) r.hostId = r.playerIds[0] ?? ''
+    if (r.party.round && !r.party.round.shown) {
+      r.party.round.votes.delete(id)
+      for (const [voter, choice] of r.party.round.votes) if (choice === id) r.party.round.votes.delete(voter)
+    }
+    if (r.party.fingers) delete r.party.fingers[id]
+    if (!r.playerIds.length) rooms.delete(r.code)
+  }
+}

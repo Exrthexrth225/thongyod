@@ -1,6 +1,7 @@
 // Game rooms: each friend plays on their own phone (PROVISIONAL contract, DECISIONS #76, docs/HANDOFF.md).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiFetch } from './client'
+import { apiFetch, ApiError } from './client'
+import { identityKey } from './auth'
 import type { PartyRoomSettings, Room, RoomGame, SpyRoomSettings } from './types'
 
 export const roomKeys = { room: (code: string) => ['rooms', code] as const }
@@ -18,12 +19,16 @@ export function roomCodeFrom(text: string): string | null {
 
 /** One room, refreshed every 1.5 s while the screen is open (until real-time push exists). */
 export function useRoom(code: string) {
+  const client = useQueryClient()
   return useQuery({
     queryKey: roomKeys.room(code),
-    queryFn: () => apiFetch<Room>(`/rooms/${code}`),
+    queryFn: async () => {
+      try { return await apiFetch<Room>(`/rooms/${code}`, {}, false) }
+      catch (error) { if (error instanceof ApiError && error.status === 401) void client.invalidateQueries({ queryKey: identityKey }); throw error }
+    },
     enabled: isRoomCode(code),
     refetchInterval: 1500,
-    retry: (count, error) => count < 2 && !(error instanceof Error && 'status' in error && (error as { status: number }).status === 404),
+    retry: (count, error) => count < 2 && !(error instanceof Error && 'status' in error && [401, 404].includes((error as { status: number }).status)),
   })
 }
 
@@ -32,15 +37,18 @@ function useRoomAction<V = void>(code: string, path: (v: V) => { url: string; bo
   return useMutation({
     mutationFn: (v: V) => {
       const { url, body, method = 'POST' } = path(v)
-      return apiFetch<Room>(url, { method, body: body === undefined ? undefined : JSON.stringify(body) })
+      return apiFetch<Room>(url, { method, body: body === undefined ? undefined : JSON.stringify(body) }, false)
     },
     onSuccess: (room) => client.setQueryData(roomKeys.room(code), room),
+    onError: (error) => { if (error instanceof ApiError && error.status === 401) void client.invalidateQueries({ queryKey: identityKey }) },
   })
 }
 
 export function useCreateRoom() {
+  const client = useQueryClient()
   return useMutation({
-    mutationFn: (body: { game: RoomGame; settings: Partial<SpyRoomSettings> | Partial<PartyRoomSettings> }) => apiFetch<Room>('/rooms', { method: 'POST', body: JSON.stringify(body) }),
+    mutationFn: (body: { game: RoomGame; settings: Partial<SpyRoomSettings> | Partial<PartyRoomSettings> }) => apiFetch<Room>('/rooms', { method: 'POST', body: JSON.stringify(body) }, false),
+    onError: (error) => { if (error instanceof ApiError && error.status === 401) void client.invalidateQueries({ queryKey: identityKey }) },
   })
 }
 

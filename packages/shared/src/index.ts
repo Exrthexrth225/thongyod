@@ -13,6 +13,8 @@ export type {
 } from './social.js'
 export type {
   Me,
+  RoomIdentity,
+  CreateRoomGuestRequest,
   UpdateMeRequest,
   UpdateMeResponse,
   UpdateMeErrorResponse,

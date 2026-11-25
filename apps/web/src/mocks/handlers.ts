@@ -9,6 +9,7 @@ import * as friends from './friends'
 import * as notifications from './notifications'
 import * as profiles from './profiles'
 import * as rooms from './rooms'
+import { mockIdentity, mockGuest, mockLogout } from './auth'
 
 const RESPONSES: MeetupResponse[] = ['going', 'maybe', 'not_going']
 const LATENCY_MS = 300 // small delay so loading states are visible during development
@@ -53,6 +54,27 @@ function replyActivity<T extends object>(work: () => T) {
 }
 
 export const handlers = [
+  http.all('/api/*', ({ request }) => {
+    const path = new URL(request.url).pathname
+    if (path.startsWith('/api/auth/')) return
+    const identity = mockIdentity()
+    if (identity.kind === 'anonymous' || (identity.kind === 'guest' && !path.startsWith('/api/rooms'))) return errorBody(401, 'UNAUTHENTICATED')
+    if (identity.kind === 'guest' && path.endsWith('/invite')) return errorBody(403, 'GUEST_FORBIDDEN')
+  }),
+  http.get('/api/auth/room-identity', () => HttpResponse.json(mockIdentity())),
+  http.get('/api/auth/options', () => HttpResponse.json({ lineAvailable: false })),
+  http.post('/api/auth/room-guest', async ({ request }) => {
+    if (mockIdentity().kind === 'account') return errorBody(409, 'ACCOUNT_SESSION_ACTIVE')
+    const identity = mockGuest(await request.json().catch(() => null))
+    return identity ? HttpResponse.json(identity) : invalid('displayName')
+  }),
+  http.post('/api/auth/logout', () => {
+    const id = mockIdentity().playerId
+    if (id) rooms.logoutPlayer(id)
+    mockLogout()
+    return new HttpResponse(null, { status: 204 })
+  }),
+
   http.get('/api/home', async () => {
     await delay(LATENCY_MS)
     return HttpResponse.json(getHome())

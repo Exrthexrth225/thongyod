@@ -1,3 +1,4 @@
+import { useRoomIdentity } from '@/api/auth'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Copy, QrCode, Send, Share2, UserPlus } from 'lucide-react'
@@ -11,6 +12,7 @@ import { roomUrl } from './url'
 // Every way to bring friends in: big room code, QR, share/copy link, invite from my friends list.
 export function RoomShare({ code, exclude }: { code: string; exclude: string[] }) {
   const { t } = useTranslation()
+  const account = useRoomIdentity().data?.kind === 'account'
   const [qr, setQr] = useState(false)
   const [invite, setInvite] = useState(false)
   const url = roomUrl(code)
@@ -54,11 +56,11 @@ export function RoomShare({ code, exclude }: { code: string; exclude: string[] }
           </span>
         ))}
       </div>
-      <div className="grid grid-cols-3 gap-2">
-        <Button variant="outline" className="h-16 flex-col gap-1" onClick={() => setInvite(true)}>
+      <div className={account ? 'grid grid-cols-3 gap-2' : 'grid grid-cols-2 gap-2'}>
+        {account && <Button variant="outline" className="h-16 flex-col gap-1" onClick={() => setInvite(true)}>
           <UserPlus />
           <span className="text-xs">{t('rooms.fromFriends')}</span>
-        </Button>
+        </Button>}
         <Button variant="outline" className="h-16 flex-col gap-1" onClick={() => setQr(true)}>
           <QrCode />
           <span className="text-xs">{t('rooms.showQr')}</span>
@@ -74,7 +76,7 @@ export function RoomShare({ code, exclude }: { code: string; exclude: string[] }
           <span className="text-2xl font-medium tracking-widest tabular-nums">{code}</span>
         </DialogContent>
       </Dialog>
-      <InviteFriendsSheet code={code} open={invite} onOpenChange={setInvite} exclude={exclude} />
+      {account && <InviteFriendsSheet code={code} open={invite} onOpenChange={setInvite} exclude={exclude} />}
     </section>
   )
 }

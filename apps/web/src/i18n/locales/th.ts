@@ -2,6 +2,17 @@
 // Rule: never write UI text directly in components; add a key here and use t('key').
 // en.ts must have exactly the same keys (TypeScript checks this).
 export const th = {
+  guestAuth: {
+    title: 'เข้าเล่นห้องเกม', name: 'ชื่อเล่น',
+    hint: 'ใช้ชื่อภาษาไทยหรืออังกฤษ 2–20 ตัวอักษร',
+    scope: 'Guest ใช้ได้เฉพาะห้องเกม กลับมาเล่นต่อได้ภายใน 3 ชั่วโมงในเบราว์เซอร์เดิม',
+    play: 'เล่นแบบ Guest', entering: 'กำลังเข้าเล่น…',
+    failed: 'เข้าเล่นไม่สำเร็จ ตรวจการเชื่อมต่อแล้วลองอีกครั้ง',
+    playingAs: 'Guest: {{name}}', continue: 'กลับไปห้องเกม',
+    logout: 'ออกจากระบบ', loggingOut: 'กำลังออกจากระบบ…',
+    logoutFailed: 'ออกจากระบบไม่สำเร็จ ลองอีกครั้ง',
+    lineUnavailable: 'เข้าสู่ระบบด้วย LINE ยังไม่พร้อม ลองอีกครั้งภายหลัง หรือเล่นแบบ Guest ได้ด้านล่าง',
+  },
   auth: {
     login: 'เข้าสู่ระบบ', intro: 'เจอเพื่อน นัดเจอ แล้วมาเล่นด้วยกัน', withLine: 'เข้าสู่ระบบด้วย LINE',
     loginFailed: 'เข้าสู่ระบบด้วย LINE ไม่สำเร็จ ลองอีกครั้งได้เลย', unavailable: 'ระบบเข้าสู่ระบบยังไม่พร้อม กรุณาลองใหม่ภายหลัง', browse: 'ดูเครื่องมือที่ใช้ได้',

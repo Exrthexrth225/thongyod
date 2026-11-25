@@ -1,3 +1,4 @@
+import { RoomAccess } from '@/features/rooms/RoomAccess'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -14,6 +15,10 @@ import { cn } from '@/lib/utils'
 
 // /games/rooms — "เล่นหลายเครื่อง": create a room for a game, or join a friend's by code, QR or link (DECISIONS #76).
 export function RoomsPage() {
+  return <RoomAccess><RoomsPageContent /></RoomAccess>
+}
+
+function RoomsPageContent() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [code, setCode] = useState('')

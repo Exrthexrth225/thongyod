@@ -16,7 +16,7 @@ export class ApiError extends Error {
 
 let redirectingToLogin = false
 
-export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+export async function apiFetch<T>(path: string, init: RequestInit = {}, redirectOnUnauthorized = true): Promise<T> {
   const options: RequestInit = {
     ...init,
     // JSON bodies get a JSON content type. FormData (file upload) must set its own boundary.
@@ -34,7 +34,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     } catch {
       // Body is not JSON; keep code undefined.
     }
-    if (response.status === 401 && import.meta.env.PROD && import.meta.env.VITE_DEPLOY_MOCKS !== 'true'
+    if (response.status === 401 && redirectOnUnauthorized && import.meta.env.PROD && import.meta.env.VITE_DEPLOY_MOCKS !== 'true'
       && !path.startsWith('/auth/') && !redirectingToLogin && window.location.pathname !== '/login' && window.location.pathname !== '/signup'
       && typeof window.location.assign === 'function') {
       redirectingToLogin = true
