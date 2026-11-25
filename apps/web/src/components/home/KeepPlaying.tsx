@@ -6,6 +6,7 @@ import { GAMES, isPlayable, type Game } from '@/config/games'
 import { recentStore } from '@/features/games/library'
 import { softTintClass } from '@/lib/tones'
 import { cn } from '@/lib/utils'
+import { SHOW_BACK } from '@/lib/nav'
 
 /** Shown until the user has played three games of their own. */
 const STARTERS = ['fatCat', 'headsUp', 'spy']
@@ -21,7 +22,7 @@ export function KeepPlaying() {
     .slice(0, 3)
   return (
     <section>
-      <SectionHeader title={t('home.keepPlaying')} action={<SeeAllLink to="/games" label={t('home.allGames')} />} />
+      <SectionHeader title={t('home.keepPlaying')} action={<SeeAllLink to="/games" label={t('home.allGames')} linkState={SHOW_BACK} />} />
       <div className="grid grid-cols-3 gap-2.5 px-4">
         {games.map((game) => (
           <Link key={game.id} to={game.to} className={cn('pressable flex flex-col items-center gap-1 rounded-[20px] px-2 py-3 text-center', softTintClass(game.tint))}>

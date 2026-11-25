@@ -3,7 +3,8 @@
 import { delay } from 'msw'
 import { http, HttpResponse } from 'msw/http'
 import type { MeetupResponse } from '@thongyod/shared'
-import { createMeetup, getHome, getMeetup, listMeetups, listMyGangs, ME, setHidden, setResponse, type MutationResult, type Visibility } from './db'
+import { createMeetup, getHome, getMeetup, listMeetups, ME, setHidden, setResponse, type MutationResult, type Visibility } from './db'
+import { activity, MockActivityError } from './activity'
 import * as friends from './friends'
 import * as notifications from './notifications'
 import * as profiles from './profiles'
@@ -43,10 +44,23 @@ function listLimit(url: URL): number | null {
 
 const invalid = (field: string) => HttpResponse.json({ error: { code: 'INVALID_REQUEST', field } }, { status: 400 })
 
+function replyActivity<T extends object>(work: () => T) {
+  try { return HttpResponse.json(work()) }
+  catch (error) {
+    if (error instanceof MockActivityError) return errorBody(error.status,error.code)
+    throw error
+  }
+}
+
 export const handlers = [
   http.get('/api/home', async () => {
     await delay(LATENCY_MS)
     return HttpResponse.json(getHome())
+  }),
+
+  http.get('/api/feed', async ({ request }) => {
+    await delay(LATENCY_MS)
+    return replyActivity(() => activity.feed(new URL(request.url).searchParams))
   }),
 
   http.get('/api/meetups', async ({ request }) => {
@@ -114,7 +128,13 @@ export const handlers = [
     const url = new URL(request.url)
     const limit = listLimit(url)
     if (limit === null) return invalid('limit')
-    return HttpResponse.json(friends.page(listMyGangs(url.searchParams.get('q') ?? ''), url.searchParams.get('cursor'), limit))
+    return HttpResponse.json(friends.page(activity.listGangs(url.searchParams.get('q') ?? ''), url.searchParams.get('cursor'), limit))
+  }),
+
+  http.put('/api/gangs/:id/activity/read', async ({ request, params }) => {
+    await delay(LATENCY_MS)
+    const body: unknown = await request.json().catch(() => null)
+    return replyActivity(() => activity.read(String(params.id),body))
   }),
 
   http.get('/api/gangs/:id', async ({ params }) => {

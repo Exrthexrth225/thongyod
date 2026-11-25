@@ -264,6 +264,13 @@ export function listMyGangs(q = '') {
     .map((g) => ({ id: g.id, name: g.name, memberCount: g.memberIds.length }))
 }
 
+/** Raw mock activity source; the activity adapter applies viewer/block/read policies. */
+export function activityMeetups() {
+  return meetups.map(m => ({ id: m.id, gangId: m.gangId, title: m.title,
+    startsAt: m.startsAt.toISOString(), createdAt: m.createdAt.toISOString(), createdBy: m.createdBy,
+    actorName: person(m.createdBy).displayName, hidden: answerOf(m, ME).hidden }))
+}
+
 /** Gangs both I and `otherId` are in (#44: never reveal other gangs). */
 export function sharedGangs(otherId: string) {
   return gangs.filter((g) => g.memberIds.includes(ME) && g.memberIds.includes(otherId)).map((g) => ({ id: g.id, name: g.name }))

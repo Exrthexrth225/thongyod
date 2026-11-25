@@ -34,7 +34,7 @@ function areaOf(path: string): MockArea | null {
   if (path.startsWith('/api/users/')) return 'profiles'
   if (path === '/api/gangs' || path.startsWith('/api/gangs/')) return 'gangs'
   if (path === '/api/meetups' || path.startsWith('/api/meetups/')) return 'meetups'
-  if (path === '/api/home') return 'home'
+  if (path === '/api/home' || path === '/api/feed') return 'home'
   if (path === '/api/notifications' || path.startsWith('/api/notifications/')) return 'notifications'
   if (path === '/api/rooms' || path.startsWith('/api/rooms/')) return 'rooms'
   return null
@@ -83,6 +83,9 @@ function mockApi(): Plugin {
           response.headers.forEach((value, key) => res.setHeader(key, value))
           res.end(Buffer.from(await response.arrayBuffer()))
         } catch (error) {
+          // Query cancellation/React StrictMode may close the request while its body is read.
+          // A disconnected browser is not a Vite server error or an HMR overlay.
+          if (req.aborted) return
           next(error)
         }
       })

@@ -7,14 +7,14 @@ import { Pet } from '@/components/pet/Pet'
 import type { PetSpeciesId } from '@/components/pet/species'
 import { Button } from '@/components/ui/button'
 import { GAMES, isPlayable } from '@/config/games'
+import { PETS_ENABLED } from '@/config/features'
 import { finishOnboarding, getMyPet, saveMyPet } from '@/features/onboarding/storage'
 import { secureRandomInt } from '@/lib/random'
 import { tintClass } from '@/lib/tones'
 import { cn } from '@/lib/utils'
 
-// First launch (DECISIONS #46/#47, #95): what you can do here → hatch your pet. The swipe is taught on the first
-// real invite deck (hint, #94) and the theme lives in Settings, so a new user is in the app in two screens.
-const STEPS = 2
+// First launch: introduce the app, then hatch a pet only while that feature is enabled (#132).
+const STEPS = PETS_ENABLED ? 2 : 1
 const EGGS: { style: EggStyle; species: PetSpeciesId | null }[] = [
   { style: 'fire', species: 'dragon' },
   { style: 'sleepy', species: 'fish' },
@@ -27,7 +27,7 @@ export function WelcomePage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   // /welcome?step=egg opens the egg screen directly (from the pet tab when no pet hatched yet).
-  const [step, setStep] = useState(params.get('step') === 'egg' ? STEPS - 1 : 0)
+  const [step, setStep] = useState(PETS_ENABLED && params.get('step') === 'egg' ? STEPS - 1 : 0)
 
   function done() {
     finishOnboarding()
@@ -48,14 +48,14 @@ export function WelcomePage() {
           </Button>
         ) : (
           <Button variant="ghost" size="sm" onClick={done}>
-            {t('welcome.later')}
+            {t(PETS_ENABLED ? 'welcome.later' : 'welcome.skip')}
           </Button>
         )}
       </div>
 
       <div className="flex flex-1 flex-col justify-center gap-6">
-        {step === 0 && <Intro onNext={() => setStep(1)} />}
-        {step === 1 && <Hatch onDone={done} />}
+        {step === 0 && <Intro onNext={PETS_ENABLED ? () => setStep(1) : done} />}
+        {PETS_ENABLED && step === 1 && <Hatch onDone={done} />}
       </div>
     </div>
   )
@@ -72,16 +72,18 @@ function Intro({ onNext }: { onNext: () => void }) {
   const games = GAMES.filter(isPlayable).length
   return (
     <>
-      <div className="flex items-end justify-center gap-2">
-        <Pet species="dragon" size={140} />
-        <Pet species="fish" size={115} />
-      </div>
+      {PETS_ENABLED && (
+        <div className="flex items-end justify-center gap-2">
+          <Pet species="dragon" size={140} />
+          <Pet species="fish" size={115} />
+        </div>
+      )}
       <div className="text-center">
         <h1 className="text-2xl font-medium">{t('welcome.introTitle')}</h1>
         <p className="mt-1 text-balance text-muted-foreground">{t('welcome.introText')}</p>
       </div>
       <ul className="grid gap-3">
-        {POINTS.map((point) => (
+        {POINTS.filter((point) => PETS_ENABLED || point.key !== 'pet').map((point) => (
           <li key={point.key} className="flex items-center gap-3">
             <span className={cn('grid size-11 shrink-0 place-items-center rounded-xl', tintClass(point.tint))}>
               <point.icon className="size-6" aria-hidden="true" />
@@ -94,7 +96,7 @@ function Intro({ onNext }: { onNext: () => void }) {
         ))}
       </ul>
       <Button size="lg" onClick={onNext}>
-        {t('welcome.start')}
+        {t(PETS_ENABLED ? 'welcome.start' : 'welcome.finish')}
       </Button>
     </>
   )

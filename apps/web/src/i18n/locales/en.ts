@@ -115,6 +115,7 @@ export const en: Messages = {
     waitingHeading: 'Waiting for you',
     hello: 'Hi {{name}}',
     oneByOne: 'One by one',
+    otherPending: 'Other tasks ({{count}})',
     invitedBy: '{{name}} invited you · {{when}}',
     doNow: 'Do it now',
     keepPlaying: 'Keep playing',
@@ -1691,6 +1692,8 @@ export const en: Messages = {
   },
   gang: {
     friendsActivity: 'What friends are up to',
+    nextMeetup: '{{title}} · {{when}}',
+    unreadCount: '{{count}} new updates',
     title: 'Gang',
     memberCount: '{{count}} members',
     members: 'Members · {{count}}',

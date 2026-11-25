@@ -1,8 +1,9 @@
 import { BadRequestException, ConflictException, HttpException, HttpStatus, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common'
 import { randomUUID } from 'node:crypto'
 import type { PoolClient } from 'pg'
-import type { CursorPage, Friend, FriendRequest, FriendRequests, GangSummary, PersonCard, UserCard } from '@thongyod/shared'
+import type { CursorPage, Friend, FriendRequest, FriendRequests, GangActivitySummary, PersonCard, UserCard } from '@thongyod/shared'
 import { DatabaseService } from '../db/database.service.js'
+import { activityContext, activityToken, exactTime, visibleActivity } from './activity-cursor.js'
 
 const edges = `WITH edges AS (
   SELECT requester_id AS a, recipient_id AS b FROM friendships WHERE status='accepted'
@@ -210,14 +211,37 @@ export class SocialService {
     return page(rows, p, u => [u.displayName,u.userId])
   }
 
-  async gangs(viewer: string, query: Query): Promise<CursorPage<GangSummary>> {
+  async gangs(viewer: string, query: Query): Promise<CursorPage<GangActivitySummary>> {
     const p = pagination(query, `gangs:${viewer}`)
-    const rows = await this.rows<GangSummary & Record<string, unknown>>(`SELECT s.gang_id AS id,s.name,
+    const client = await this.database.connection.connect().catch(() => { throw new ServiceUnavailableException({ error: { code: 'SOCIAL_UNAVAILABLE' } }) })
+    try {
+      await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY')
+      const context = await activityContext(client)
+      const rows = await this.rows<Omit<GangActivitySummary, 'readCursor'> & { membership: string } & Record<string, unknown>>(`SELECT s.gang_id AS id,s.name,mine.id AS membership,
         (SELECT count(*)::int FROM gang_members members WHERE members.gang_id=s.gang_id AND members.left_at IS NULL) AS "memberCount"
+        ,reads.last_opened_at AS "lastOpenedAt",
+        (SELECT json_build_object('id',m.id,'title',m.title,'startsAt',${exactTime('m.starts_at')}) FROM meetups m
+          WHERE m.gang_id=s.gang_id AND m.starts_at>=now()
+          AND NOT EXISTS(SELECT 1 FROM meetup_responses r WHERE r.meetup_id=m.id AND r.user_id=$1 AND r.hidden_at IS NOT NULL)
+          AND NOT EXISTS(SELECT 1 FROM user_blocks b WHERE (b.blocker_id=$1 AND b.blocked_id=m.created_by) OR (b.blocked_id=$1 AND b.blocker_id=m.created_by))
+          ORDER BY m.starts_at,m.id LIMIT 1) AS "nextMeetup",
+        (SELECT count(*)::int FROM meetups m WHERE m.gang_id=s.gang_id
+          AND m.created_at>=greatest(epoch.started_at,mine.joined_at) AND ${visibleActivity}
+          AND (reads.membership_id IS NULL OR NOT txid_visible_in_snapshot(m.activity_txid,reads.read_snapshot::txid_snapshot))) AS "unreadCount"
       FROM gang_settings s JOIN gang_members mine ON mine.gang_id=s.gang_id AND mine.user_id=$1 AND mine.left_at IS NULL
+      CROSS JOIN activity_epoch epoch LEFT JOIN gang_activity_reads reads ON reads.membership_id=mine.id
       WHERE strpos(lower(s.name),$2)>0
         AND ($3::text IS NULL OR (s.name COLLATE "C",s.gang_id)>($3::text COLLATE "C",$4::uuid))
-      ORDER BY s.name COLLATE "C",s.gang_id LIMIT $5`, [viewer,p.q,p.name,p.id,p.limit+1])
-    return page(rows, p, g => [g.name,g.id])
+      ORDER BY s.name COLLATE "C",s.gang_id LIMIT $5`, [viewer,p.q,p.name,p.id,p.limit+1], client)
+      const result = page(rows.map(({ membership, ...g }) => ({ ...g,
+        readCursor: activityToken(context.key, ['gang-read',viewer,g.id,membership,context.snapshot,context.at]),
+      })), p, g => [g.name,g.id])
+      await client.query('COMMIT')
+      return result
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => undefined)
+      if (error instanceof HttpException) throw error
+      throw new ServiceUnavailableException({ error: { code: 'SOCIAL_UNAVAILABLE' } })
+    } finally { client.release() }
   }
 }

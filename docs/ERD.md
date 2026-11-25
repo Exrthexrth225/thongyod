@@ -1,5 +1,9 @@
 ﻿# ERD — accounts, gangs, and meetups
 
+## Gang activity extension (#133)
+
+ACTIVITY_EPOCH has one rollout row: start time and a private cursor-signing key. GANG_ACTIVITY_READS has one optional row per GANG_MEMBERS.id, with last-opened time, observed time and a PostgreSQL visibility snapshot. Rejoin creates a new membership/read period. MEETUPS.activity_txid records its creation transaction, surviving edits; historical rows get the migration transaction while creation times remain intact. Unread is eligible other-user activity after max(rollout,current join), absent from the acknowledged snapshot. Feed history starts at current join. Blocked/hidden events are excluded before paging/counts. These reads never mutate meetup answers, bills or notifications. The design-only notes below describe their original round.
+
 Design only, updated for DECISIONS #29–#36; #37 controls frontend migration to these contracts. Later decisions override #26–#28 where they conflict. No migrations, database changes, or endpoint implementation in this round. Details explicitly marked proposed/question are not new approved decisions.
 
 ## Relationships

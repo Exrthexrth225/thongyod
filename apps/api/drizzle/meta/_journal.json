@@ -43,6 +43,13 @@
       "when": 1795358835162,
       "tag": "0005_line_login",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795493923093,
+      "tag": "0006_gang_activity",
+      "breakpoints": true
     }
   ]
 }

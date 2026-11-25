@@ -11,7 +11,7 @@ import { useMeetupActions } from '@/features/meetups/useMeetupActions'
 import { formatDayLabel, formatTime } from '@/lib/date'
 import { pendingSubtitle, pendingTitle } from '@/lib/describe'
 
-/** Home shows this many rows; the rest are behind "ดูทั้งหมด". */
+/** Home previews this many rows; each category keeps its own full-list destination. */
 const PREVIEW = 3
 
 type Props = { invites: MeetupListItem[]; pending: PendingItem[]; now: Date }
@@ -62,7 +62,6 @@ export function WaitingBox({ invites, pending, now }: Props) {
                 {t('home.oneByOne')}
               </Link>
             )}
-            {total > PREVIEW && <SeeAllLink to={invites.length > PREVIEW || pending.length === 0 ? '/invites' : '/pending'} />}
           </span>
         }
       />
@@ -90,6 +89,11 @@ export function WaitingBox({ invites, pending, now }: Props) {
           <Row key={item.id} art={PENDING_ART[item.kind]} title={pendingTitle(item)} subtitle={pendingSubtitle(item, now)} />
         ))}
       </ul>
+      {pending.length > 0 && (
+        <div className="mx-4 flex justify-end px-2.5 pt-2">
+          <SeeAllLink to="/pending" label={t('home.otherPending', { count: pending.length })} />
+        </div>
+      )}
     </section>
   )
 }

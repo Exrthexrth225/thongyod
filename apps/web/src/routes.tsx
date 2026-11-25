@@ -1,4 +1,4 @@
-import { Navigate, type RouteObject } from 'react-router'
+import { Navigate, replace, type LoaderFunctionArgs, type RouteObject } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { SubPageShell } from '@/components/layout/SubPageShell'
 import { TOOLS } from '@/config/tools'
@@ -76,6 +76,10 @@ const placeholderToolRoutes: RouteObject[] = TOOLS.filter(
 
 // Paths are English; labels shown to users come from i18n.
 // The router itself is made in router.tsx; this file only lists the routes, so tests can read them.
+function redirectToPlan({ request }: LoaderFunctionArgs) {
+  return replace(`/plan${new URL(request.url).search}`)
+}
+
 export const routes: RouteObject[] = [
   { path: '/login', element: <LoginPage /> },
   { path: '/signup', element: <SignupPage /> },
@@ -93,7 +97,7 @@ export const routes: RouteObject[] = [
           { path: 'friends', element: <FriendsPage /> },
         ],
       },
-      { path: 'explore', element: <Navigate to="/plan" replace /> }, // ทำอะไรดี was split into นัด, เกม and ฉัน (#132)
+      { path: 'explore', loader: redirectToPlan }, // ทำอะไรดี was split into นัด, เกม and ฉัน (#132)
       { path: 'plan', element: <PlanPage /> },
       { path: 'games', element: <GamesPage /> }, // a tab since #132: keeps the tab bar
       { path: 'pet', element: <PetPage /> },
@@ -141,7 +145,7 @@ export const routes: RouteObject[] = [
       { path: 'pending', element: <PendingPage /> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'updates', element: <UpdatesPage /> },
-      { path: 'meetups', element: <Navigate to="/plan" replace /> }, // old "นัดของฉัน" page, now the นัด tab (#132)
+      { path: 'meetups', loader: redirectToPlan }, // old "นัดของฉัน" page, now the นัด tab (#132)
       { path: 'calendar', element: <CalendarPage /> },
       { path: 'invites', element: <InvitesPage /> },
       { path: 'meetups/new', element: <CreateMeetupPage /> },

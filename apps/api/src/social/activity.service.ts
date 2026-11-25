@@ -1,4 +1,6 @@
-import {BadRequestException,HttpException,Injectable,ServiceUnavailableException} from '@nestjs/common'
+import {BadRequestException,HttpException,Injectable,NotFoundException,ServiceUnavailableException} from '@nestjs/common'
+import type { ListFeedResponse, ReadGangActivityResponse } from '@thongyod/shared'
+import {activityContext,activityInvalid,activityToken,activityUuid,exactTime,parseActivityToken,visibleActivity} from './activity-cursor.js'
 import {DatabaseService} from '../db/database.service.js'
 import type {PoolClient} from 'pg'
 
@@ -31,6 +33,49 @@ export class ActivityService{
       ORDER BY m.created_at DESC,m.id DESC LIMIT 20`,[viewer])).rows
     return {pending:[],pet:null,luckyColor:null,feed}
   },true)}
+  async feed(viewer: string, query: Record<string, unknown>): Promise<ListFeedResponse> {
+    const { limit = '20', cursor } = query
+    if (Object.keys(query).some(k => !['limit','cursor'].includes(k)) || typeof limit !== 'string'
+      || !/^\d+$/.test(limit) || Number(limit)<1 || Number(limit)>50) throw activityInvalid()
+    return this.transaction(async c => {
+      const context = await activityContext(c)
+      const token = cursor === undefined ? null : parseActivityToken(context.key,cursor,'feed',viewer)
+      const snapshot = token?.[2] ?? context.snapshot, upper = token?.[3] ?? context.at
+      const rows = (await c.query(`SELECT m.id,'meetup_created' AS kind,u.display_name AS "actorName",m.title AS subject,
+        s.name AS "gangName",m.gang_id AS "gangId",${exactTime('m.created_at')} AS "createdAt",
+        json_build_object('type','meetup','id',m.id) AS target
+        FROM meetups m JOIN users u ON u.id=m.created_by JOIN gang_settings s ON s.gang_id=m.gang_id
+        JOIN gang_members mine ON mine.gang_id=m.gang_id AND mine.user_id=$1 AND mine.left_at IS NULL AND mine.joined_at<=m.created_at
+        WHERE ${visibleActivity} AND m.created_at<=$3::timestamptz
+        AND txid_visible_in_snapshot(m.activity_txid,$2::txid_snapshot)
+        AND ($4::timestamptz IS NULL OR (m.created_at,m.id)<($4::timestamptz,$5::uuid))
+        ORDER BY m.created_at DESC,m.id DESC LIMIT $6`, [viewer,snapshot,upper,token?.[4]??null,token?.[5]??null,Number(limit)+1])).rows
+      const items = rows.slice(0,Number(limit)), last = items.at(-1)
+      return { items, nextCursor: rows.length>Number(limit)
+        ? activityToken(context.key,['feed',viewer,snapshot,upper,last.createdAt,last.id]) : null }
+    },true)
+  }
+
+  async readGang(viewer: string, gang: string, body: unknown): Promise<ReadGangActivityResponse> {
+    if (!activityUuid(gang)) throw new NotFoundException({ error: { code: 'GANG_NOT_FOUND' } })
+    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).length!==1
+      || !('readThrough' in body)) throw activityInvalid()
+    return this.transaction(async c => {
+      // Hold membership access until the read update commits; departure cannot race the authorization check.
+      const member = (await c.query('SELECT id FROM gang_members WHERE gang_id=$1 AND user_id=$2 AND left_at IS NULL FOR SHARE',[gang,viewer])).rows[0]
+      if (!member) throw new NotFoundException({ error: { code: 'GANG_NOT_FOUND' } })
+      const context = await activityContext(c)
+      const values = parseActivityToken(context.key,body.readThrough,'gang-read',viewer)
+      if (values[2]!==gang || values[3]!==member.id || values[5]>context.at) throw activityInvalid()
+      const row = (await c.query(`INSERT INTO gang_activity_reads(membership_id,read_snapshot,observed_at,last_opened_at)
+        VALUES($1,$2,$3,clock_timestamp()) ON CONFLICT(membership_id) DO UPDATE SET
+          read_snapshot=CASE WHEN EXCLUDED.observed_at>gang_activity_reads.observed_at THEN EXCLUDED.read_snapshot ELSE gang_activity_reads.read_snapshot END,
+          observed_at=greatest(EXCLUDED.observed_at,gang_activity_reads.observed_at),
+          last_opened_at=greatest(clock_timestamp(),gang_activity_reads.last_opened_at)
+        RETURNING read_snapshot AS snapshot,${exactTime('observed_at')} AS at,last_opened_at AS "lastOpenedAt"`,[member.id,values[4],values[5]])).rows[0]
+      return { lastOpenedAt: row.lastOpenedAt.toISOString(), readThrough: activityToken(context.key,['gang-read',viewer,gang,member.id,row.snapshot,row.at]) }
+    })
+  }
   async list(viewer:string,query:Record<string,unknown>){
     const {limit='20',cursor}=query
     if(typeof limit!=='string'||!/^\d+$/.test(limit)||Number(limit)<1||Number(limit)>50)throw invalid()

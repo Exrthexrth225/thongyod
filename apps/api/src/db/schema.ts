@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { boolean, check, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid, date } from 'drizzle-orm/pg-core'
+import { bigint, boolean, check, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid, date } from 'drizzle-orm/pg-core'
 
 const instant = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' })
 export const gender = pgEnum('gender', ['male', 'female', 'other', 'unspecified'])
@@ -101,10 +101,25 @@ export const meetups = pgTable('meetups', {
   createdBy: uuid('created_by').notNull().references(() => users.id), title: text('title').notNull(),
   startsAt: instant('starts_at').notNull(), timezone: text('timezone').notNull().default('Asia/Bangkok'),
   scheduleVersion: integer('schedule_version').notNull().default(1), createdAt: instant('created_at').notNull(),
+  activityTxid: bigint('activity_txid', { mode: 'bigint' }).notNull().default(sql`txid_current()`),
 }, (t) => [index('meetup_calendar').on(t.gangId, t.startsAt, t.id),
+  index('meetup_activity_page').on(t.gangId, t.createdAt, t.id),
   check('meetup_title', sql`char_length(${t.title}) between 1 and 100 and ${t.title} = btrim(${t.title})`),
   check('meetup_version', sql`${t.scheduleVersion} > 0`),
 ])
+
+export const activityEpoch = pgTable('activity_epoch', {
+  singleton: boolean('singleton').primaryKey().default(true),
+  startedAt: instant('started_at').notNull().default(sql`clock_timestamp()`),
+  cursorKey: uuid('cursor_key').notNull().defaultRandom(),
+}, t => [check('activity_singleton', sql`${t.singleton}`)])
+
+export const gangActivityReads = pgTable('gang_activity_reads', {
+  membershipId: uuid('membership_id').primaryKey().references(() => gangMembers.id, { onDelete: 'cascade' }),
+  readSnapshot: text('read_snapshot').notNull(),
+  observedAt: instant('observed_at').notNull(),
+  lastOpenedAt: instant('last_opened_at').notNull(),
+}, t => [check('activity_read_snapshot', sql`${t.readSnapshot}::txid_snapshot is not null`)])
 
 // Account participants only in phase 1. No guest, waitlist, or attendance behavior.
 export const meetupResponses = pgTable('meetup_responses', {

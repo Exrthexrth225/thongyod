@@ -117,6 +117,7 @@ export const th = {
     waitingHeading: 'รอเราตอบ',
     hello: 'หวัดดี {{name}}',
     oneByOne: 'ตอบทีละใบ',
+    otherPending: 'งานอื่น ({{count}})',
     invitedBy: '{{name}}ชวน · {{when}}',
     doNow: 'ทำเลย',
     keepPlaying: 'เล่นต่อ',
@@ -1693,6 +1694,8 @@ export const th = {
   },
   gang: {
     friendsActivity: 'เพื่อนทำอะไรอยู่',
+    nextMeetup: '{{title}} · {{when}}',
+    unreadCount: 'อัปเดตใหม่ {{count}} รายการ',
     title: 'แก๊ง',
     memberCount: 'สมาชิก {{count}} คน',
     members: 'สมาชิก · {{count}}',
