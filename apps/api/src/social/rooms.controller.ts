@@ -1,14 +1,14 @@
 import {BadRequestException,Body,Controller,Get,Header,HttpCode,Param,Patch,Post,Req} from '@nestjs/common'
 import type{IncomingMessage}from'node:http'
-import{SessionService}from'../auth/session.service.js'
+import{RoomGuestService}from'../auth/room-guest.service.js'
 import{assertMutationOrigin}from'../auth/policy.js'
 import{RoomsService}from'./rooms.service.js'
 @Controller('rooms')
 export class RoomsController{
- constructor(private readonly sessions:SessionService,private readonly rooms:RoomsService){}
- private async actor(req:IncomingMessage,json=false){assertMutationOrigin(req);const id=(await this.sessions.me(req)).userId;if(json&&!/^application\/json(?:;|$)/i.test(req.headers['content-type']??''))throw new BadRequestException({error:{code:'INVALID_REQUEST'}});return id}
+ constructor(private readonly guests:RoomGuestService,private readonly rooms:RoomsService){}
+ private async actor(req:IncomingMessage,json=false){assertMutationOrigin(req);const id=await this.guests.actor(req);if(json&&!/^application\/json(?:;|$)/i.test(req.headers['content-type']??''))throw new BadRequestException({error:{code:'INVALID_REQUEST'}});return id}
  @Get(':code') @Header('Cache-Control','no-store')
- async get(@Req() req:IncomingMessage,@Param('code') code:string){return this.rooms.action((await this.sessions.me(req)).userId,code)}
+ async get(@Req() req:IncomingMessage,@Param('code') code:string){return this.rooms.action(await this.guests.actor(req),code)}
  @Post() @Header('Cache-Control','no-store')
  async create(@Req() req:IncomingMessage,@Body() body:unknown){return this.rooms.create(await this.actor(req,true),body)}
  @Patch(':code/settings') @Header('Cache-Control','no-store')

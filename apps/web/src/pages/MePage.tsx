@@ -1,3 +1,4 @@
+import { LogoutButton } from '@/features/rooms/RoomAccess'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { ChevronRight, Pencil, QrCode, Settings } from 'lucide-react'
@@ -35,6 +36,7 @@ export function MePage() {
           <Settings className="size-[22px]" aria-hidden="true" />
         </Link>
       </TabHeader>
+      <div className="flex justify-end px-4"><LogoutButton /></div>
       {profile.isPending ? (
         <LoadingState rows={3} />
       ) : profile.isError ? (

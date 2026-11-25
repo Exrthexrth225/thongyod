@@ -50,6 +50,13 @@
       "when": 1795493923093,
       "tag": "0006_gang_activity",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795597896975,
+      "tag": "0007_room_guests",
+      "breakpoints": true
     }
   ]
 }

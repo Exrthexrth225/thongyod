@@ -3,10 +3,12 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { SessionService } from './session.service.js'
 import { assertMutationOrigin } from './policy.js'
 import { clearSessionCookie } from './cookie.js'
+import { guestCookie } from './room-guest.service.js'
+import { RoomsService } from '../social/rooms.service.js'
 
 @Controller()
 export class AuthController {
-  constructor(private readonly sessions: SessionService) {}
+  constructor(private readonly sessions: SessionService, private readonly rooms: RoomsService) {}
 
   @Get('me')
   @Header('Cache-Control', 'no-store')
@@ -27,7 +29,7 @@ export class AuthController {
   @Header('Cache-Control', 'no-store')
   async logout(@Req() request: IncomingMessage, @Res({ passthrough: true }) response: ServerResponse): Promise<void> {
     assertMutationOrigin(request)
-    await this.sessions.logout(request)
-    response.setHeader('Set-Cookie', clearSessionCookie())
+    await this.rooms.logout(request)
+    response.setHeader('Set-Cookie', [clearSessionCookie(), guestCookie()])
   }
 }

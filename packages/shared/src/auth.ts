@@ -1,3 +1,12 @@
+/** Room-only identity. A guest playerId is not an app user ID. */
+export type RoomIdentity = {
+  kind: 'account' | 'guest' | 'anonymous'
+  playerId: string | null
+  displayName: string | null
+  expiresAt: string | null
+}
+export type CreateRoomGuestRequest = { displayName: string }
+
 /** GET /me and successful POST /auth/dev/login. No private profile fields. */
 export interface Me {
   userId: string

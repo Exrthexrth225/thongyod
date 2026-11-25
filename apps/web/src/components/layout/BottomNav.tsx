@@ -1,3 +1,4 @@
+import { useRoomIdentity } from '@/api/auth'
 import { NavLink } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useWaitingCount } from '@/features/meetups/useWaiting'
@@ -8,8 +9,14 @@ import { cn } from '@/lib/utils'
 // Bottom tab bar (#132): a flat full-width bar in the card colour, never floating over content.
 // The current tab sits in a yolk pill; the tab you land on gives a small hop (motion plan #5).
 export function BottomNav() {
+  const identity = useRoomIdentity()
+  return identity.data?.kind === 'account' ? <AccountBottomNav /> : <BottomNavView waiting={0} />
+}
+function AccountBottomNav() {
+  return <BottomNavView waiting={useWaitingCount()} />
+}
+function BottomNavView({ waiting }: { waiting: number }) {
   const { t } = useTranslation()
-  const waiting = useWaitingCount()
   return (
     <nav aria-label={t('nav.label')} className="fixed inset-x-0 bottom-0 z-40 bg-card pb-[env(safe-area-inset-bottom)]">
       <ul className="mx-auto grid h-16 max-w-md grid-cols-5 px-1.5">

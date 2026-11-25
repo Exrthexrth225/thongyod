@@ -1,5 +1,9 @@
 ﻿# ERD — accounts, gangs, and meetups
 
+## Room-only guest credentials
+
+`game_guest_sessions` stores a random UUID, validated display name, unique SHA-256 token hash, creation/expiry timestamps and optional revocation timestamp. It has no foreign key to `users`, `auth_identities` or `auth_sessions`. Expiry is three hours; nickname equality never identifies the same player. Existing `game_rooms.data.playerIds` may contain app-user UUIDs or guest UUIDs; room projections resolve them from their respective table. Legacy room `userId` fields are room identifiers for guests, not app-account credentials. Existing rooms and LINE sessions require no backfill. Migration 0007 only adds this table/index. Logout locks credentials before room rows, applies leave/host-transfer rules and revokes credentials atomically. Guests cannot access account-only endpoints or link themselves to LINE.
+
 ## Gang activity extension (#133)
 
 ACTIVITY_EPOCH has one rollout row: start time and a private cursor-signing key. GANG_ACTIVITY_READS has one optional row per GANG_MEMBERS.id, with last-opened time, observed time and a PostgreSQL visibility snapshot. Rejoin creates a new membership/read period. MEETUPS.activity_txid records its creation transaction, surviving edits; historical rows get the migration transaction while creation times remain intact. Unread is eligible other-user activity after max(rollout,current join), absent from the acknowledged snapshot. Feed history starts at current join. Blocked/hidden events are excluded before paging/counts. These reads never mutate meetup answers, bills or notifications. The design-only notes below describe their original round.

@@ -8,6 +8,7 @@
 
 | Component | Path | Source / License | Purpose | Variants / props | Notes |
 |---|---|---|---|---|---|
+| RoomAccess / GuestEntry / LogoutButton | `src/features/rooms/RoomAccess.tsx` | ours | Room identity gate, nickname entry and session logout using existing controls | RoomAccess: children; GuestEntry: returnTo? | Only mount room queries after identity resolves; guests have room-only access. Logout is also shown on Me. |
 | Button | `src/components/ui/button.tsx` | shadcn/ui (MIT) via `shadcn add`, Base UI | All buttons | variant: default, outline, secondary, ghost, destructive, link · size: default, xs, sm, lg, icon, icon-xs, icon-sm, icon-lg | Sizes changed for touch: default/icon 44px, lg 48px, sm 36px, xs 28px (xs/sm only for dense non-primary UI). |
 | AppShell | `src/components/layout/AppShell.tsx` | ours | Frame for all tab pages: content + bottom tab bar, phone width, safe-area padding | — | Used as the parent route in `src/routes.tsx`; every bottom-bar tab (`src/config/tabs.ts`) must be its child (`src/routes.test.ts`) |
 | BottomNav | `src/components/layout/BottomNav.tsx` | ours (icons: lucide-react, ISC) | Bottom tabs (#132): หน้าหลัก / นัด / เกม / แก๊ง / ฉัน, active tab in a yolk pill | — | Tabs listed in `TABS` in `src/config/tabs.ts` |

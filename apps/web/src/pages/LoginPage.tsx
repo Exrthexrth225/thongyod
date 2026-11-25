@@ -1,3 +1,6 @@
+import { GuestEntry } from '@/features/rooms/RoomAccess'
+import { useRoomIdentity } from '@/api/auth'
+import { appUrl } from '@/lib/share'
 import { useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -13,6 +16,12 @@ export function LoginPage() {
   const { t } = useTranslation()
   const [params] = useSearchParams()
   const returnTo = params.get('returnTo') ?? '/'
+  const identity = useRoomIdentity()
+  const exitGuest = useMutation({ mutationFn: () => apiFetch<void>('/auth/logout', { method: 'POST' }) })
+  const startLine = async () => {
+    if (identity.data?.kind === 'guest') await exitGuest.mutateAsync()
+    window.location.assign('/api/auth/line?returnTo=' + encodeURIComponent(returnTo))
+  }
   const options = useQuery({ queryKey: ['auth', 'options'], queryFn: () => apiFetch<{ lineAvailable: boolean }>('/auth/options'), retry: false })
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-6 py-12">
@@ -22,8 +31,10 @@ export function LoginPage() {
       </div>
       {params.has('error') && <p role="alert" className="text-destructive">{t('auth.loginFailed')}</p>}
       {options.isPending ? <LoadingState rows={1} /> : options.data?.lineAvailable ? (
-        <Button size="lg" onClick={() => window.location.assign('/api/auth/line?returnTo=' + encodeURIComponent(returnTo))}>{t('auth.withLine')}</Button>
-      ) : <p role="status" className="text-muted-foreground">{t('auth.unavailable')}</p>}
+        <Button size="lg" disabled={identity.isPending || exitGuest.isPending} onClick={() => { void startLine().catch(() => undefined) }}>{t('auth.withLine')}</Button>
+      ) : <p role="status" className="text-muted-foreground">{t('guestAuth.lineUnavailable')}</p>}
+      {exitGuest.isError && <p role="alert" className="text-destructive">{t('guestAuth.logoutFailed')}</p>}
+      {identity.data?.kind === 'guest' ? <Button variant="outline" onClick={() => window.location.assign(appUrl('/games/rooms'))}>{t('guestAuth.continue')}</Button> : identity.data?.kind !== 'account' && <GuestEntry returnTo={returnTo} />}
       <Link className="min-h-11 py-3 text-center underline underline-offset-4" to="/games" state={SHOW_BACK}>{t('auth.browse')}</Link>
     </main>
   )

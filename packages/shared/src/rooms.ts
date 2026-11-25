@@ -10,7 +10,8 @@ export type SpyRoomSettings = { mode: 'places' | 'pairs'; spies: number; minutes
 /** ใครน่าจะ… / ไม่เคย… settings: which card packs (ids from config/games/party.ts). */
 export type PartyRoomSettings = { packs: string[] }
 
-export type RoomPlayer = PersonRef & { isHost: boolean }
+/** userId is the legacy room-player identifier; guest IDs do not identify app accounts. */
+export type RoomPlayer = PersonRef & { isHost: boolean; isGuest?: boolean }
 
 /** What only I can see this round. */
 export type SpySecret = { isSpy: boolean; /** The place / my word; null for the spy in places mode. */ text: string | null }

@@ -18,10 +18,12 @@ import { RoomsController } from './social/rooms.controller.js'
 import { RoomsService } from './social/rooms.service.js'
 import { LineService } from './auth/line.service.js'
 import { LineController } from './auth/line.controller.js'
+import { RoomGuestController } from './auth/room-guest.controller.js'
+import { RoomGuestService } from './auth/room-guest.service.js'
 
 @Module({
-  controllers: [HealthController, AuthController, SocialController, MeetupsController, MediaController, ActivityController, RoomsController, LineController],
-  providers: [DatabaseService, SessionService, SocialService, FriendLinksService, MeetupsService, ProfilesService, MediaService, ActivityService, RoomsService, LineService, { provide: ALLOW_DEV_SESSIONS, useValue: false }],
+  controllers: [RoomGuestController, HealthController, AuthController, SocialController, MeetupsController, MediaController, ActivityController, RoomsController, LineController],
+  providers: [RoomGuestService, DatabaseService, SessionService, SocialService, FriendLinksService, MeetupsService, ProfilesService, MediaService, ActivityService, RoomsService, LineService, { provide: ALLOW_DEV_SESSIONS, useValue: false }],
   exports: [DatabaseService, SessionService],
 })
 export class AppModule {}

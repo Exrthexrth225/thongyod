@@ -1,8 +1,9 @@
+import { RoomAccess } from '@/features/rooms/RoomAccess'
 import { useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { DoorOpen, Users } from 'lucide-react'
 import { ApiError } from '@/api/client'
-import { useMe } from '@/api/profile'
+import { useRoomIdentity } from '@/api/auth'
 import { isRoomCode, useJoinRoom, useLeaveRoom, useRoom } from '@/api/rooms'
 import { Avatar } from '@/components/common/Avatar'
 import { EmptyState } from '@/components/common/EmptyState'
@@ -21,11 +22,15 @@ const JOIN_ERRORS: Record<string, string> = { ROOM_FULL: 'rooms.errors.full', RO
 
 // /games/rooms/:code — a game room (many phones). Opening the link/QR shows "เข้าห้อง" first.
 export function RoomPage() {
+  return <RoomAccess><RoomPageContent /></RoomAccess>
+}
+
+function RoomPageContent() {
   const { t } = useTranslation()
   const { code = '' } = useParams()
   const navigate = useNavigate()
   const room = useRoom(code)
-  const me = useMe()
+  const me = useRoomIdentity()
   const join = useJoinRoom(code)
   const leave = useLeaveRoom(code)
 
@@ -77,7 +82,7 @@ export function RoomPage() {
     body = <ErrorState onRetry={() => void me.refetch()} />
   } else if (room.data && me.data) {
     body = (
-      room.data.game === 'spy' ? <SpyRoom room={room.data} meId={me.data.userId} onLeave={onLeave} /> : <PartyRoom room={room.data} meId={me.data.userId} onLeave={onLeave} />
+      room.data.game === 'spy' ? <SpyRoom room={room.data} meId={me.data.playerId!} onLeave={onLeave} /> : <PartyRoom room={room.data} meId={me.data.playerId!} onLeave={onLeave} />
     )
   } else body = <LoadingState rows={3} />
 

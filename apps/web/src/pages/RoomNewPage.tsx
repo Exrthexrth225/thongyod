@@ -1,3 +1,4 @@
+import { RoomAccess } from '@/features/rooms/RoomAccess'
 import { useEffect, useRef } from 'react'
 import { Navigate, useNavigate, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -24,6 +25,10 @@ function loadPartyPacks(game: 'mostLikely' | 'neverHave'): string[] {
 
 // /games/rooms/new?game=spy|mostLikely|neverHave — makes a room with my last settings for that game, then opens it.
 export function RoomNewPage() {
+  return <RoomAccess><RoomNewPageContent /></RoomAccess>
+}
+
+function RoomNewPageContent() {
   const { t } = useTranslation()
   const [params] = useSearchParams()
   const navigate = useNavigate()

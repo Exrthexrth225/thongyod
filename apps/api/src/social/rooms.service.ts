@@ -3,6 +3,9 @@ import {randomInt,randomUUID} from 'node:crypto'
 import {readFileSync} from 'node:fs'
 import {createRequire} from 'node:module'
 import type {PoolClient} from 'pg'
+import type {IncomingMessage} from 'node:http'
+import {RoomGuestService,type RoomActor} from '../auth/room-guest.service.js'
+import {readSessionCookie,readGuestCookie,sessionHash} from '../auth/cookie.js'
 import type {Room,RoomGame,RoomState,SpyRoomSettings,PartyRoomSettings,RoomPlayer} from '@thongyod/shared'
 import {DatabaseService} from '../db/database.service.js'
 
@@ -30,7 +33,7 @@ function settings(game:RoomGame,raw:unknown,current?:Internal['settings']):Inter
 
 @Injectable()
 export class RoomsService{
-  constructor(private readonly database:DatabaseService){}
+  constructor(private readonly database:DatabaseService,private readonly guests:RoomGuestService){}
   private async transaction<T>(work:(c:PoolClient)=>Promise<T>){
     const c=await this.database.connection.connect().catch(()=>{throw new ServiceUnavailableException({error:{code:'ROOMS_UNAVAILABLE'}})})
     try{await c.query('BEGIN');const result=await work(c);await c.query('COMMIT');return result}
@@ -38,6 +41,8 @@ export class RoomsService{
   }
   private async view(c:PoolClient,r:Internal,viewer:string):Promise<Room>{
     const people=(await c.query<{userId:string;displayName:string;avatarUrl:string|null}>('SELECT id AS "userId",display_name AS "displayName",avatar_url AS "avatarUrl" FROM users WHERE id=ANY($1::uuid[])',[r.playerIds])).rows
+    const guestPeople=(await c.query<{userId:string;displayName:string;avatarUrl:null;isGuest:true}>('SELECT id AS "userId",display_name AS "displayName",NULL AS "avatarUrl",true AS "isGuest" FROM game_guest_sessions WHERE id=ANY($1::uuid[])',[r.playerIds])).rows
+    people.push(...guestPeople)
     const players=r.playerIds.map(id=>({...people.find(p=>p.userId===id)!,isHost:id===r.hostId})) as RoomPlayer[]
     const joined=r.playerIds.includes(viewer),base={code:r.code,state:r.state,hostId:r.hostId,players,maxPlayers:12,joined,expiresAt:r.expiresAt}
     if(r.game==='spy'){
@@ -60,12 +65,40 @@ export class RoomsService{
     round.result={tally,haveIds};r.state='revealed'
     if(r.fingers)for(const id of haveIds)r.fingers[id]=Math.max(0,(r.fingers[id]??5)-1)
   }
-  async create(viewer:string,body:unknown){
+  private leave(r:Internal,viewer:string){
+    r.playerIds=r.playerIds.filter(id=>id!==viewer)
+    if(r.hostId===viewer)r.hostId=r.playerIds[0]??viewer
+    if(r.party&&!r.party.result){delete r.party.votes[viewer];for(const[id,vote]of Object.entries(r.party.votes))if(r.game==='mostLikely'&&vote===viewer)delete r.party.votes[id];if(r.playerIds.length&&r.playerIds.every(id=>r.party!.votes[id]))this.show(r)}
+    if(r.fingers)delete r.fingers[viewer]
+  }
+  async logout(request:IncomingMessage){
+    const account=readSessionCookie(request),guest=readGuestCookie(request)
+    if(!account&&!guest)return
+    await this.transaction(async c=>{
+      const ids:string[]=[]
+      for(const [table,column,token] of [['auth_sessions','user_id',account],['game_guest_sessions','id',guest]]){
+        if(!token)continue
+        const hash=sessionHash(token)
+        const rows=await c.query<{actor:string}>(`SELECT ${column} AS actor FROM ${table} WHERE token_hash=$1 AND revoked_at IS NULL AND expires_at>clock_timestamp() FOR UPDATE`,[hash])
+        ids.push(...rows.rows.map(r=>r.actor))
+        await c.query(`UPDATE ${table} SET revoked_at=clock_timestamp() WHERE token_hash=$1 AND revoked_at IS NULL`,[hash])
+      }
+      if(!ids.length)return
+      const rows=await c.query<{code:string;data:Internal}>("SELECT code,data FROM game_rooms WHERE data->'playerIds' ?| $1::text[] ORDER BY code FOR UPDATE",[ids])
+      for(const {code,data:r} of rows.rows){
+        for(const id of ids)this.leave(r,id)
+        if(r.playerIds.length)await c.query('UPDATE game_rooms SET data=$2 WHERE code=$1',[code,JSON.stringify(r)])
+        else await c.query('DELETE FROM game_rooms WHERE code=$1',[code])
+      }
+    })
+  }
+  async create(actor:RoomActor,body:unknown){
+    const viewer=actor.playerId
     const b=object(body)
     if(Object.keys(b).some(k=>!['game','settings'].includes(k))||!['spy','mostLikely','neverHave'].includes(String(b.game)))throw invalid()
     const game=b.game as RoomGame,s=settings(game,b.settings)
     return this.transaction(async c=>{
-      await c.query('SELECT id FROM users WHERE id=$1 FOR UPDATE',[viewer])
+      await this.guests.assertActive(c,actor)
       await c.query('DELETE FROM game_rooms WHERE expires_at<=now()')
       for(let tries=0;tries<10;tries++){
         const code=String(randomInt(100000,1000000)),now=new Date(),expiresAt=new Date(now.getTime()+10800000).toISOString()
@@ -76,9 +109,11 @@ export class RoomsService{
       throw new ServiceUnavailableException({error:{code:'ROOMS_UNAVAILABLE'}})
     })
   }
-  async action(viewer:string,code:string,action='get',body?:unknown){
+  async action(actor:RoomActor,code:string,action='get',body?:unknown){
+    const viewer=actor.playerId
     if(!/^\d{6}$/.test(code))throw new NotFoundException({error:{code:'ROOM_NOT_FOUND'}})
     return this.transaction(async c=>{
+      await this.guests.assertActive(c,actor)
       const result=await c.query<{data:Internal}>('SELECT data FROM game_rooms WHERE code=$1 AND expires_at>clock_timestamp() FOR UPDATE',[code])
       const r=result.rows[0]?.data;if(!r)throw new NotFoundException({error:{code:'ROOM_NOT_FOUND'}})
       const joined=r.playerIds.includes(viewer)
@@ -86,10 +121,7 @@ export class RoomsService{
       if(action==='join'){
         if(!joined){if(r.state!=='lobby')throw new ConflictException({error:{code:'ROOM_STARTED'}});if(r.playerIds.length>=12)throw new ConflictException({error:{code:'ROOM_FULL'}});r.playerIds.push(viewer);if(r.fingers)r.fingers[viewer]=5}
       }else if(action==='leave'){
-        r.playerIds=r.playerIds.filter(id=>id!==viewer)
-        if(r.hostId===viewer)r.hostId=r.playerIds[0]??viewer
-        if(r.party&&!r.party.result){delete r.party.votes[viewer];for(const[id,vote]of Object.entries(r.party.votes))if(r.game==='mostLikely'&&vote===viewer)delete r.party.votes[id];if(r.playerIds.length&&r.playerIds.every(id=>r.party!.votes[id]))this.show(r)}
-        if(r.fingers)delete r.fingers[viewer]
+        this.leave(r,viewer)
       }else{
         if(!joined)throw new ForbiddenException({error:{code:'NOT_IN_ROOM'}})
         if(action==='vote'){
@@ -100,6 +132,7 @@ export class RoomsService{
           r.party.votes[viewer]=choice
           if(r.playerIds.every(id=>r.party!.votes[id]))this.show(r)
         }else if(action==='invite'){
+          if(actor.kind==='guest')throw new ForbiddenException({error:{code:'GUEST_FORBIDDEN'}})
           const b=object(body),ids=b.userIds
           if(Object.keys(b).length!==1||!Array.isArray(ids)||ids.length>50||ids.some(id=>typeof id!=='string'||!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)))throw invalid()
           const recipients=(await c.query<{id:string}>(`SELECT u.id FROM users u JOIN friendships f ON f.status='accepted' AND

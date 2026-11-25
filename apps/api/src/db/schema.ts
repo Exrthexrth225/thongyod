@@ -6,6 +6,16 @@ export const gender = pgEnum('gender', ['male', 'female', 'other', 'unspecified'
 export const friendshipStatus = pgEnum('friendship_status', ['pending', 'accepted', 'declined', 'ended'])
 export const response = pgEnum('meetup_response', ['going', 'maybe', 'not_going'])
 export const sessionSource = pgEnum('session_source', ['line', 'local_dev'])
+
+// Room-only credentials are never app accounts or LINE identities.
+export const gameGuestSessions = pgTable('game_guest_sessions', {
+  id: uuid('id').primaryKey(),
+  displayName: text('display_name').notNull(),
+  tokenHash: text('token_hash').notNull().unique(),
+  createdAt: instant('created_at').notNull().defaultNow(),
+  expiresAt: instant('expires_at').notNull(),
+  revokedAt: instant('revoked_at'),
+}, (t) => [index('guest_sessions_expiry').on(t.expiresAt), check('guest_session_expiry', sql`${t.expiresAt}>${t.createdAt}`)])
 export const admissionRule = pgEnum('admission_rule', ['majority_48h', 'auto_unless_objection_24h'])
 
 export const users = pgTable('users', {
