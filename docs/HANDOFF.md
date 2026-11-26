@@ -1,5 +1,19 @@
 # Backend handoff
 
+## I'm the Boss! tabletop foundation (2026-11-26)
+
+Rules baseline: the standard 3–6 player game in the [Eagle-Gryphon rulebook](https://gamers-hq.de/media/pdf/26/0e/cf/ITB-Rules-public.pdf). Use this edition's random first player. The player on their right picks the initial space. With three players deal two investor placards per player. With four to six deal one each and leave the remainder available to recruit. Each player starts with five influence cards and zero cash.
+
+The 16 reusable board positions and the 15 numbered deal placards are different components. An open space specifies required teams, optional teams, how many different teams must join, and the number of dividends. The deal placard determines the current dividend value. Roll clockwise past closed spaces or negotiate where the marker stands. After rolling, negotiate or draw three. Limit the hand to twelve. A failed negotiation leaves its space available. A successful deal pays the negotiated amounts once, closes its space and advances to the next open space. Start making end rolls at deal ten, end at fifteen at the latest, and compare cash.
+
+Team cards can substitute for matching investors. Travel blocks a placard for the deal or removes an exposed Team card. Recruit requires three cards and targets an unowned placard first. Boss transfers control of negotiations, including who takes the next turn. Stop can cancel Travel, Recruit or Boss. Return unused Team cards after a deal. Recheck investor availability and the agreed allocation before settling. The app should preserve uneven negotiated payments, including amounts smaller than a dividend.
+
+**Proposed network contract (design only).** A seated guest or account acts using their existing room identity. Pair a read-only board without consuming a seat. Keep room owner and current deal boss independent. A Socket.IO command carries room code, action ID, expected revision and action payload. Validate actor and turn, lock the existing Neon room row, deduplicate retries and persist the accepted transition before publishing a new revision. A reconnect reads a fresh view scoped to the authenticated seat or paired board. Drawing, settling and advancing turns must be safe to retry.
+
+**Display and artwork.** The board shows the marker, deal requirements, public cards, active offers and progress. On a phone, show the same table plus that player's cards and exact balance. Proposed cash display follows stacked money on the physical table: show a coarse stack on the board, then all totals at scoring. Omit opponents' exact balances and hand contents from the wire payload. Use the same team color, symbol and original portrait on the board and cards. The six portraits can arrive after the game setup code.
+
+**Before enabling play.** Verify every space, dividend schedule and end-roll face against a legible board and placards from this edition. A ten-second closing window is a digital adaptation. If an interrupt changes the deal, reopen negotiation and obtain agreement on the revised terms. Integration tests should cover two simultaneous interrupts, duplicate settlement, reconnect during closing and public/private views. Only the initial deal and marker movement are scaffolded here.
+
 ## Approved Logout and room-only guests — 2026-11-25
 
 Earth approved creating/joining existing spy, mostLikely and neverHave rooms as a nickname-only guest, plus Logout on Me and room screens. This supersedes decision #88's proposal to create general guest accounts or automatically link them to LINE. Keep REST, six-digit codes, 12 seats, existing rules, 3-hour rooms and 1.5-second polling. No new game, dependency, Redis or WebSocket.
