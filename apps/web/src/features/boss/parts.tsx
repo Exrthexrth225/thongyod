@@ -45,7 +45,7 @@ export function SpaceTile({ space, big, active, onPick, className }: { space: Bo
   const closed = space.closedByDeal !== null
   const rich = space.dividends >= 6
   const Tag = onPick && !closed ? 'button' : 'div'
-  const u = (n: number) => (big ? `${n * 0.32}rem` : `${n}cqmin`) // board units
+  const u = (n: number) => (big ? `${n * 0.46}rem` : `${n}cqmin`) // board units
   return (
     <Tag
       type={Tag === 'button' ? 'button' : undefined}
