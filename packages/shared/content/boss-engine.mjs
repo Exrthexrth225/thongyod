@@ -54,6 +54,8 @@ export function buildDeck() {
 
 const iso = (ms) => new Date(ms).toISOString()
 const seatOf = (state, id) => state.seats.find((s) => s.id === id)
+/** Every team printed on a space (all its columns). */
+export const spaceTeams = (space) => space.groups.flatMap((g) => g.teams)
 
 function nextSeatId(state, fromId) {
   const idx = state.seats.findIndex((s) => s.id === fromId)
@@ -111,7 +113,7 @@ export function activeTeamProviders(state) {
   if (!deal) return providers
   const space = state.spaces[deal.spaceIndex]
   const blocked = new Set(deal.blockedTeams)
-  for (const team of [...space.required, ...space.optional]) {
+  for (const team of spaceTeams(space)) {
     const ids = new Set()
     if (!blocked.has(team)) {
       const owner = state.seats.find((s) => s.investors.includes(team))
@@ -147,8 +149,8 @@ export function canCloseDeal(state) {
   if (!deal.offered || amounts.reduce((a, b) => a + b, 0) !== deal.totalValue) return { ok: false, reason: 'NO_OFFER' }
   for (const id of Object.keys(deal.allocation)) if (!seatOf(state, id)) return { ok: false, reason: 'BAD_RECIPIENT' }
   const teams = new Set(agreedTeams(state))
-  if (space.required.some((t) => !teams.has(t))) return { ok: false, reason: 'MISSING_REQUIRED' }
-  if (teams.size < space.teamCount) return { ok: false, reason: 'NOT_ENOUGH_TEAMS' }
+  // every column needs its own count of investors
+  if (space.groups.some((g) => g.teams.filter((t) => teams.has(t)).length < g.pick)) return { ok: false, reason: 'NOT_ENOUGH_TEAMS' }
   return { ok: true }
 }
 
@@ -520,7 +522,7 @@ function act(state, seat, a, board, randomIndex, nowMs) {
       if (idx === -1) return err(400, 'CARD_NOT_FOUND')
       const card = seat.hand[idx]
       const space = state.spaces[deal.spaceIndex]
-      if (!space.required.includes(card.team) && !space.optional.includes(card.team)) return err(400, 'TEAM_NOT_IN_DEAL')
+      if (!spaceTeams(space).includes(card.team)) return err(400, 'TEAM_NOT_IN_DEAL')
       seat.hand.splice(idx, 1)
       deal.tableCards.push({ id: card.id, ownerId: actorId, team: card.team })
       backToTalks(state)
@@ -545,7 +547,7 @@ function act(state, seat, a, board, randomIndex, nowMs) {
       const card = seat.hand[idx]
       if (card.team !== 'any' && card.team !== a.targetTeam) return err(400, 'WRONG_TEAM')
       const space = state.spaces[deal.spaceIndex]
-      if (!space.required.includes(a.targetTeam) && !space.optional.includes(a.targetTeam)) return err(400, 'TEAM_NOT_IN_DEAL')
+      if (!spaceTeams(space).includes(a.targetTeam)) return err(400, 'TEAM_NOT_IN_DEAL')
       let targetCardId = null
       if (a.targetCardId !== undefined) {
         const tc = deal.tableCards.find((c) => c.id === a.targetCardId && c.team === a.targetTeam)
@@ -623,9 +625,11 @@ export function blockingIds(state) {
     ids.add(state.deal.bossId)
     const space = state.spaces[state.deal.spaceIndex]
     const providers = activeTeamProviders(state)
-    for (const team of space.required) {
-      const list = providers[team] ?? []
-      if (list.length === 1) ids.add(list[0])
+    for (const g of space.groups.filter((x) => x.pick === x.teams.length)) {
+      for (const team of g.teams) {
+        const list = providers[team] ?? []
+        if (list.length === 1) ids.add(list[0])
+      }
     }
   }
   return [...ids]

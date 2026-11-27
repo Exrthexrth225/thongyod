@@ -461,6 +461,7 @@ export const en: Messages = {
     },
     deal: {
       total: 'Deal value',
+      pick: 'Pick {{count}}',
       needs: 'Needs',
       choose: '{{count}} more from',
       people: '{{count}} investors',

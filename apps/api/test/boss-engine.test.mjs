@@ -54,7 +54,8 @@ test('deck and board match the agreed edition', () => {
   assert.equal(board.spaces.length, 16)
   for (const s of board.spaces) {
     assert.ok(s.teamCount >= 2 && s.teamCount <= 5 && s.dividends >= 3 && s.dividends <= 6)
-    assert.ok(s.required.length + s.optional.length >= s.teamCount)
+    assert.equal(s.teamCount, s.groups.reduce((a, g) => a + g.pick, 0))
+    for (const g of s.groups) assert.ok(g.pick >= 1 && g.pick <= g.teams.length)
   }
   assert.deepEqual(board.dealPlacards.map((p) => p.shareValue / 1e6), [2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 5, 5])
   assert.deepEqual(board.dealPlacards[10].endRollFaces, [1, 2])
@@ -78,7 +79,7 @@ test('a deal pays a bribe to someone outside it and only contributors must accep
   fails(s, 'p1', { type: 'start_closing' }, 'NO_OFFER')
   // p3 (green, not needed) gets 1M to stay quiet; p2 brings blue
   s = ok(s, 'p1', { type: 'set_allocation', allocation: { p1: 3_000_000, p2: 2_000_000, p3: 1_000_000 } })
-  fails(s, 'p1', { type: 'start_closing' }, 'MISSING_REQUIRED')
+  fails(s, 'p1', { type: 'start_closing' }, 'NOT_ENOUGH_TEAMS')
   s = ok(s, 'p2', { type: 'accept_offer' })
   s = ok(s, 'p1', { type: 'start_closing' }, 2000)
   assert.equal(s.phase, 'closing')

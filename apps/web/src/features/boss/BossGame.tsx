@@ -64,10 +64,11 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   if (view.phase === 'game_over') field = <Results view={view} players={players} />
   else if (view.phase === 'pick_start') {
     const mine = view.markerChooserId === meId
+    // Whole screen so the spaces are big enough to tap.
     field = (
-      <div className="flex size-full flex-col gap-2">
+      <div className="fixed inset-0 z-30 flex items-center justify-center gap-3 bg-black/70 p-2">
         <StatusLine text={mine ? t('boss.phase.pickMine') : t('boss.phase.pickStart', { name: nameOf(players, view.markerChooserId) })} />
-        <BossBoard view={view} onPick={mine ? (spaceIndex) => act({ type: 'pick_start', spaceIndex }) : undefined} className="min-h-0 flex-1" />
+        <BossBoard view={view} onPick={mine ? (spaceIndex) => act({ type: 'pick_start', spaceIndex }) : undefined} className="h-full" />
       </div>
     )
   } else if (deal) {
@@ -82,10 +83,9 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
       <div className="flex w-full flex-col items-center gap-3">
         <StatusLine text={view.phase === 'discard_limit' ? t('boss.phase.discard', { name: nameOf(players, view.turnPlayerId) }) : myTurn ? t('boss.phase.myTurn') : t('boss.phase.turn', { name: nameOf(players, view.turnPlayerId) })} />
         <div className="flex items-center gap-4">
-          {space && <SpaceTile space={space} big active className="w-60 max-w-[60vw]" />}
+          {space && <SpaceTile space={space} big active className="w-56 max-w-[60vw]" />}
           {view.phase === 'rolled_choice' && lastRoll && <Die key={lastRoll.id} value={lastRoll.roll ?? 1} size={60} />}
         </div>
-        <PlacardLine view={view} />
       </div>
     )
   }
@@ -121,8 +121,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
       <div className="boss-game relative size-full pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]">
         <header className="boss-top flex items-center gap-2 px-2 pt-1.5">
           <Button variant="ghost" size="icon" className="size-9 rounded-full bg-black/35 text-white hover:bg-black/50" aria-label={t('rooms.leave')} onClick={() => void navigate('/games/rooms')}><X className="size-5" /></Button>
-          <span className="truncate text-sm font-bold text-white drop-shadow">{t('boss.status.deal', { n: view.currentDealNumber })} · {t('boss.status.dealsLeft', { done: view.dealsDone, total: view.dealsTotal })}</span>
-          <span className="ml-auto" />
+          <div className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none]"><PlacardLine view={view} /></div>
           {view.phase !== 'pick_start' && <Button variant="ghost" size="sm" className="rounded-full bg-black/35 text-white hover:bg-black/50" onClick={() => setBoardOpen(true)}><LayoutGrid data-icon="inline-start" />{t('boss.act.board')}</Button>}
         </header>
         <div className="boss-live px-2"><RoomLiveBar room={room} meId={meId} /></div>
@@ -147,11 +146,9 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
       <InterruptOverlay view={view} players={players} canStop={!!myStop && view.interrupt?.actorId !== meId} stopping={move.isPending} onStop={() => myStop && act({ type: 'play_stop', cardId: myStop.id })} />
 
       {boardOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-black/80 p-2" role="dialog" aria-label={t('boss.act.board')}>
+        <div className="fixed inset-0 z-50 flex flex-col items-center bg-black/80 p-2" role="dialog" aria-label={t('boss.act.board')}>
           <Button variant="ghost" size="icon" className="mb-1 size-9 self-end rounded-full bg-white/15 text-white" aria-label="close" onClick={() => setBoardOpen(false)}><X className="size-5" /></Button>
-          <BossBoard view={view} className="min-h-0 flex-1">
-            {deal ? <DealPanel view={view} players={players} meId={meId} /> : <PlacardLine view={view} light />}
-          </BossBoard>
+          <div className="flex min-h-0 w-full flex-1 items-center justify-center"><BossBoard view={view} piles className="h-full" /></div>
         </div>
       )}
       <OfferSheet open={offerOpen} onOpenChange={setOfferOpen} view={view} players={players} sending={move.isPending} onSend={(allocation) => act({ type: 'set_allocation', allocation }, () => setOfferOpen(false))} />
@@ -170,12 +167,13 @@ function StatusLine({ text }: { text: string }) {
 export function PlacardLine({ view, light }: { view: BossView; light?: boolean }) {
   const { t } = useTranslation()
   return (
-    <div className={cn('flex flex-wrap items-center justify-center gap-2 text-sm font-bold', light ? 'text-[#fff4dc]' : 'text-white')}>
-      <span className="rounded-xl border-2 border-[#5a3420] bg-[#fff4dc] px-3 py-1 text-[#3a2416] shadow-[0_2px_0_#5a3420]">
+    <div className={cn('flex items-center gap-1.5 whitespace-nowrap text-xs font-bold', light ? 'text-[#fff4dc]' : 'text-white')}>
+      <span className="rounded-lg border-2 border-[#5a3420] bg-[#fff4dc] px-2 py-0.5 text-[#3a2416] shadow-[0_2px_0_#5a3420]">
         #{view.currentDealNumber} · {t('boss.status.perDividend', { m: view.currentShareValue / 1_000_000 })}
       </span>
-      {view.currentEndRollFaces.length > 0 && <span className="rounded-full bg-red-600/90 px-3 py-1">{t('boss.status.endFaces', { faces: view.currentEndRollFaces.join(' ') })}</span>}
-      <span className="rounded-full bg-black/40 px-3 py-1">{t('boss.status.deck', { count: view.deckCount })}</span>
+      {view.currentEndRollFaces.length > 0 && <span className="rounded-full bg-red-600/90 px-2 py-0.5">{t('boss.status.endFaces', { faces: view.currentEndRollFaces.join(' ') })}</span>}
+      <span className="rounded-full bg-black/40 px-2 py-0.5">{t('boss.status.dealsLeft', { done: view.dealsDone, total: view.dealsTotal })}</span>
+      <span className="rounded-full bg-black/40 px-2 py-0.5">{t('boss.status.deck', { count: view.deckCount })}</span>
     </div>
   )
 }

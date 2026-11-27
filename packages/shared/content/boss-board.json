@@ -1,38 +1,464 @@
 {
-  "_note": "Thongyod edition. Space shape follows the Eagle-Gryphon board (2-5 investors, x3-x6 dividends); placard values match the rulebook (#1 $2M, #6 $3M, #7 $4M, #13/#15 $5M). Replace with a legible copy of the real board when available.",
-  "spaces": [
-    { "index": 0, "required": ["red", "blue"], "optional": [], "teamCount": 2, "dividends": 3 },
-    { "index": 1, "required": ["yellow"], "optional": ["orange", "green", "purple"], "teamCount": 3, "dividends": 4 },
-    { "index": 2, "required": ["green", "purple"], "optional": ["red", "orange", "yellow", "blue"], "teamCount": 4, "dividends": 5 },
-    { "index": 3, "required": ["orange", "yellow"], "optional": [], "teamCount": 2, "dividends": 3 },
-    { "index": 4, "required": ["red", "yellow", "blue"], "optional": ["purple", "orange", "green"], "teamCount": 5, "dividends": 6 },
-    { "index": 5, "required": ["purple"], "optional": ["red", "blue", "green"], "teamCount": 3, "dividends": 4 },
-    { "index": 6, "required": ["orange", "blue"], "optional": ["yellow", "green", "purple", "red"], "teamCount": 4, "dividends": 5 },
-    { "index": 7, "required": ["green", "red"], "optional": ["orange", "purple"], "teamCount": 3, "dividends": 4 },
-    { "index": 8, "required": ["green", "blue"], "optional": ["red", "orange", "yellow", "purple"], "teamCount": 5, "dividends": 6 },
-    { "index": 9, "required": ["green", "purple"], "optional": [], "teamCount": 2, "dividends": 3 },
-    { "index": 10, "required": ["yellow", "red"], "optional": ["orange", "blue", "green", "purple"], "teamCount": 4, "dividends": 5 },
-    { "index": 11, "required": ["blue"], "optional": ["yellow", "purple", "orange"], "teamCount": 3, "dividends": 4 },
-    { "index": 12, "required": ["orange", "green", "purple"], "optional": ["red", "yellow", "blue"], "teamCount": 5, "dividends": 6 },
-    { "index": 13, "required": ["yellow", "green"], "optional": [], "teamCount": 2, "dividends": 3 },
-    { "index": 14, "required": ["orange"], "optional": ["red", "green", "blue"], "teamCount": 3, "dividends": 4 },
-    { "index": 15, "required": ["purple", "red"], "optional": ["orange", "yellow", "green", "blue"], "teamCount": 4, "dividends": 5 }
-  ],
-  "dealPlacards": [
-    { "number": 1, "shareValue": 2000000, "endRollFaces": [] },
-    { "number": 2, "shareValue": 2000000, "endRollFaces": [] },
-    { "number": 3, "shareValue": 2000000, "endRollFaces": [] },
-    { "number": 4, "shareValue": 3000000, "endRollFaces": [] },
-    { "number": 5, "shareValue": 3000000, "endRollFaces": [] },
-    { "number": 6, "shareValue": 3000000, "endRollFaces": [] },
-    { "number": 7, "shareValue": 4000000, "endRollFaces": [] },
-    { "number": 8, "shareValue": 4000000, "endRollFaces": [] },
-    { "number": 9, "shareValue": 4000000, "endRollFaces": [] },
-    { "number": 10, "shareValue": 5000000, "endRollFaces": [1] },
-    { "number": 11, "shareValue": 5000000, "endRollFaces": [1, 2] },
-    { "number": 12, "shareValue": 5000000, "endRollFaces": [1, 2, 3] },
-    { "number": 13, "shareValue": 5000000, "endRollFaces": [1, 2, 3, 4] },
-    { "number": 14, "shareValue": 5000000, "endRollFaces": [1, 2, 3, 4, 5] },
-    { "number": 15, "shareValue": 5000000, "endRollFaces": [1, 2, 3, 4, 5, 6] }
-  ]
+ "_note": "Thongyod edition, laid out like the Eagle-Gryphon board: each space has columns, pick N investors from each column; the box number is the total. Dividends x3-x6. Placard values follow the rulebook.",
+ "spaces": [
+  {
+   "index": 0,
+   "groups": [
+    {
+     "teams": [
+      "red"
+     ],
+     "pick": 1
+    },
+    {
+     "teams": [
+      "blue"
+     ],
+     "pick": 1
+    }
+   ],
+   "teamCount": 2,
+   "dividends": 3
+  },
+  {
+   "index": 1,
+   "groups": [
+    {
+     "teams": [
+      "yellow",
+      "blue",
+      "orange"
+     ],
+     "pick": 2
+    },
+    {
+     "teams": [
+      "purple",
+      "green"
+     ],
+     "pick": 1
+    }
+   ],
+   "teamCount": 3,
+   "dividends": 4
+  },
+  {
+   "index": 2,
+   "groups": [
+    {
+     "teams": [
+      "green",
+      "purple"
+     ],
+     "pick": 2
+    },
+    {
+     "teams": [
+      "red",
+      "orange",
+      "yellow",
+      "blue"
+     ],
+     "pick": 2
+    }
+   ],
+   "teamCount": 4,
+   "dividends": 5
+  },
+  {
+   "index": 3,
+   "groups": [
+    {
+     "teams": [
+      "orange",
+      "yellow"
+     ],
+     "pick": 1
+    },
+    {
+     "teams": [
+      "green",
+      "red"
+     ],
+     "pick": 1
+    }
+   ],
+   "teamCount": 2,
+   "dividends": 3
+  },
+  {
+   "index": 4,
+   "groups": [
+    {
+     "teams": [
+      "red",
+      "yellow"
+     ],
+     "pick": 2
+    },
+    {
+     "teams": [
+      "blue",
+      "purple",
+      "orange"
+     ],
+     "pick": 2
+    },
+    {
+     "teams": [
+      "green"
+     ],
+     "pick": 1
+    }
+   ],
+   "teamCount": 5,
+   "dividends": 6
+  },
+  {
+   "index": 5,
+   "groups": [
+    {
+     "teams": [
+      "purple"
+     ],
+     "pick": 1
+    },
+    {
+     "teams": [
+      "red",
+      "blue",
+      "green"
+     ],
+     "pick": 2
+    }
+   ],
+   "teamCount": 3,
+   "dividends": 4
+  },
+  {
+   "index": 6,
+   "groups": [
+    {
+     "teams": [
+      "orange",
+      "blue",
+      "yellow"
+     ],
+     "pick": 2
+    },
+    {
+     "teams": [
+      "green",
+      "purple",
+      "red"
+     ],
+     "pick": 2
+    }
+   ],
+   "teamCount": 4,
+   "dividends": 5
+  },
+  {
+   "index": 7,
+   "groups": [
+    {
+     "teams": [
+      "green",
+      "red"
+     ],
+     "pick": 1
+    },
+    {
+     "teams": [
+      "orange",
+      "purple"
+     ],
+     "pick": 1
+    },
+    {
+     "teams": [
+      "yellow",
+      "blue"
+     ],
+     "pick": 1
+    }
+   ],
+   "teamCount": 3,
+   "dividends": 4
+  },
+  {
+   "index": 8,
+   "groups": [
+    {
+     "teams": [
+      "green",
+      "blue"
+     ],
+     "pick": 2
+    },
+    {
+     "teams": [
+      "red",
+      "orange",
+      "yellow",
+      "purple"
+     ],
+     "pick": 3
+    }
+   ],
+   "teamCount": 5,
+   "dividends": 6
+  },
+  {
+   "index": 9,
+   "groups": [
+    {
+     "teams": [
+      "green",
+      "purple",
+      "yellow"
+     ],
+     "pick": 2
+    }
+   ],
+   "teamCount": 2,
+   "dividends": 3
+  },
+  {
+   "index": 10,
+   "groups": [
+    {
+     "teams": [
+      "yellow",
+      "red"
+     ],
+     "pick": 1
+    },
+    {
+     "teams": [
+      "orange",
+      "blue",
+      "green",
+      "purple"
+     ],
+     "pick": 3
+    }
+   ],
+   "teamCount": 4,
+   "dividends": 5
+  },
+  {
+   "index": 11,
+   "groups": [
+    {
+     "teams": [
+      "blue"
+     ],
+     "pick": 1
+    },
+    {
+     "teams": [
+      "yellow",
+      "purple",
+      "orange"
+     ],
+     "pick": 2
+    }
+   ],
+   "teamCount": 3,
+   "dividends": 4
+  },
+  {
+   "index": 12,
+   "groups": [
+    {
+     "teams": [
+      "orange",
+      "green",
+      "purple"
+     ],
+     "pick": 2
+    },
+    {
+     "teams": [
+      "red",
+      "yellow",
+      "blue"
+     ],
+     "pick": 3
+    }
+   ],
+   "teamCount": 5,
+   "dividends": 6
+  },
+  {
+   "index": 13,
+   "groups": [
+    {
+     "teams": [
+      "yellow",
+      "green"
+     ],
+     "pick": 1
+    },
+    {
+     "teams": [
+      "blue",
+      "red"
+     ],
+     "pick": 1
+    }
+   ],
+   "teamCount": 2,
+   "dividends": 3
+  },
+  {
+   "index": 14,
+   "groups": [
+    {
+     "teams": [
+      "orange",
+      "red"
+     ],
+     "pick": 2
+    },
+    {
+     "teams": [
+      "green",
+      "blue"
+     ],
+     "pick": 1
+    }
+   ],
+   "teamCount": 3,
+   "dividends": 4
+  },
+  {
+   "index": 15,
+   "groups": [
+    {
+     "teams": [
+      "purple",
+      "red"
+     ],
+     "pick": 1
+    },
+    {
+     "teams": [
+      "orange",
+      "yellow",
+      "green",
+      "blue"
+     ],
+     "pick": 3
+    }
+   ],
+   "teamCount": 4,
+   "dividends": 5
+  }
+ ],
+ "dealPlacards": [
+  {
+   "number": 1,
+   "shareValue": 2000000,
+   "endRollFaces": []
+  },
+  {
+   "number": 2,
+   "shareValue": 2000000,
+   "endRollFaces": []
+  },
+  {
+   "number": 3,
+   "shareValue": 2000000,
+   "endRollFaces": []
+  },
+  {
+   "number": 4,
+   "shareValue": 3000000,
+   "endRollFaces": []
+  },
+  {
+   "number": 5,
+   "shareValue": 3000000,
+   "endRollFaces": []
+  },
+  {
+   "number": 6,
+   "shareValue": 3000000,
+   "endRollFaces": []
+  },
+  {
+   "number": 7,
+   "shareValue": 4000000,
+   "endRollFaces": []
+  },
+  {
+   "number": 8,
+   "shareValue": 4000000,
+   "endRollFaces": []
+  },
+  {
+   "number": 9,
+   "shareValue": 4000000,
+   "endRollFaces": []
+  },
+  {
+   "number": 10,
+   "shareValue": 5000000,
+   "endRollFaces": [
+    1
+   ]
+  },
+  {
+   "number": 11,
+   "shareValue": 5000000,
+   "endRollFaces": [
+    1,
+    2
+   ]
+  },
+  {
+   "number": 12,
+   "shareValue": 5000000,
+   "endRollFaces": [
+    1,
+    2,
+    3
+   ]
+  },
+  {
+   "number": 13,
+   "shareValue": 5000000,
+   "endRollFaces": [
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "number": 14,
+   "shareValue": 5000000,
+   "endRollFaces": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  {
+   "number": 15,
+   "shareValue": 5000000,
+   "endRollFaces": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ]
+  }
+ ]
 }

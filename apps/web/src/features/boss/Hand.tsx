@@ -54,7 +54,7 @@ function CardSheet({ card, onClose, view, players, meId, busy, act }: { card: Bo
   const deal = view.deal
   const talking = !!deal && (view.phase === 'negotiating' || view.phase === 'closing')
   const space = deal ? view.spaces[deal.spaceIndex] : null
-  const inDeal = (team: InvestorTeam) => !!space && (space.required.includes(team) || space.optional.includes(team))
+  const inDeal = (team: InvestorTeam) => !!space && space.groups.some((g) => g.teams.includes(team))
   let body: React.ReactNode = null
   if (card) {
     const reason = (text: string) => <p className="rounded-2xl bg-muted p-3 text-center text-sm">{text}</p>

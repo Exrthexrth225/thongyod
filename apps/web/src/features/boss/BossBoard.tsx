@@ -1,8 +1,8 @@
 import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import type { BossEvent, BossView } from '@/api/types'
 import { cn } from '@/lib/utils'
-import { fxArt, hopPath, ringCell, tableArt } from './meta'
-import { SpaceTile } from './parts'
+import { centerArt, fxArt, hopPath, ringCell, tableArt } from './meta'
+import { DeckPile, PlacardStack, SpaceTile } from './parts'
 
 type Props = {
   view: BossView
@@ -12,11 +12,13 @@ type Props = {
   onPick?: (space: number) => void
   /** The middle of the table. */
   children?: ReactNode
+  /** Show the placard stack and the draw pile in the middle. */
+  piles?: boolean
   className?: string
 }
 
 /** The board: 16 deal spaces around a felt table, the $ marker, and whatever goes in the middle. */
-export function BossBoard({ view, roll, onPick, children, className }: Props) {
+export function BossBoard({ view, roll, onPick, children, piles, className }: Props) {
   const grid = useRef<HTMLDivElement>(null)
   const marker = useRef<HTMLImageElement>(null)
   const markerSpace = view.markerSpace
@@ -50,21 +52,34 @@ export function BossBoard({ view, roll, onPick, children, className }: Props) {
   }, [rollKey])
 
   return (
-    <div className={cn('relative overflow-hidden rounded-[2.2vmin] bg-[#0f5a46] bg-cover bg-center', className)} style={{ backgroundImage: `url(${tableArt})` }}>
-      <div ref={grid} className="absolute inset-[5.5%] grid grid-cols-5 grid-rows-5 gap-[0.8vmin]">
+    <div className={cn('relative aspect-square max-h-full max-w-full overflow-hidden rounded-[2.2vmin] bg-[#0f5a46] bg-cover bg-center', className)} style={{ backgroundImage: `url(${tableArt})` }}>
+      <div ref={grid} className="absolute inset-[3.5%] grid grid-cols-8 grid-rows-8 gap-[0.7%]">
         {view.spaces.map((space) => {
-          const { col, row } = ringCell(space.index)
           return (
-            <div key={space.index} data-space={space.index} style={{ gridColumn: col, gridRow: row }} className="relative min-h-0 min-w-0">
+            <div key={space.index} data-space={space.index} style={ringCell(space.index)} className="relative min-h-0 min-w-0">
               <SpaceTile space={space} active={markerSpace === space.index} onPick={onPick ? () => onPick(space.index) : undefined} className="size-full" />
-              <span className="absolute -left-1 -top-1 flex size-[2.4vmin] min-h-4 min-w-4 items-center justify-center rounded-full bg-[#5a3420] text-[clamp(8px,1.2vmin,12px)] font-bold text-[#fff4dc]">{space.index + 1}</span>
               {markerSpace === space.index && (
                 <img ref={marker} src={fxArt('pawn')} alt="$" className="boss-pawn pointer-events-none absolute left-1/2 top-1/2 z-20 size-[7vmin] min-h-10 min-w-10 -translate-x-1/2 -translate-y-[70%] drop-shadow-[0_6px_4px_rgba(0,0,0,0.45)]" />
               )}
             </div>
           )
         })}
-        <div className="col-[2/5] row-[2/5] flex min-h-0 min-w-0 flex-col items-center justify-center p-[1vmin]">{children}</div>
+        <div className="relative col-[3/7] row-[3/7] min-h-0 min-w-0 overflow-hidden rounded-[1.6vmin] shadow-[inset_0_0_3vmin_rgba(0,0,0,0.55)] ring-2 ring-[#b9821c]/80">
+          {centerArt ? (
+            <img src={centerArt} alt="" className="absolute inset-0 size-full object-cover" aria-hidden="true" />
+          ) : (
+            <div className="boss-center-felt absolute inset-0" aria-hidden="true">
+              <span className="boss-center-title absolute inset-x-0 top-[6%] text-center text-[clamp(18px,5vmin,64px)] font-black italic">I&apos;m the Boss!</span>
+            </div>
+          )}
+          {piles && (
+            <>
+              <PlacardStack view={view} className="absolute bottom-[6%] left-[5%] aspect-[3/4] w-[24%]" />
+              <DeckPile count={view.deckCount} className="absolute bottom-[6%] right-[7%] aspect-[2/3] w-[16%]" />
+            </>
+          )}
+          <div className="relative flex size-full flex-col items-center justify-center p-[1.2vmin]">{children}</div>
+        </div>
       </div>
     </div>
   )

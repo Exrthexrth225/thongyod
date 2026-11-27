@@ -463,6 +463,7 @@ export const th = {
     },
     deal: {
       total: 'มูลค่าดีล',
+      pick: 'เลือก {{count}}',
       needs: 'ต้องมี',
       choose: 'เลือกอีก {{count}} จาก',
       people: '{{count}} คน',

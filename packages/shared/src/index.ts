@@ -77,4 +77,4 @@ export type {
 } from './home.js'
 
 export type { RoomGame, RoomState, SpyRoomSettings, PartyRoomSettings, RoomPlayer, SpySecret, RoomRound, PartyRound, SpyRoomData, PartyRoomData, BossRoomData, BossCommandPayload, BossHostPayload, Room, RoomBoard, RoomBoardStatus, RoomCommand, RoomCommandType, RoomCommandResult, RoomServerEvents, RoomClientEvents, RoomBoardSession } from './rooms.js'
-export type { InvestorTeam, InfluenceCard, BossHandCard, DealSpace, BossCashTier, BossBoardSpace, BossDealPlacard, BossPhase, BossTableCard, BossInterrupt, BossDealState, BossEventKind, BossEvent, BossSeatView, BossRoomSettings, BossView, BossActionPayload, BossActionRequest } from './boss.js'
+export type { InvestorTeam, InfluenceCard, BossHandCard, DealGroup, DealSpace, BossCashTier, BossBoardSpace, BossDealPlacard, BossPhase, BossTableCard, BossInterrupt, BossDealState, BossEventKind, BossEvent, BossSeatView, BossRoomSettings, BossView, BossActionPayload, BossActionRequest } from './boss.js'

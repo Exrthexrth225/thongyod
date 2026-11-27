@@ -10,6 +10,8 @@ const pick = (all: Record<string, string>, name: string) => Object.entries(all).
 
 export { default as tableArt } from '@/assets/boss/table.webp'
 export { default as cardBackArt } from '@/assets/boss/card-back.webp'
+/** Optional middle-of-the-table illustration (image/imboss_9). */
+export const centerArt: string | null = Object.values(import.meta.glob<string>('@/assets/boss/center.webp', { eager: true, import: 'default' }))[0] ?? null
 
 export const TEAMS: InvestorTeam[] = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
 export const TEAM_COLOR: Record<InvestorTeam, string> = {
@@ -53,10 +55,14 @@ export function hopPath(from: number, to: number, closed: Set<number>): number[]
   return path
 }
 
-/** Where each of the 16 spaces sits on the board ring (5 across the top, 3 down the right, 5 back, 3 up). */
-export function ringCell(index: number): { col: number; row: number } {
-  if (index < 5) return { col: index + 1, row: 1 }
-  if (index < 8) return { col: 5, row: index - 3 }
-  if (index < 13) return { col: 5 - (index - 8), row: 5 }
-  return { col: 1, row: 5 - (index - 12) }
-}
+/**
+ * Where each space sits on the square board (8×8 grid, a two-deep ring around a 4×4 middle), like the printed
+ * board: big corner spaces, and sides split unevenly (1-2-1, 2-1-1, 1-1-2, 1-2-1). Clockwise from top-left.
+ */
+const RING: [string, string][] = [
+  ['1 / 3', '1 / 3'], ['3 / 4', '1 / 3'], ['4 / 6', '1 / 3'], ['6 / 7', '1 / 3'],
+  ['7 / 9', '1 / 3'], ['7 / 9', '3 / 5'], ['7 / 9', '5 / 6'], ['7 / 9', '6 / 7'],
+  ['7 / 9', '7 / 9'], ['6 / 7', '7 / 9'], ['5 / 6', '7 / 9'], ['3 / 5', '7 / 9'],
+  ['1 / 3', '7 / 9'], ['1 / 3', '6 / 7'], ['1 / 3', '4 / 6'], ['1 / 3', '3 / 4'],
+]
+export const ringCell = (index: number) => ({ gridColumn: RING[index][0], gridRow: RING[index][1] })

@@ -43,6 +43,7 @@ export const START_HAND: number
 export const STOP_WINDOW_MS: number
 export const CLOSING_MS: number
 export function buildDeck(): BossHandCard[]
+export function spaceTeams(space: { groups: { teams: InvestorTeam[] }[] }): InvestorTeam[]
 export function cashTierOf(cash: number): BossView['seats'][number]['cashTier']
 export function activeTeamProviders(state: BossInternalState): Partial<Record<InvestorTeam, string[]>>
 export function contributorIds(state: BossInternalState): string[]

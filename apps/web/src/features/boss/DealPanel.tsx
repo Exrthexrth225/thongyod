@@ -13,7 +13,6 @@ export function DealPanel({ view, players, meId, big }: Props) {
   const deal = view.deal
   if (!deal) return null
   const space = view.spaces[deal.spaceIndex]
-  const choose = space.teamCount - space.required.length
   const agreed = new Set(deal.agreedTeams)
   const accepted = new Set([deal.bossId, ...deal.acceptedIds])
   const given = Object.values(deal.allocation).reduce((a, b) => a + b, 0)
@@ -43,7 +42,7 @@ export function DealPanel({ view, players, meId, big }: Props) {
 
   const recipients = Object.entries(deal.allocation).filter(([id]) => id !== deal.bossId)
   const contributors = new Set(deal.contributorIds)
-  const missing = Math.max(0, space.teamCount - agreed.size)
+  const missing = space.groups.reduce((n, g) => n + Math.max(0, g.pick - g.teams.filter((team) => agreed.has(team)).length), 0)
 
   return (
     <div className={cn('boss-deal flex w-full min-w-0 flex-col gap-2 rounded-2xl bg-[#fff4dc]/95 p-2.5 text-[#3a2416] shadow-[0_3px_0_#5a3420] ring-2 ring-[#5a3420]/60', big && 'gap-3 p-4')}>
@@ -59,17 +58,19 @@ export function DealPanel({ view, players, meId, big }: Props) {
         </div>
       </header>
 
-      <div className={cn('grid gap-2', choose > 0 ? 'grid-cols-2' : 'grid-cols-1')}>
-        <section className="flex min-w-0 flex-col gap-1">
-          <h4 className="text-xs font-black uppercase tracking-wide opacity-70">{t('boss.deal.needs')}</h4>
-          <ul className="flex flex-col gap-1">{space.required.map(slot)}</ul>
-        </section>
-        {choose > 0 && (
-          <section className="flex min-w-0 flex-col gap-1 border-l-2 border-dashed border-[#5a3420]/35 pl-2">
-            <h4 className="text-xs font-black uppercase tracking-wide opacity-70">{t('boss.deal.choose', { count: choose })}</h4>
-            <ul className="flex flex-col gap-1">{space.optional.map(slot)}</ul>
-          </section>
-        )}
+      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${space.groups.length}, minmax(0, 1fr))` }}>
+        {space.groups.map((g, i) => {
+          const have = g.teams.filter((team) => agreed.has(team)).length
+          return (
+            <section key={i} className={cn('flex min-w-0 flex-col gap-1', i > 0 && 'border-l-2 border-dashed border-[#5a3420]/35 pl-2')}>
+              <h4 className={cn('flex items-center justify-between text-xs font-black uppercase tracking-wide', have >= g.pick ? 'text-emerald-700' : 'opacity-70')}>
+                <span>{g.pick === g.teams.length ? t('boss.deal.needs') : t('boss.deal.pick', { count: g.pick })}</span>
+                <span className="tabular-nums">{Math.min(have, g.pick)}/{g.pick}</span>
+              </h4>
+              <ul className="flex flex-col gap-1">{g.teams.map(slot)}</ul>
+            </section>
+          )
+        })}
       </div>
 
       <section className="flex flex-col gap-1 rounded-xl bg-white/70 p-2">
@@ -112,7 +113,7 @@ export function DealPanel({ view, players, meId, big }: Props) {
         )}
       </section>
       <p className={cn('text-center text-xs font-bold', deal.canClose ? 'text-emerald-700' : 'opacity-70')}>
-        {deal.canClose ? t('boss.deal.ready') : missing > 0 ? t('boss.deal.missingTeams', { count: missing }) : t('boss.deal.needAccept', { teams: space.required.filter((team) => !agreed.has(team)).map((team) => t(`boss.teamShort.${team}`)).join(', ') })}
+        {deal.canClose ? t('boss.deal.ready') : missing > 0 ? t('boss.deal.missingTeams', { count: missing }) : t('boss.deal.noOffer')}
       </p>
     </div>
   )

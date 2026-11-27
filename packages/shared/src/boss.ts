@@ -8,10 +8,16 @@ export type InfluenceCard =
 
 export type BossHandCard = InfluenceCard & { id: string }
 
-/** A deal space: every required team plus enough optional teams to reach teamCount different teams. */
+/** One column of a deal space: pick `pick` investors from these teams (pick === teams.length means all of them). */
+export interface DealGroup {
+  teams: InvestorTeam[]
+  pick: number
+}
+
+/** A deal space as printed on the board: columns of teams, the total number of investors and the multiplier. */
 export interface DealSpace {
-  required: InvestorTeam[]
-  optional: InvestorTeam[]
+  groups: DealGroup[]
+  /** Sum of the columns' picks. */
   teamCount: number
   dividends: number
 }
