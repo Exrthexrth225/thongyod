@@ -15,7 +15,6 @@ import { Button } from '@/components/ui/button'
 import { PartyRoom } from '@/features/rooms/PartyRoom'
 import { SpyRoom } from '@/features/rooms/SpyRoom'
 import { BossRoom } from '@/features/boss/BossRoom'
-import { faceArt, TEAMS } from '@/features/boss/meta'
 import { RoomLiveBar } from '@/features/rooms/RoomLiveBar'
 import { showErrorToast } from '@/lib/toast'
 import { tintClass } from '@/lib/tones'
@@ -59,9 +58,7 @@ function RoomPageContent() {
     body = (
       <div className="flex flex-col gap-4 px-4 pb-8">
         <div className={cn('game-pop flex flex-col items-center gap-3 rounded-3xl p-6 text-center', tintClass(6))}>
-          {r.game === 'boss'
-            ? <div className="flex -space-x-3" aria-hidden="true">{TEAMS.map((team) => <img key={team} src={faceArt(team)} alt="" className="size-12 rounded-full bg-white/90 object-contain ring-2 ring-background" />)}</div>
-            : <Users className="size-12" aria-hidden="true" />}
+          <Users className="size-12" aria-hidden="true" />
           <span className="text-sm opacity-80">{t('rooms.invitedBy', { name: host?.displayName ?? '' })}</span>
           <span className="text-3xl font-medium">{t(`games.list.${r.game}.title`)}</span>
           <div className="flex -space-x-2">

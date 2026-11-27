@@ -2,6 +2,7 @@
 // a (re)connect just watches the room again and gets a fresh snapshot, so nothing depends on
 // Socket.IO's own recovery. While the link is down, useRoom falls back to polling REST.
 import { io, type Socket } from 'socket.io-client'
+import { checkForNewVersion } from '@/lib/appVersion'
 import type { Room, RoomBoard, RoomClientEvents, RoomCommand, RoomCommandResult, RoomServerEvents } from '@thongyod/shared'
 
 type Mode = 'seat' | 'board'
@@ -101,7 +102,8 @@ export class RoomLink {
       path: '/api/socket.io', withCredentials: true, transports: ['websocket', 'polling'],
       auth: { as: this.mode }, reconnectionDelay: 1000, reconnectionDelayMax: 8000,
     })
-    socket.on('connect', () => { this.set({ connected: true }); void this.sendWatch(false) })
+    // a reconnect usually means the server restarted (a deploy): make sure this page is not an old build
+    socket.on('connect', () => { this.set({ connected: true }); void this.sendWatch(false); void checkForNewVersion() })
     socket.on('disconnect', () => this.set({ connected: false }))
     socket.on('room:view', ({ room, control }) => {
       if (room.code !== this.state.watching) return

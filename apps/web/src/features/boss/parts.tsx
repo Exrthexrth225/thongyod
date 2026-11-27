@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Crown, Layers, WifiOff } from 'lucide-react'
+import { Crown, Layers, UserRound, WifiOff } from 'lucide-react'
 import type { BossBoardSpace, BossSeatView, BossView, InvestorTeam, RoomPlayer } from '@/api/types'
 import { cn } from '@/lib/utils'
 import { Word } from './Word'
-import { cardBackArt, faceArt, millions, moneyArt, seatTeam, shortName, teamArt, TEAM_COLOR, type Mood, type TileShape } from './meta'
+import { cardBackArt, faceArt, millions, moneyArt, shortName, teamArt, TEAM_COLOR, type Mood, type TileShape } from './meta'
 
 export function TeamBadge({ team, className, dim }: { team: InvestorTeam; className?: string; dim?: boolean }) {
   const { t } = useTranslation()
@@ -25,14 +25,28 @@ export function Money({ amount, className }: { amount: number; className?: strin
 }
 
 /**
- * A player's face: the same portrait all game (it does not change when they gain or lose investors).
- * The investors they hold are shown next to it as colour chips (`SeatColors`).
+ * A player's faces: one character per investor colour they hold (two colours → two faces, overlapping a little,
+ * each ringed in its colour). No colour yet (draft) → a plain silhouette. `className` sizes one face.
  */
 export function SeatFaces({ view, userId, mood = 'calm', round, className }: { view: BossView; userId: string; mood?: Mood; round?: boolean; className?: string }) {
-  const team = seatTeam(view, userId)
+  const teams = view.seats.find((s) => s.userId === userId)?.investors ?? []
+  const shape = round ? 'rounded-full' : 'rounded-2xl'
+  if (!teams.length) {
+    return (
+      <span className={cn('relative flex shrink-0 items-end justify-center overflow-hidden bg-[#3a3366] ring-2 ring-white/25', shape, className)} aria-hidden="true">
+        <UserRound className="size-[85%] translate-y-[12%] text-white/35" />
+      </span>
+    )
+  }
+  const step = 0.58 // each extra face adds 58% of a face width
+  const ratio = 1 + step * (teams.length - 1)
   return (
-    <span className={cn('relative block shrink-0', round ? 'rounded-full' : 'rounded-2xl', className)} style={{ background: TEAM_COLOR[team], padding: 2 }}>
-      <Face team={team} mood={mood} className={cn('size-full', round && 'rounded-full')} />
+    <span className={cn('relative block shrink-0', className)} style={{ width: 'auto', aspectRatio: ratio }}>
+      {teams.map((team, i) => (
+        <span key={team} className={cn('absolute top-0 block h-full', shape)} style={{ left: `${(i * step * 100) / ratio}%`, width: `${100 / ratio}%`, zIndex: teams.length - i, background: TEAM_COLOR[team], padding: 2, boxShadow: i ? '-2px 0 4px rgba(0,0,0,0.35)' : undefined }}>
+          <Face team={team} mood={mood} className={cn('size-full', round && 'rounded-full')} />
+        </span>
+      ))}
     </span>
   )
 }
@@ -45,7 +59,7 @@ export function SeatColors({ view, userId, className, size = 'size-4' }: { view:
 }
 
 /** A long name shortened at a readable boundary; tap to see it whole. */
-export function PlayerName({ name, max = 8, className }: { name: string; max?: number; className?: string }) {
+export function PlayerName({ name, max = 6, className }: { name: string; max?: number; className?: string }) {
   const [full, setFull] = useState(false)
   const short = shortName(name, max)
   if (short === name) return <span className={cn('truncate', className)}>{name}</span>
@@ -185,7 +199,7 @@ export function SeatCard({ view, seat, players, online, mood, me, compact, dark 
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="flex items-center gap-1 truncate text-sm font-bold">
           {isBoss && <Crown className="size-3.5 shrink-0 text-amber-500" aria-label={t('boss.cards.boss')} />}
-          <PlayerName name={name} max={compact ? 6 : 9} />
+          <PlayerName name={name} />
           {!online && <WifiOff className="size-3 shrink-0 opacity-70" aria-hidden="true" />}
         </span>
         <span className="flex items-center gap-1.5">

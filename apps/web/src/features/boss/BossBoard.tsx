@@ -9,6 +9,8 @@ type Props = {
   view: BossView
   /** The latest dice roll to animate (marker hops tile by tile). */
   roll?: BossEvent | null
+  /** While the marker is still hopping: keep the glow on the space it left, so the board does not give away the landing. */
+  hold?: number | null
   /** pick_start: tap a space. */
   onPick?: (space: number) => void
   /** The middle of the table. */
@@ -21,39 +23,67 @@ type Props = {
 }
 
 /** The board: 16 deal spaces around a felt table, the $ marker, and whatever goes in the middle. */
-export function BossBoard({ view, roll, onPick, children, piles, settledSpace = null, className }: Props) {
+export function BossBoard({ view, roll, hold = null, onPick, children, piles, settledSpace = null, className }: Props) {
   const grid = useRef<HTMLDivElement>(null)
   const marker = useRef<HTMLSpanElement>(null)
   const markerSpace = view.markerSpace
+  const lit = hold ?? markerSpace
   const focus = markerSpace !== null && view.phase !== 'pick_start' && view.phase !== 'game_over'
   const rollKey = roll?.id
 
-  // Hop the marker along its path. Positions are read from the tiles, so it follows any screen size.
+  // Hop the marker along its path like a game piece: it jumps onto the middle of each space (the space bumps and puffs),
+  // and after landing on the last one it hops off to its resting spot at the side, so it never covers the icons.
   useLayoutEffect(() => {
     const root = grid.current, pawn = marker.current
     if (!root || !pawn || !roll || roll.fromSpace === undefined || roll.spaceIndex === undefined) return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const closed = new Set(view.spaces.filter((s) => s.closedByDeal !== null).map((s) => s.index))
     // step by step, over closed spaces too (they just don't count)
-    const path = [roll.fromSpace, ...(roll.path ?? hopPath(roll.fromSpace, roll.spaceIndex, closed))]
-    // Offsets from the end space (the marker keeps the same spot on every tile, so tile centre to tile centre works).
-    const end = root.querySelector<HTMLElement>(`[data-space="${roll.spaceIndex}"]`)!.getBoundingClientRect()
-    const at = (i: number) => {
-      const tile = root.querySelector<HTMLElement>(`[data-space="${i}"]`)!.getBoundingClientRect()
-      return { x: tile.left + tile.width / 2 - (end.left + end.width / 2), y: tile.top + tile.height / 2 - (end.top + end.height / 2) }
-    }
-    const frames: Keyframe[] = []
-    path.forEach((space, i) => {
-      const p = at(space)
-      const offset = path.length === 1 ? 1 : i / (path.length - 1)
-      frames.push({ transform: `translate(${p.x}px, ${p.y}px) scale(1)`, offset: Math.min(1, offset) })
-      if (i < path.length - 1) {
-        const q = at(path[i + 1])
-        frames.push({ transform: `translate(${(p.x + q.x) / 2}px, ${(p.y + q.y) / 2 - 28}px) scale(1.15)`, offset: Math.min(1, (i + 0.5) / (path.length - 1)) })
+    const path = roll.path ?? hopPath(roll.fromSpace, roll.spaceIndex, closed)
+    const cell = (i: number) => root.querySelector<HTMLElement>(`[data-space="${i}"]`)!
+    const rest = pawn.getBoundingClientRect()
+    const restC = { x: rest.left + rest.width / 2, y: rest.top + rest.height / 2 }
+    const rel = (p: { x: number; y: number }) => ({ x: p.x - restC.x, y: p.y - restC.y })
+    const centre = (i: number) => { const r = cell(i).getBoundingClientRect(); return rel({ x: r.left + r.width / 2, y: r.top + r.height / 2 }) }
+    // where it rested on the space it starts from: measure a probe placed like the marker
+    const probe = document.createElement('span')
+    probe.style.cssText = 'position:absolute;width:0;height:0;'
+    Object.assign(probe.style, markerSpot(roll.fromSpace))
+    cell(roll.fromSpace).appendChild(probe)
+    const pr = probe.getBoundingClientRect()
+    probe.remove()
+    const start = rel({ x: pr.left, y: pr.top })
+    const lift = rest.height * 0.9
+    const hops = [...path.map(centre), { x: 0, y: 0 }]
+    const total = path.length * ROLL.step + ROLL.off
+    const delay = ROLL.tumble + ROLL.hold
+    const frames: Keyframe[] = [{ transform: `translate(${start.x}px, ${start.y}px) scale(1)`, offset: 0 }]
+    let from = start, t = 0
+    hops.forEach((to, k) => {
+      const len = k < path.length ? ROLL.step : ROLL.off
+      const at = (f: number) => Math.min(1, (t + len * f) / total)
+      const up = Math.min(lift * (k < path.length ? 1 : 0.7), lift + Math.abs(to.y - from.y) * 0.3)
+      frames.push({ transform: `translate(${from.x}px, ${from.y}px) scale(1.05, 0.9)`, offset: at(0.08), easing: 'ease-out' })
+      frames.push({ transform: `translate(${(from.x + to.x) / 2}px, ${Math.min(from.y, to.y) - up}px) scale(0.95, 1.1)`, offset: at(0.5), easing: 'ease-in' })
+      frames.push({ transform: `translate(${to.x}px, ${to.y}px) scale(1.18, 0.8)`, offset: at(0.88), easing: 'ease-out' })
+      frames.push({ transform: `translate(${to.x}px, ${to.y}px) scale(1)`, offset: at(1) })
+      if (k < path.length) {
+        // the space bumps and a puff of dust where it lands
+        const land = delay + t + len * 0.88
+        cell(path[k]).animate([{ transform: 'scale(1)' }, { transform: 'scale(1.07)' }, { transform: 'scale(1)' }], { duration: 260, delay: land, easing: 'ease-out' })
+        const puff = document.createElement('span')
+        const r = cell(path[k]).getBoundingClientRect(), g = root.getBoundingClientRect()
+        puff.className = 'boss-puff'
+        puff.style.left = `${r.left - g.left + r.width / 2}px`
+        puff.style.top = `${r.top - g.top + r.height / 2}px`
+        root.appendChild(puff)
+        puff.animate([{ opacity: 0, transform: 'translate(-50%, -50%) scale(0.3)' }, { opacity: 0.85, transform: 'translate(-50%, -50%) scale(0.9)', offset: 0.25 }, { opacity: 0, transform: 'translate(-50%, -50%) scale(1.6)' }], { duration: 520, delay: land, fill: 'both', easing: 'ease-out' }).finished.then(() => puff.remove(), () => puff.remove())
       }
+      from = to
+      t += len
     })
     // after the die has tumbled and shown its face
-    pawn.animate(frames, { duration: Math.max(1, path.length - 1) * ROLL.step, delay: ROLL.tumble + ROLL.hold, easing: 'linear', fill: 'backwards' })
+    pawn.animate(frames, { duration: total, delay, fill: 'backwards' })
     // only when a new roll arrives
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rollKey])
@@ -62,13 +92,13 @@ export function BossBoard({ view, roll, onPick, children, piles, settledSpace = 
     <div className={cn('relative aspect-square max-h-full max-w-full overflow-hidden rounded-[3%] bg-[#17142b] shadow-[0_20px_60px_rgba(0,0,0,0.5)] ring-1 ring-[#e9b949]/40', className)}>
       <div ref={grid} className="boss-grid absolute inset-[3.5%] grid gap-[0.8%] [container-type:size]">
         {view.spaces.map((space) => {
-          const here = markerSpace === space.index
+          const here = lit === space.index
           const celebrate = settledSpace === space.index
           // While someone plays, the other spaces step back so the one with the $ stands out.
           const dim = focus && !here && !celebrate
           return (
             <div key={space.index} data-space={space.index} style={ringCell(space.index)} className={cn('relative min-h-0 min-w-0 transition-[opacity,filter] duration-500', dim && 'opacity-75 saturate-[0.6]', here && 'z-10', celebrate && 'boss-celebrate z-30')}>
-              <SpaceTile space={space} shape={ringShape(space.index)} active={markerSpace === space.index} onPick={onPick ? () => onPick(space.index) : undefined} className="size-full" />
+              <SpaceTile space={space} shape={ringShape(space.index)} active={lit === space.index} onPick={onPick ? () => onPick(space.index) : undefined} className="size-full" />
               {markerSpace === space.index && (
                 <span ref={marker} className="boss-marker pointer-events-none absolute z-20 size-[11cqmin] -translate-x-1/2 -translate-y-1/2" style={markerSpot(space.index)}>
                   <span className="boss-marker-ring absolute inset-0 rounded-full" aria-hidden="true" />

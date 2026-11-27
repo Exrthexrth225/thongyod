@@ -62,7 +62,7 @@ export function RoomLobby({ room, isHost, minPlayers, starting, onStart, onLeave
   const nameOf = (id: string | null) => room.players.find((p) => p.userId === id)?.displayName ?? '?'
   return (
     <div className="flex flex-col gap-4 px-4 pb-8">
-      <RoomShare code={room.code} exclude={room.players.map((p) => p.userId)} game={room.game} />
+      <RoomShare code={room.code} exclude={room.players.map((p) => p.userId)} />
       <section className="flex flex-col gap-2">
         <h2 className="flex items-center justify-between text-sm font-medium">
           {t('rooms.players', { count: room.players.length })}

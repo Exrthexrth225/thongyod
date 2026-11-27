@@ -1,4 +1,5 @@
 import { StrictMode } from 'react'
+import { watchAppVersion } from '@/lib/appVersion'
 import { createRoot } from 'react-dom/client'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from 'react-router'
@@ -27,6 +28,7 @@ async function mount() {
 // The Pages demo registers MSW's worker instead (src/mocks/browser.ts).
 if (import.meta.env.PROD && import.meta.env.VITE_DEPLOY_MOCKS !== 'true' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => { void navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => undefined) })
+  watchAppVersion()
 }
 
 void mount().catch((error: unknown) => {

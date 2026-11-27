@@ -1,10 +1,10 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { BossActionPayload, BossHandCard, BossView, InvestorTeam, RoomPlayer } from '@/api/types'
 import { Button } from '@/components/ui/button'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { cn } from '@/lib/utils'
-import { cardArt, cardKey, cardName, faceArt, fxArt, moneyArt, nameOf, TEAM_COLOR, TEAMS } from './meta'
+import { cardArt, cardKey, cardName, faceArt, fxArt, moneyArt, nameOf, shortName, TEAM_COLOR, TEAMS } from './meta'
 import { TeamBadge } from './parts'
 
 /** Card look: coloured frame, light art panel, name (+ team) underneath — like a real card. */
@@ -67,35 +67,63 @@ function playable(view: BossView, meId: string, card: BossHandCard) {
   return (card.team === 'any' ? teams : teams.filter((x) => x === card.team)).some((x) => (deal.providers[x] ?? []).some((id) => id !== meId))
 }
 
-/** Card width in the hand: tall enough for name + ability, short enough to fit the bottom row of a landscape phone. */
-const HAND_CARD = 70
+/** Size of an element, kept up to date (the hand fits its cards to whatever room the layout gives it). */
+function useBox<T extends HTMLElement>() {
+  const ref = useRef<T>(null)
+  const [box, setBox] = useState({ w: 0, h: 0 })
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const ro = new ResizeObserver(([e]) => setBox({ w: Math.round(e.contentRect.width), h: Math.round(e.contentRect.height) }))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  return [ref, box] as const
+}
 
-/** My hand: same cards stacked; tap one to see what it can do right now. */
-export function HandBar({ view, players, meId, busy, act }: { view: BossView; players: RoomPlayer[]; meId: string; busy: boolean; act: Act }) {
+/**
+ * My hand, fanned like real cards: overlapping, a gentle arc, playable cards raised and shining.
+ * `big` when nothing else needs the screen (the hand is the star); small "peek" while a decision is on screen.
+ * The fan always fits the width it has, so it never scrolls.
+ */
+export function HandBar({ view, players, meId, busy, act, big = false }: { view: BossView; players: RoomPlayer[]; meId: string; busy: boolean; act: Act; big?: boolean }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState<BossHandCard | null>(null)
+  const [ref, box] = useBox<HTMLDivElement>()
   const stacks = new Map<string, BossHandCard[]>()
   for (const c of view.myHand) stacks.set(cardKey(c), [...(stacks.get(cardKey(c)) ?? []), c])
   const order = ['boss', 'stop', 'recruit', ...TEAMS.map((x) => `team:${x}`), 'travel:any', ...TEAMS.map((x) => `travel:${x}`)]
   const sorted = [...stacks.entries()].sort(([a], [b]) => order.indexOf(a) - order.indexOf(b))
+  const n = sorted.length
+  // card width from the room: height-bound, a little smaller when peeking
+  const size = Math.max(48, Math.min(big ? 150 : 84, Math.floor((box.h - (big ? 26 : 8)) / 1.42)))
+  const step = n > 1 ? Math.min(size * (big ? 0.62 : 0.8), (box.w - size - 16) / (n - 1)) : 0
+  const tilt = big ? Math.min(6, 30 / Math.max(1, n)) : 1.5
   return (
     <>
-      <div className="boss-hand flex h-full items-end overflow-x-auto overflow-y-hidden px-1 pt-2 [scrollbar-width:none]" role="list" aria-label={t('boss.cards.hand', { count: view.myHand.length })}>
-        <div className="mx-auto flex w-max items-end gap-1.5 pb-1">
-          {sorted.map(([key, cards], i) => {
+      <div ref={ref} className="boss-hand relative h-full w-full" role="list" aria-label={t('boss.cards.hand', { count: view.myHand.length })}>
+        <div className="absolute bottom-0 left-1/2 h-full" style={{ width: size + step * Math.max(0, n - 1), transform: 'translateX(-50%)' }}>
+          {box.h > 0 && sorted.map(([key, cards], i) => {
             const can = playable(view, meId, cards[0])
             const glow = can && (cards[0].kind === 'stop' || view.phase !== 'interrupt')
+            const off = n > 1 ? i - (n - 1) / 2 : 0
+            const lifted = open && cardKey(open) === key
             return (
               <button
                 key={key}
                 type="button"
                 role="listitem"
                 aria-label={cardName(cards[0], t)}
-                className={cn('boss-hand-card shrink-0 origin-bottom rounded-[12%/8.6%] transition-transform duration-200 hover:-translate-y-1.5 focus-visible:-translate-y-1.5 active:scale-95', can && '-translate-y-1')}
-                style={{ animationDelay: `${i * 50}ms` }}
+                className={cn('boss-hand-card absolute bottom-0 origin-bottom rounded-[12%/8.6%] transition-[transform,filter] duration-200 ease-out hover:z-50 focus-visible:z-50', lifted && 'z-50')}
+                style={{
+                  left: i * step,
+                  zIndex: lifted ? 50 : i + 1,
+                  transform: `translateY(${(lifted ? -18 : can ? -6 : 0) + (big ? Math.abs(off) ** 1.6 * size * 0.035 : 0)}%) rotate(${off * tilt}deg)`,
+                  animationDelay: `${i * 50}ms`,
+                }}
                 onClick={() => setOpen(cards[0])}
               >
-                <CardFace card={cards[0]} size={HAND_CARD} count={cards.length} glow={glow && cards[0].kind === 'stop'} dim={!can} className={cn(can && cards[0].kind !== 'stop' && 'boss-card-ready')} />
+                <CardFace card={cards[0]} size={size} count={cards.length} glow={glow && cards[0].kind === 'stop'} dim={!can} detail={size >= 64} className={cn(can && cards[0].kind !== 'stop' && 'boss-card-ready', 'shadow-[0_6px_16px_rgba(0,0,0,0.45)]')} />
               </button>
             )
           })}
@@ -133,8 +161,8 @@ function CardSheet({ card, onClose, view, players, meId, busy, act }: { card: Bo
       const targets: { key: string; team: InvestorTeam; label: string; cardId?: string }[] = []
       for (const team of teams) {
         const owner = view.seats.find((s) => s.investors.includes(team))
-        if (owner && owner.userId !== meId && !deal!.blockedTeams.includes(team)) targets.push({ key: `p:${team}`, team, label: t('boss.deal.investor', { name: nameOf(players, owner.userId) }) })
-        for (const tc of deal!.tableCards.filter((c) => c.team === team && c.ownerId !== meId)) targets.push({ key: tc.id, team, label: t('boss.deal.byCard', { name: nameOf(players, tc.ownerId) }), cardId: tc.id })
+        if (owner && owner.userId !== meId && !deal!.blockedTeams.includes(team)) targets.push({ key: `p:${team}`, team, label: t('boss.deal.investor', { name: shortName(nameOf(players, owner.userId)) }) })
+        for (const tc of deal!.tableCards.filter((c) => c.team === team && c.ownerId !== meId)) targets.push({ key: tc.id, team, label: t('boss.deal.byCard', { name: shortName(nameOf(players, tc.ownerId)) }), cardId: tc.id })
       }
       body = targets.length ? (
         <div className="flex flex-col gap-2">

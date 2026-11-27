@@ -4,21 +4,22 @@ import type { BossEvent, BossHandCard, BossView, InvestorTeam, RoomPlayer } from
 import { useSecondsLeft } from '@/features/rooms/useSecondsLeft'
 import { cn } from '@/lib/utils'
 import { CardFace } from './Hand'
+import { SeatFaces } from './parts'
 import { ROLL } from './useBossTimeline'
 import { Word } from './Word'
-import { faceArt, fxArt, millions, moneyArt, nameOf, PLAY_FX, seatTeam, type Mood } from './meta'
+import { faceArt, fxArt, millions, moneyArt, shortOf, PLAY_FX, TEAMS, type Mood } from './meta'
 
 /** Big slam banner for the moment that just happened. Keyed by event id so each plays once. */
 export function FxBanner({ event, view, players }: { event: BossEvent | null; view: BossView; players: RoomPlayer[] }) {
   const { t } = useTranslation()
   if (!event) return null
-  const actor = nameOf(players, event.actorId)
+  const actor = shortOf(players, event.actorId)
   let art: string | null = null, title: string, sub = '', tone = 'gold', fly = ''
   switch (event.kind) {
     case 'deal_opened': art = fxArt('ribbon'); title = t('boss.fx.deal'); sub = t('boss.fx.dealSub', { boss: actor, n: event.dealNumber, amount: t('boss.money', { m: millions(event.amount ?? 0) }) }); break
     case 'deal_settled':
       art = fxArt('stamp'); title = t('boss.fx.settledValue', { amount: t('boss.money', { m: millions(event.amount ?? 0) }) }); tone = 'red'
-      if (view.lastSettlement && view.lastSettlement.dealNumber === event.dealNumber) sub = Object.entries(view.lastSettlement.payouts).sort(([, a], [, b]) => b - a).map(([id, amount]) => t('boss.fx.paid', { name: nameOf(players, id), amount: t('boss.money', { m: millions(amount) }) })).join(' · ')
+      if (view.lastSettlement && view.lastSettlement.dealNumber === event.dealNumber) sub = Object.entries(view.lastSettlement.payouts).sort(([, a], [, b]) => b - a).map(([id, amount]) => t('boss.fx.paid', { name: shortOf(players, id), amount: t('boss.money', { m: millions(amount) }) })).join(' · ')
       break
     case 'deal_failed': title = t('boss.fx.failed'); tone = 'gray'; break
     case 'interrupt_resolved': {
@@ -27,9 +28,9 @@ export function FxBanner({ event, view, players }: { event: BossEvent | null; vi
       if (event.cancelled) {
         const stop = view.events.findLast((x) => x.revision < event.revision && x.kind === 'stop_played')
         art = fxArt('stop'); title = t('boss.fx.blocked'); tone = 'red'; fly = 'stop'
-        sub = t('boss.fx.blockedSub', { name: nameOf(players, stop?.actorId), actor })
+        sub = t('boss.fx.blockedSub', { name: shortOf(players, stop?.actorId), actor })
       } else if (played?.kind === 'travel_played') { art = fxArt('plane'); fly = 'plane'; title = t('boss.fx.doneTravel', { team }); sub = t('boss.fx.doneTravelSub') }
-      else if (played?.kind === 'boss_played') { art = fxArt('crown'); fly = 'crown'; title = t('boss.fx.doneBoss', { actor }); sub = t('boss.fx.doneBossSub', { target: nameOf(players, played.targetId) }) }
+      else if (played?.kind === 'boss_played') { art = fxArt('crown'); fly = 'crown'; title = t('boss.fx.doneBoss', { actor }); sub = t('boss.fx.doneBossSub', { target: shortOf(players, played.targetId) }) }
       else if (played?.kind === 'recruit_played') { art = fxArt('magnet'); fly = 'magnet'; title = t('boss.fx.doneRecruit', { actor, team }); sub = t('boss.fx.doneRecruitSub') }
       else return null
       break
@@ -45,7 +46,7 @@ export function FxBanner({ event, view, players }: { event: BossEvent | null; vi
         </div>
       )
     }
-    case 'game_ended': art = fxArt('trophy'); title = t('boss.fx.winner', { name: view.winnerIds.map((id) => nameOf(players, id)).join(', ') }); break
+    case 'game_ended': art = fxArt('trophy'); title = t('boss.fx.winner', { name: view.winnerIds.map((id) => shortOf(players, id)).join(', ') }); break
     default: return null
   }
   return (
@@ -66,18 +67,20 @@ export function InterruptOverlay({ view, players, canStop, onStop, stopping }: {
   const intr = view.interrupt
   const left = useSecondsLeft(intr?.deadlineAt ?? null)
   if (!intr || view.phase !== 'interrupt') return null
-  const actor = nameOf(players, intr.actorId)
+  const actor = shortOf(players, intr.actorId)
   const team = intr.targetTeam ? t(`boss.teamShort.${intr.targetTeam}`) : ''
-  const target = nameOf(players, intr.targetId)
+  const target = shortOf(players, intr.targetId)
   const card = { id: intr.id, kind: intr.kind, team: intr.targetTeam ?? 'any' } as BossHandCard
   const title = intr.kind === 'travel' ? t('boss.fx.travel', { actor, team }) : intr.kind === 'recruit' ? t('boss.fx.recruit', { actor, team }) : t('boss.fx.boss', { actor })
   const outcome = intr.kind === 'travel' ? t('boss.fx.outTravel', { team }) : intr.kind === 'recruit' ? t('boss.fx.outRecruit', { actor, team }) : t('boss.fx.outBoss', { actor, target })
-  const actorFace = seatTeam(view, intr.actorId)
-  const targetFace: InvestorTeam = intr.kind === 'boss' || !intr.targetTeam ? (intr.targetId ? seatTeam(view, intr.targetId) : actorFace) : intr.targetTeam
+  // a player shows every colour they hold; a card aimed at one colour shows just that colour
+  const targetFace: InvestorTeam | string = intr.kind === 'boss' || !intr.targetTeam ? (intr.targetId ?? intr.actorId) : intr.targetTeam
   const stopped = !!intr.stoppedBy
-  const who = (face: InvestorTeam, name: string, mood: Mood, extra?: string) => (
-    <span className={cn('flex w-20 flex-col items-center gap-1', extra)}>
-      <img src={faceArt(face, mood)} alt="" className="size-16 rounded-full bg-white/90 object-contain p-0.5 ring-4 ring-white/80" />
+  const who = (face: InvestorTeam | string, name: string, mood: Mood, extra?: string) => (
+    <span className={cn('flex min-w-20 flex-col items-center gap-1', extra)}>
+      {(TEAMS as readonly string[]).includes(face)
+        ? <img src={faceArt(face as InvestorTeam, mood)} alt="" className="size-16 rounded-full bg-white/90 object-contain p-0.5 ring-4 ring-white/80" />
+        : <SeatFaces view={view} userId={face} mood={mood} round className="size-16" />}
       <span className="max-w-full truncate rounded-full bg-black/60 px-2 text-xs font-bold text-white">{name}</span>
     </span>
   )
@@ -86,7 +89,7 @@ export function InterruptOverlay({ view, players, canStop, onStop, stopping }: {
       <div className="flex max-h-full origin-center flex-col items-center gap-2 overflow-y-auto p-3 [scrollbar-width:none] [@media(min-width:768px)_and_(min-height:600px)]:scale-[1.45] [@media(max-height:500px)]:scale-[0.74]">
         <Word text={title} className="boss-role text-[28px]" />
         <div className="flex items-center gap-2">
-          {who(actorFace, actor, stopped ? 'upset' : 'happy', intr.kind === 'boss' ? 'boss-fx-crowned' : undefined)}
+          {who(intr.actorId, actor, stopped ? 'upset' : 'happy', intr.kind === 'boss' ? 'boss-fx-crowned' : undefined)}
           <div className="relative">
             <svg viewBox="0 0 120 120" className="absolute -inset-5 size-[calc(100%+2.5rem)] -rotate-90" aria-hidden="true">
               <circle cx="60" cy="60" r="56" fill="none" stroke="#ffffff26" strokeWidth="5" />
@@ -101,7 +104,7 @@ export function InterruptOverlay({ view, players, canStop, onStop, stopping }: {
             : who(targetFace, team, 'calm', 'boss-fx-pulled')}
         </div>
         {stopped
-          ? <Word text={t('boss.fx.stoppedBy', { name: nameOf(players, intr.stoppedBy) })} tone="red" className="boss-role text-[22px]" />
+          ? <Word text={t('boss.fx.stoppedBy', { name: shortOf(players, intr.stoppedBy) })} tone="red" className="boss-role text-[22px]" />
           : <span className="rounded-2xl bg-white/95 px-3 py-1.5 text-center text-sm font-bold text-[#3a2416]"><span className="text-[#b45309]">{t('boss.fx.ifNone')}</span> → {outcome}</span>}
         <span className="text-xs font-semibold text-white/85 tabular-nums">{stopped ? t('boss.fx.resolving', { s: left }) : canStop ? t('boss.fx.stopWindow', { s: left }) : `${t('boss.fx.waitStop')} · ${left}`}</span>
         {canStop && !stopped && (

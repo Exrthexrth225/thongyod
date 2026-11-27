@@ -46,6 +46,12 @@ export class RoomPresence {
   }
 
   isOnline(code: string, playerId: string) { return this.sockets.has(`${code}:${playerId}`) }
+  /** Everyone signed in who is watching this room right now (seated or not); Board Screens excluded. */
+  watchers(code: string) {
+    const ids: string[] = []
+    for (const key of this.sockets.keys()) if (key.startsWith(`${code}:`) && !key.startsWith(`${code}:board:`)) ids.push(key.slice(code.length + 1))
+    return ids
+  }
   isController(code: string, playerId: string, socketId: string) { return this.controllers.get(`${code}:${playerId}`) === socketId }
 
   /** How long a player has had no connection to this room (since server start if never seen). */

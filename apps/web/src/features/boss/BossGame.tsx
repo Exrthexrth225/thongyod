@@ -2,13 +2,15 @@ import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
-import { BookOpen, DoorOpen, LayoutGrid, LogOut, Menu, RotateCcw, RotateCw, Shuffle, WifiOff, XCircle } from 'lucide-react'
+import { BookOpen, DoorOpen, LayoutGrid, LogOut, Maximize, Menu, MonitorUp, RotateCcw, RotateCw, Shuffle, Smartphone, WifiOff, XCircle } from 'lucide-react'
 import { ApiError } from '@/api/client'
-import { roomKeys, useBackToLobby, useBossAction, useBossDraftRandom, useBossHost, useCloseRoom, useLeaveRoom, useRestartOpen, useRestartVote } from '@/api/rooms'
+import { roomKeys, useBackToLobby, useBossAction, useBossDraftRandom, useBossHost, useCloseRoom, useLeaveRoom, useMakeBoard, useRestartOpen, useRestartVote } from '@/api/rooms'
 import type { BossActionPayload, BossRoomData, BossView, Room, RoomPlayer } from '@/api/types'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Button } from '@/components/ui/button'
+import { QrCodeCard } from '@/components/friends/QrCodeCard'
 import { RoomLiveBar } from '@/features/rooms/RoomLiveBar'
+import { boardUrl } from '@/features/rooms/url'
 import { showErrorToast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { BossBoard } from './BossBoard'
@@ -46,10 +48,10 @@ function SheetConfirm({ open, title, text, label, busy, onCancel, onConfirm }: {
 
 /**
  * One phone in a game of I'm the Boss!, played sideways.
- * With a shared screen (iPad) connected the phone is a controller: my hand, my wallet, my colours, and in the middle
- * only the decision in front of me (boss: build the deal; offered: accept or decline; interrupted: Stop).
- * Without one (or when it drops) every phone shows the table: the active space, the deal and who it waits on,
- * with "full board" one tap away. Other players' hands and wallets stay private either way.
+ * With a shared screen (iPad) the phone is a controller: the hand is the star (big, fanned), my wallet and colours on
+ * the left, one line of table news on top; a decision (boss: build the deal, offered: accept or decline, draft) slides
+ * into the middle only when there is one. Without a shared screen (or by choice, or when it drops) the middle shows the
+ * table. Nothing in the middle scrolls: every card is laid out to fit.
  */
 export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   const { t } = useTranslation()
@@ -65,8 +67,11 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   const restartOpen = useRestartOpen(room.code)
   const [boardOpen, setBoardOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [addBoard, setAddBoard] = useState(false)
+  const [installHelp, setInstallHelp] = useState(false)
   const [confirm, setConfirm] = useState<'leave' | 'close' | 'fail' | 'restart' | null>(null)
   const [tutorial, setTutorial] = useState(() => !tutorialSeen())
+  const [ownScreen, setOwnScreen] = useState(() => readMode(room.code))
   const { latest, moods, rolling } = useBossTimeline(view)
 
   const act = (action: BossActionPayload, after?: () => void) =>
@@ -85,9 +90,24 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
       },
     })
   const toRooms = () => void navigate('/games/rooms', { replace: true })
+  const switchMode = (own: boolean) => { setOwnScreen(own); writeMode(room.code, own) }
+  const fullscreen = async () => {
+    // Android and desktop browsers: real fullscreen, locked sideways. iPhone Safari cannot: explain Add to Home Screen.
+    if (document.fullscreenElement) { await document.exitFullscreen().catch(() => {}); return }
+    const el = document.documentElement
+    if (document.fullscreenEnabled && typeof el.requestFullscreen === 'function') {
+      try {
+        await el.requestFullscreen({ navigationUI: 'hide' })
+        await (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }).lock?.('landscape').catch(() => {})
+        return
+      } catch { /* refused: show the help */ }
+    }
+    setInstallHelp(true)
+  }
 
   const players = room.players
-  const tableMode = !room.boardOnline
+  // The table is on this phone when there is no shared screen, or when this player chose to play on their own screen.
+  const tableMode = !room.boardOnline || ownScreen
   const deal = view.deal
   const isBoss = deal?.bossId === meId
   const myTurn = !deal && view.turnPlayerId === meId
@@ -100,22 +120,16 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   const mustConfirm = !!deal && deal.terms[meId] !== undefined && view.phase !== 'interrupt'
   const say = instruction(view, players, meId, t, rolling)
 
-  // ── the middle: only what this player has to decide now, else (table mode) the public table ──
-  let field: React.ReactNode
+  // ── the middle: what this player has to decide now; else (own screen) the table; else nothing ──
+  let field: React.ReactNode = null
   if (view.phase === 'game_over') field = <Results view={view} players={players} />
   else if (view.phase === 'draft') field = <DraftCard view={view} players={players} meId={meId} busy={move.isPending} act={act} host={room.hostId === meId} onRandom={() => draftRandom.mutate(undefined, { onError: () => showErrorToast(t('common.saveError')) })} />
   else if (deal && isBoss) field = <BossEditor view={view} players={players} meId={meId} busy={move.isPending} act={(a) => act(a)} />
-  else if (deal && mustConfirm) {
-    field = (
-      <div className="flex w-full flex-col items-center gap-2">
-        <OfferCard view={view} players={players} meId={meId} busy={move.isPending} act={(a) => act(a)} />
-        {tableMode && <DealBoard view={view} players={players} meId={meId} />}
-      </div>
-    )
-  } else if (deal && tableMode) field = <DealBoard view={view} players={players} meId={meId} />
+  else if (deal && mustConfirm) field = <OfferCard view={view} players={players} meId={meId} busy={move.isPending} act={(a) => act(a)} />
+  else if (deal && tableMode) field = <DealBoard view={view} players={players} meId={meId} compact />
   else if (tableMode && space) {
     field = (
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-center gap-4">
         <SpaceTile space={space} big active className="h-32 w-44" />
         <div className="flex flex-col items-center gap-2">
           {lastRoll && view.phase === 'rolled_choice' ? <Die key={lastRoll.id} value={lastRoll.roll ?? 1} size={52} rolling={rolling} /> : <Die value={lastRoll?.roll ?? 5} size={52} rolling={false} className="opacity-40" />}
@@ -123,9 +137,10 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
         </div>
       </div>
     )
-  } else field = <IdleCard view={view} players={players} meId={meId} />
+  }
+  const focus = field ? 'field' : 'hand'
 
-  // ── big buttons on the right ──
+  // ── big buttons on the right, only when it is up to me ──
   const big = 'h-12 w-full rounded-2xl text-base font-black shadow-[0_4px_0_rgba(0,0,0,0.3)] active:translate-y-0.5'
   /** A big button with one short line saying what it does. */
   const label = (text: string, hint: string) => (
@@ -163,9 +178,9 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   } else if (view.phase === 'game_over' && room.hostId === meId) {
     side = <Button className={big} disabled={lobby.isPending} onClick={() => lobby.mutate()}>{t('boss.act.backToRoom')}</Button>
   }
-  if (view.phase === 'closing' && deal) side = <>{<ClosingRing deadline={deal.closingDeadlineAt} className="text-sm" />}{side}</>
+  if (view.phase === 'closing' && deal) side = <><ClosingRing deadline={deal.closingDeadlineAt} className="text-sm" />{side}</>
 
-  // ── a player row on the left (table mode): public things only ──
+  // ── other players (own screen): public things only ──
   const row = (s: (typeof view.seats)[number]) => {
     const id = s.userId
     const isBossRow = deal?.bossId === id
@@ -174,10 +189,10 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
       ? isBossRow ? t('boss.status.boss') : deal.acceptedIds.includes(id) ? t('boss.deal.accepted') : deal.declinedIds.includes(id) ? t('boss.deal.declined') : deal.requiredIds.includes(id) ? t('boss.deal.waiting') : ''
       : ''
     return (
-      <div key={id} data-seat={id} className={cn('flex w-full items-center gap-1.5 rounded-xl bg-white/[0.06] p-1 pr-1.5 ring-1 ring-white/10 transition', (turn || isBossRow) && 'ring-2 ring-[#ffc21a]', !room.online.includes(id) && 'opacity-50')}>
-        <SeatFaces view={view} userId={id} mood={moods[id] ?? 'calm'} round className="size-9" />
+      <div key={id} data-seat={id} className={cn('flex w-full shrink-0 items-center gap-1.5 rounded-xl bg-white/[0.06] p-1 pr-1.5 ring-1 ring-white/10 transition', (turn || isBossRow) && 'ring-2 ring-[#ffc21a]', !room.online.includes(id) && 'opacity-50')}>
+        <SeatFaces view={view} userId={id} mood={moods[id] ?? 'calm'} round className="size-8" />
         <span className="flex min-w-0 flex-1 flex-col leading-tight">
-          <span className="flex min-w-0 items-center gap-1 text-[13px] font-bold text-white"><PlayerName name={nameOf(players, id)} max={7} />{!room.online.includes(id) && <WifiOff className="size-3 shrink-0" />}</span>
+          <span className="flex min-w-0 items-center gap-1 text-[12px] font-bold text-white"><PlayerName name={nameOf(players, id)} />{!room.online.includes(id) && <WifiOff className="size-3 shrink-0" />}</span>
           <span className="flex items-center gap-1 text-[10px] text-white/60">
             <SeatColors view={view} userId={id} size="size-3.5" />
             <span className="ml-auto truncate">{status || t('boss.cards.hand', { count: s.handCount })}</span>
@@ -187,54 +202,60 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
     )
   }
 
+  // ── me: portrait, wallet, the colours I hold ──
   const myCard = me && (
-    <div data-seat={meId} className={cn('flex flex-col gap-1 rounded-2xl bg-[#ffc21a]/15 p-1.5 ring-2', view.turnPlayerId === meId && !deal ? 'ring-[#ffc21a]' : 'ring-[#ffc21a]/40', !tableMode && 'flex-1 justify-center')}>
-      <div className="flex items-center gap-2">
-        <SeatFaces view={view} userId={meId} mood={moods[meId] ?? 'calm'} round className={tableMode ? 'size-11' : 'size-16'} />
+    <div data-seat={meId} className={cn('flex shrink-0 flex-col gap-1 rounded-2xl bg-[#ffc21a]/15 p-1.5 ring-2', view.turnPlayerId === meId && !deal ? 'ring-[#ffc21a]' : 'ring-[#ffc21a]/40')}>
+      <div className="flex items-center gap-1.5">
+        <SeatFaces view={view} userId={meId} mood={moods[meId] ?? 'calm'} round className="size-10" />
         <span className="min-w-0 leading-tight">
-          <PlayerName name={nameOf(players, meId)} max={8} className="block text-xs font-bold text-white/80" />
-          <span className="block text-[10px] font-bold text-white/60">{t('boss.table.wallet')}</span>
-          <Money amount={me.exactCash ?? 0} className={cn('text-[#ffc21a]', tableMode ? 'text-xl' : 'text-2xl')} />
+          <PlayerName name={nameOf(players, meId)} className="block text-xs font-bold text-white/85" />
+          <Money amount={me.exactCash ?? 0} className="text-xl text-[#ffc21a]" />
         </span>
       </div>
-      <span className="flex flex-wrap items-center gap-1 text-[10px] font-bold text-white/70">
-        <span>{t('boss.table.myColors')}:</span>
-        {me.investors.length ? me.investors.map((team) => <span key={team} className="flex items-center gap-0.5 rounded-full bg-black/25 py-0.5 pl-0.5 pr-1.5"><TeamBadge team={team} className="size-4" />{t(`boss.teamShort.${team}`)}</span>) : <span>{t('boss.table.noColors')}</span>}
+      <span className="flex flex-wrap items-center gap-1">
+        {me.investors.length
+          ? me.investors.map((team) => <span key={team} className="flex items-center gap-0.5 rounded-full bg-black/25 py-0.5 pl-0.5 pr-1.5 text-[10px] font-bold text-white/80"><TeamBadge team={team} className="size-4" />{t(`boss.teamShort.${team}`)}</span>)
+          : <span className="text-[10px] text-white/60">{t('boss.table.noColors')}</span>}
       </span>
     </div>
   )
 
+  const iconBtn = 'flex size-8 shrink-0 items-center justify-center rounded-full bg-white/10'
   return (
     <div ref={stage} className="boss-stage fixed inset-0 z-40 overflow-hidden bg-[radial-gradient(ellipse_at_50%_35%,#2c2360,#17142b_65%,#120d2b)] text-white">
-      <div className="boss-game relative size-full pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]">
-        <header className="boss-top relative z-40 flex items-center gap-2 px-2 pt-1.5">
-          <button type="button" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/10" aria-label={t('boss.menu.title')} onClick={() => setMenuOpen(true)}><Menu className="size-4" /></button>
+      <div data-focus={focus} className="boss-game relative size-full pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]">
+        <header className="boss-top relative z-40 flex items-center gap-1.5 px-2 pt-1.5">
+          <button type="button" className={iconBtn} aria-label={t('boss.menu.title')} onClick={() => setMenuOpen(true)}><Menu className="size-4" /></button>
           <span className="min-w-0 flex-1" />
           {/* one line: what is going on / what to do now */}
-          <span key={say} className="boss-plaque boss-banner flex min-w-0 items-center gap-2 px-4 py-1"><Word text={say} className="truncate text-[16px]" /></span>
-          <span className="shrink-0 rounded-full bg-black/30 px-2 py-1 text-[10px] font-bold text-[#ffd77a]">{t('boss.status.dealOf', { n: Math.min(view.dealsDone + 1, view.dealsTotal), total: view.dealsTotal })}{view.currentEndRollFaces.length > 0 && view.phase !== 'game_over' ? ` · 🎲${view.currentEndRollFaces.join('')}` : ''}</span>
+          <span key={say} className="boss-plaque boss-banner flex min-w-0 items-center px-4 py-1"><Word text={say} className="truncate text-[15px]" /></span>
           <span className="min-w-0 flex-1" />
-          {tableMode
-            ? <button type="button" className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-white/10 px-2.5 text-xs font-bold" onClick={() => setBoardOpen(true)}><LayoutGrid className="size-4" />{t('boss.table.fullBoard')}</button>
-            : <span className="shrink-0 rounded-full bg-emerald-500/20 px-2.5 py-1 text-[10px] font-bold text-emerald-200">{t('boss.table.lookUp')}</span>}
+          {room.boardOnline && (
+            <button type="button" className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-white/10 px-2.5 text-[11px] font-bold" onClick={() => switchMode(!ownScreen)}>
+              {ownScreen ? <><MonitorUp className="size-4" />{t('boss.mode.toBoard')}</> : <><Smartphone className="size-4" />{t('boss.mode.toOwn')}</>}
+            </button>
+          )}
+          <button type="button" className={iconBtn} aria-label={t('boss.table.fullBoard')} onClick={() => setBoardOpen(true)}><LayoutGrid className="size-4" /></button>
+          <button type="button" className={iconBtn} aria-label={t('rooms.board.fullscreen')} onClick={() => void fullscreen()}><Maximize className="size-4" /></button>
         </header>
-        <div className="boss-live px-2"><RoomLiveBar room={room} meId={meId} /></div>
+        <div className="boss-strip flex min-w-0 flex-col gap-1 px-2 pt-1">
+          <InfoStrip view={view} players={players} />
+          <RoomLiveBar room={room} meId={meId} />
+        </div>
 
-        <aside className="boss-seats flex min-h-0 flex-col gap-1 overflow-y-auto p-1.5 [scrollbar-width:none]">
+        <aside className="boss-seats flex min-h-0 flex-col gap-1 overflow-hidden p-1.5">
+          {myCard}
           {tableMode && others.map(row)}
-          <div className={cn(tableMode ? 'mt-auto' : 'flex flex-1 flex-col')}>{myCard}</div>
         </aside>
 
-        <main className="boss-field relative min-h-0 min-w-0 px-1">
-          <div className="boss-oval flex size-full flex-col items-center overflow-y-auto rounded-[2.2rem] bg-[radial-gradient(ellipse_at_center,#2c2360,#221a4b_75%)] p-2 shadow-[inset_0_0_0_2px_rgba(233,185,73,0.5),inset_0_0_40px_rgba(0,0,0,0.45),0_10px_40px_rgba(0,0,0,0.4)] [scrollbar-width:none]">
-            <div className="my-auto flex w-full justify-center">{field}</div>
-          </div>
+        <main className="boss-field relative flex min-h-0 min-w-0 items-center justify-center overflow-hidden p-1">
+          {field && <div className="boss-field-in flex size-full items-center justify-center">{field}</div>}
         </main>
 
         <nav className="boss-side flex min-h-0 flex-col justify-end gap-1.5 p-1.5">{side}</nav>
 
-        <footer className="boss-hand-row min-w-0">
-          <HandBar view={view} players={players} meId={meId} busy={move.isPending} act={(a) => act(a)} />
+        <footer className="boss-hand-row min-h-0 min-w-0">
+          <HandBar view={view} players={players} meId={meId} busy={move.isPending} act={(a) => act(a)} big={focus === 'hand'} />
         </footer>
       </div>
 
@@ -243,7 +264,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
         <RotateCw className="boss-rotate-icon size-16 text-[#ffc21a]" aria-hidden="true" />
         <p className="text-xl font-black">{t('boss.rotate.title')}</p>
         <p className="text-sm text-white/70">{t('boss.rotate.hint')}</p>
-        <div className="mt-4 flex flex-col gap-2">
+        <div className="mt-4 flex w-full max-w-xs flex-col gap-2">
           <Button variant="secondary" size="lg" onClick={toRooms}><DoorOpen data-icon="inline-start" />{t('boss.menu.away')}</Button>
           <Button variant="destructive" size="lg" onClick={() => setConfirm('leave')}><LogOut data-icon="inline-start" />{t('boss.menu.leave')}</Button>
         </div>
@@ -275,11 +296,20 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
       <BottomSheet open={menuOpen} onOpenChange={setMenuOpen} title={t('boss.menu.title')}>
         <div className="flex flex-col gap-2 px-4 pb-6">
           <Button variant="secondary" size="lg" className="justify-start" onClick={() => { setMenuOpen(false); setTutorial(true) }}><BookOpen data-icon="inline-start" />{t('boss.act.howTo')}</Button>
+          {room.hostId === meId && <Button variant="secondary" size="lg" className="justify-start" onClick={() => { setMenuOpen(false); setAddBoard(true) }}><MonitorUp data-icon="inline-start" />{t('boss.addBoard.title')}</Button>}
           <Button variant="secondary" size="lg" className="justify-start" onClick={toRooms}><DoorOpen data-icon="inline-start" />{t('boss.menu.away')}</Button>
           {!room.restart && view.phase !== 'game_over' && <Button variant="secondary" size="lg" className="justify-start" onClick={() => { setMenuOpen(false); setConfirm('restart') }}><RotateCcw data-icon="inline-start" />{t('boss.restart.open')}</Button>}
           <Button variant="secondary" size="lg" className="justify-start" onClick={() => { setMenuOpen(false); setConfirm('leave') }}><LogOut data-icon="inline-start" />{t('boss.menu.leave')}</Button>
           {room.hostId === meId && <Button variant="secondary" size="lg" className="justify-start text-destructive" onClick={() => { setMenuOpen(false); setConfirm('close') }}><XCircle data-icon="inline-start" />{t('rooms.closeRoom')}</Button>}
         </div>
+      </BottomSheet>
+      <AddBoardSheet room={room} open={addBoard} onOpenChange={setAddBoard} />
+      <BottomSheet open={installHelp} onOpenChange={setInstallHelp} title={t('boss.full.title')}>
+        <ol className="flex list-decimal flex-col gap-2 px-8 pb-6 text-sm">
+          <li>{t('boss.full.step1')}</li>
+          <li>{t('boss.full.step2')}</li>
+          <li>{t('boss.full.step3')}</li>
+        </ol>
       </BottomSheet>
       <SheetConfirm
         open={confirm !== null}
@@ -299,22 +329,49 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   )
 }
 
-/** Controller view while nothing is asked of me: look up at the shared screen; the last deal's result for me. */
-function IdleCard({ view, players, meId }: { view: BossView; players: RoomPlayer[]; meId: string }) {
+const modeKey = (code: string) => `thongyod-boss-own:${code}`
+function readMode(code: string) { try { return localStorage.getItem(modeKey(code)) === '1' } catch { return false } }
+function writeMode(code: string, own: boolean) { try { localStorage.setItem(modeKey(code), own ? '1' : '0') } catch { /* private mode */ } }
+
+/** One line of table news on every phone: the deal count, the space and its value, the boss, who it waits on, the end roll. */
+function InfoStrip({ view, players }: { view: BossView; players: RoomPlayer[] }) {
   const { t } = useTranslation()
-  const last = view.lastSettlement
-  const mine = last?.payouts[meId] ?? 0
+  const deal = view.deal
+  const space = deal ? view.spaces[deal.spaceIndex] : view.markerSpace !== null ? view.spaces[view.markerSpace] : null
+  const waiting = deal ? deal.requiredIds.filter((id) => !deal.acceptedIds.includes(id)) : []
+  const chip = 'flex shrink-0 items-center gap-1 rounded-full bg-black/30 px-2 py-0.5'
   return (
-    <div className="flex flex-col items-center gap-2 text-center">
-      <img src={fxArt('pawn')} alt="" className="size-14 opacity-90" />
-      <p className="text-sm font-bold text-white/80">{t('boss.table.lookUp')}</p>
-      {view.deal && <p className="text-xs text-white/60">{t('boss.table.shareOf', { n: view.deal.dealNumber, boss: shortName(nameOf(players, view.deal.bossId), 8) })}</p>}
-      {last && (
-        <p className="rounded-full bg-black/30 px-3 py-1 text-xs font-bold text-[#ffd77a]">
-          {mine > 0 ? t('boss.table.lastDeal', { n: last.dealNumber, amount: t('boss.money', { m: mine / M }) }) : t('boss.table.lastDealNone', { n: last.dealNumber })}
-        </p>
+    <div className="flex min-w-0 items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap text-[11px] font-bold text-white/80">
+      <span className={chip}>{t('boss.status.dealOf', { n: Math.min(view.dealsDone + 1, view.dealsTotal), total: view.dealsTotal })}</span>
+      {space && view.phase !== 'game_over' && (
+        <span className={chip}>{t('boss.deal.people', { count: space.teamCount })} · $×{space.dividends} · <span className="text-[#ffc21a]">{t('boss.money', { m: (space.dividends * view.currentShareValue) / M })}</span></span>
       )}
+      {deal && <span className={chip}>👑 {shortName(nameOf(players, deal.bossId))}</span>}
+      {waiting.length > 0 && <span className={cn(chip, 'min-w-0 truncate')}>{t('boss.table.waitingFor', { names: waiting.map((id) => shortName(nameOf(players, id))).join(', ') })}</span>}
+      {view.currentEndRollFaces.length > 0 && view.phase !== 'game_over' && <span className={cn(chip, 'bg-red-600/80 text-white')}>🎲 {view.currentEndRollFaces.join(' ')}</span>}
     </div>
+  )
+}
+
+/** Owner, during a game: pair another Board Screen by QR, or turn a device that is only watching into one. */
+function AddBoardSheet({ room, open, onOpenChange }: { room: BossRoomData; open: boolean; onOpenChange: (v: boolean) => void }) {
+  const { t } = useTranslation()
+  const make = useMakeBoard(room.code)
+  return (
+    <BottomSheet open={open} onOpenChange={onOpenChange} title={t('boss.addBoard.title')}>
+      <div className="flex flex-col gap-3 px-4 pb-6">
+        <p className="text-sm text-muted-foreground">{t('boss.addBoard.qr')}</p>
+        <QrCodeCard value={boardUrl(room.code)} label={t('rooms.board.open')} />
+        <p className="text-sm font-bold">{t('boss.addBoard.watching')}</p>
+        {room.spectators.length === 0 && <p className="text-sm text-muted-foreground">{t('boss.addBoard.none')}</p>}
+        {room.spectators.map((s) => (
+          <Button key={s.userId} variant="secondary" size="lg" className="justify-start" disabled={make.isPending}
+            onClick={() => make.mutate(s.userId, { onSuccess: () => onOpenChange(false), onError: () => showErrorToast(t('common.saveError')) })}>
+            <MonitorUp data-icon="inline-start" />{t('boss.addBoard.make', { name: shortName(s.displayName) })}
+          </Button>
+        ))}
+      </div>
+    </BottomSheet>
   )
 }
 
@@ -367,7 +424,7 @@ export function Results({ view, players }: { view: BossView; players: RoomPlayer
   const { t } = useTranslation()
   const ranked = [...view.seats].sort((a, b) => (b.exactCash ?? 0) - (a.exactCash ?? 0))
   const place = (i: number) => 1 + ranked.findIndex((s) => (s.exactCash ?? 0) === (ranked[i].exactCash ?? 0))
-  const winners = view.winnerIds.map((id) => shortName(nameOf(players, id), 8))
+  const winners = view.winnerIds.map((id) => shortName(nameOf(players, id)))
   const best = (key: 'deals' | 'biggest' | 'bribesPaid' | 'travels' | 'stops') => {
     const top = Object.entries(view.stats ?? {}).filter(([id]) => view.seats.some((x) => x.userId === id)).sort(([, a], [, b]) => b[key] - a[key])[0]
     return top && top[1][key] > 0 ? { id: top[0], n: top[1][key] } : null
@@ -390,7 +447,7 @@ export function Results({ view, players }: { view: BossView; players: RoomPlayer
           <li key={s.userId} className={cn('boss-rank flex items-center gap-3 rounded-2xl bg-white/80 p-2', view.winnerIds.includes(s.userId) && 'ring-4 ring-amber-400')} style={{ animationDelay: `${i * 120}ms` }}>
             <span className="w-8 text-center text-lg font-black">{place(i)}</span>
             <SeatFaces view={view} userId={s.userId} mood={view.winnerIds.includes(s.userId) ? 'happy' : 'calm'} className="size-11" />
-            <PlayerName name={nameOf(players, s.userId)} max={10} className="min-w-0 flex-1 font-bold" />
+            <PlayerName name={nameOf(players, s.userId)} className="min-w-0 flex-1 font-bold" />
             <Money amount={s.exactCash ?? 0} className="text-xl text-amber-600" />
           </li>
         ))}
@@ -402,7 +459,7 @@ export function Results({ view, players }: { view: BossView; players: RoomPlayer
               <span className="relative shrink-0"><SeatFaces view={view} userId={w.id} round className="size-9" /><img src={fxArt(AWARD_ART[w.key])} alt="" className="boss-how absolute -bottom-1 -right-2 size-6 drop-shadow" style={{ animationDelay: `${(ranked.length + i) * 120 + 300}ms` }} /></span>
               <span className="min-w-0 leading-tight">
                 <span className="block truncate text-[10px] font-bold text-[#ffd77a]">{w.title}</span>
-                <span className="block truncate text-xs font-bold">{shortName(nameOf(players, w.id), 8)} · {w.value}</span>
+                <span className="block truncate text-xs font-bold">{shortName(nameOf(players, w.id))} · {w.value}</span>
               </span>
             </li>
           ))}
@@ -423,8 +480,8 @@ function RestartPanel({ room, meId }: { room: BossRoomData; meId: string }) {
   const onError = (e: Error) => showErrorToast(e instanceof ApiError && e.code ? t(`boss.errors.${e.code as KnownError}`, { defaultValue: t('common.saveError') }) : t('common.saveError'))
   return (
     <div className="flex flex-col gap-2 rounded-3xl bg-card p-3 text-foreground shadow-2xl">
-      <p className="flex items-center gap-2 font-bold"><RotateCcw className="size-4 text-amber-500" aria-hidden="true" />{t('boss.restart.by', { name: shortName(nameOf(room.players, r.openedBy), 8) })}</p>
-      <p className="text-sm font-bold text-muted-foreground">{t('boss.restart.count', { yes: r.yes.length, needed: r.needed })} · {r.voters.map((id) => `${shortName(nameOf(room.players, id), 6)}${r.yes.includes(id) ? '✓' : r.no.includes(id) ? '✗' : ' ?'}`).join(' · ')}</p>
+      <p className="flex items-center gap-2 font-bold"><RotateCcw className="size-4 text-amber-500" aria-hidden="true" />{t('boss.restart.by', { name: shortName(nameOf(room.players, r.openedBy)) })}</p>
+      <p className="text-sm font-bold text-muted-foreground">{t('boss.restart.count', { yes: r.yes.length, needed: r.needed })} · {r.voters.map((id) => `${shortName(nameOf(room.players, id))}${r.yes.includes(id) ? '✓' : r.no.includes(id) ? '✗' : ' ?'}`).join(' · ')}</p>
       {!voter ? <p className="text-sm text-muted-foreground">{t('boss.restart.notVoter')}</p> : (
         <div className="grid grid-cols-2 gap-2">
           <Button variant={mine === 'no' ? 'default' : 'secondary'} disabled={vote.isPending} onClick={() => vote.mutate(false, { onError })}>{t('boss.restart.no')}</Button>
@@ -447,7 +504,7 @@ function AwayPanel({ room, view, meId }: { room: BossRoomData; view: BossView; m
   const target = [...away.filter((id) => view.blockingIds.includes(id)), ...away].find((id) => !dismissed.includes(id))
   const blocking = !!target && view.blockingIds.includes(target) && view.phase !== 'interrupt'
   if (!target) return null
-  const name = shortName(nameOf(room.players, target), 8)
+  const name = shortName(nameOf(room.players, target))
   const host = room.hostId === meId
   const onError = (e: Error) => showErrorToast(e instanceof ApiError && e.code === 'PLAYER_ONLINE' ? t('boss.errors.PLAYER_ONLINE') : t('common.saveError'))
   return (

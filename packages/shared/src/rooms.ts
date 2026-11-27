@@ -115,6 +115,8 @@ export type BossRoomData = RoomBase & {
   restart: BossRestartVote | null
   /** A new restart vote may open after this time. */
   restartCooldownUntil: string | null
+  /** Owner only: devices watching the room without a seat (can be made the Board Screen mid-game). */
+  spectators: { userId: string; displayName: string }[]
   /** null in the lobby or when not a player / board. */
   boss: BossView | null
 }

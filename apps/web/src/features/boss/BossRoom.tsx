@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next'
 import { useRoomSettings, useStartRound } from '@/api/rooms'
-import type { BossRoomData } from '@/api/types'
+import type { BossEvent, BossRoomData, BossView, RoomPlayer } from '@/api/types'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { RoomLobby } from '@/features/rooms/RoomParts'
 import { showErrorToast } from '@/lib/toast'
+import { cn } from '@/lib/utils'
 import { BossBoard } from './BossBoard'
 import { ClosingRing, Die, EndRoll, FxBanner, InterruptOverlay, MoneyFly } from './BossFx'
 import { BossGame } from './BossGame'
@@ -13,7 +14,8 @@ import { instruction } from './dealInfo'
 import { Word } from './Word'
 import { useBossTimeline } from './useBossTimeline'
 import { faceArt, M, nameOf, shortName, TEAMS } from './meta'
-import { PriceTag, SeatCard } from './parts'
+import { PriceTag, SeatCard, SpaceTile } from './parts'
+import { PlacardLine } from './BossGame'
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { ListOrdered, Maximize, Maximize2, Minimize2, Shuffle, X } from 'lucide-react'
@@ -87,10 +89,10 @@ export function BossTableScreen({ room }: { room: BossRoomData }) {
   return (
     <div ref={stage} className="boss-table fixed inset-0 z-[41] gap-3 overflow-hidden bg-[radial-gradient(ellipse_at_30%_20%,#2c2360,#17142b_60%,#120d2b)] p-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] text-white">
       <div className="boss-table-board relative flex min-h-0 min-w-0 items-center justify-center">
-        <BossBoard view={view} roll={lastRoll} piles settledSpace={settled?.spaceIndex ?? null} className="h-full">
+        <BossBoard view={view} roll={lastRoll} hold={rolling && lastRoll ? lastRoll.fromSpace ?? null : null} piles settledSpace={settled?.spaceIndex ?? null} className="h-full">
           <div className="flex size-full flex-col items-center justify-center gap-2 overflow-hidden">
             {view.phase === 'game_over'
-              ? plaque(view.winnerIds.length > 1 ? t('boss.over.jointWin', { names: view.winnerIds.map((id) => shortName(nameOf(room.players, id), 8)).join(' & '), amount: t('boss.money', { m: (view.seats.find((s) => s.userId === view.winnerIds[0])?.exactCash ?? 0) / M }) }) : t('boss.fx.winner', { name: nameOf(room.players, view.winnerIds[0]) }), 'text-[clamp(22px,4vmin,44px)]')
+              ? plaque(view.winnerIds.length > 1 ? t('boss.over.jointWin', { names: view.winnerIds.map((id) => shortName(nameOf(room.players, id))).join(' & '), amount: t('boss.money', { m: (view.seats.find((s) => s.userId === view.winnerIds[0])?.exactCash ?? 0) / M }) }) : t('boss.fx.winner', { name: shortName(nameOf(room.players, view.winnerIds[0])) }), 'text-[clamp(22px,4vmin,44px)]')
               : plaque(say)}
             {deal && <PriceTag key={`p${deal.id}`} amount={deal.totalValue} share={view.currentShareValue} dividends={view.spaces[deal.spaceIndex].dividends} size={40} className="boss-price-pop" />}
             {view.phase === 'closing' && deal && <ClosingRing deadline={deal.closingDeadlineAt} className="text-lg" />}
@@ -118,12 +120,59 @@ export function BossTableScreen({ room }: { room: BossRoomData }) {
         <div className="grid shrink-0 grid-cols-2 gap-1.5">
           {view.seats.map((s) => <SeatCard key={s.userId} view={view} seat={s} players={room.players} online={room.online.includes(s.userId)} mood={moods[s.userId] ?? 'calm'} dark compact={view.seats.length > 4} />)}
         </div>
-        {deal && !expanded && <div className="min-h-0 flex-1"><DealBoard view={view} players={room.players} /></div>}
+        {deal && !expanded && <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none]"><DealBoard view={view} players={room.players} /></div>}
+        {!deal && view.phase !== 'game_over' && <TableIdle view={view} players={room.players} rolling={rolling} />}
       </aside>
       <FxBanner event={latest} view={view} players={room.players} />
       {settled && view.lastSettlement && <MoneyFly event={settled} payouts={view.lastSettlement.payouts} container={stage} />}
       {latest?.kind === 'end_roll' && <EndRoll event={latest} view={view} />}
       <InterruptOverlay view={view} players={room.players} canStop={false} stopping={false} onStop={() => {}} />
+    </div>
+  )
+}
+
+/** Board Screen side panel between deals: the space the marker is on and what it is worth, the placard, recent moves. */
+function TableIdle({ view, players, rolling }: { view: BossView; players: RoomPlayer[]; rolling: boolean }) {
+  const { t } = useTranslation()
+  // while the die and the marker are still moving, keep the old space and do not tell the roll yet
+  const roll = rolling ? view.events.findLast((e) => e.kind === 'dice_rolled') : undefined
+  const at = roll?.fromSpace ?? view.markerSpace
+  const space = at !== null ? view.spaces[at] : null
+  const who = (id?: string) => shortName(nameOf(players, id))
+  const team = (e: BossEvent) => (e.team ? t(`boss.teamShort.${e.team}`) : '')
+  const line = (e: BossEvent): string | null => {
+    switch (e.kind) {
+      case 'dice_rolled': return t('boss.log.rolled', { name: who(e.actorId), roll: e.roll ?? 0 })
+      case 'drew_cards': return t('boss.log.drew', { name: who(e.actorId) })
+      case 'deal_opened': return t('boss.log.opened', { name: who(e.actorId), n: e.dealNumber ?? 0 })
+      case 'deal_settled': return t('boss.log.settled', { n: e.dealNumber ?? 0, amount: t('boss.money', { m: (e.amount ?? 0) / M }) })
+      case 'deal_failed': return t('boss.log.failed', { n: e.dealNumber ?? 0 })
+      case 'travel_played': return t('boss.log.travel', { name: who(e.actorId), team: team(e) })
+      case 'boss_played': return t('boss.log.boss', { name: who(e.actorId) })
+      case 'recruit_played': return t('boss.log.recruit', { name: who(e.actorId), team: team(e) })
+      case 'stop_played': return t('boss.log.stop', { name: who(e.actorId) })
+      case 'end_roll': return t('boss.log.endRoll', { roll: e.roll ?? 0 })
+      case 'player_skipped': return t('boss.log.skipped', { name: who(e.targetId ?? e.actorId) })
+      default: return null
+    }
+  }
+  const log = view.events.filter((e) => e.id !== roll?.id).flatMap((e) => { const text = line(e); return text ? [{ id: e.id, text }] : [] }).slice(-6).reverse()
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+      {space && (
+        <div className="flex shrink-0 items-center gap-3 rounded-2xl bg-white/[0.06] p-2 ring-1 ring-white/10">
+          <SpaceTile space={space} big active className="h-28 w-40 shrink-0" />
+          <div className="flex min-w-0 flex-col items-start gap-1.5">
+            <span className="text-xs font-bold text-white/60">{t('boss.log.here')}</span>
+            <PriceTag amount={space.dividends * view.currentShareValue} share={view.currentShareValue} dividends={space.dividends} size={26} />
+          </div>
+        </div>
+      )}
+      <PlacardLine view={view} />
+      <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden rounded-2xl bg-black/25 p-2">
+        <span className="text-xs font-bold text-white/60">{t('boss.log.title')}</span>
+        {log.map((l, i) => <p key={l.id} className={cn('truncate text-sm font-bold', i === 0 ? 'text-[#ffd77a]' : 'text-white/70')}>{l.text}</p>)}
+      </div>
     </div>
   )
 }

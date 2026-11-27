@@ -3,16 +3,25 @@
 /* Phone game: Hearthstone-style in landscape (players left, table centre, big buttons right, hand at the bottom). */
 .boss-game {
   display: grid;
-  grid-template-areas: 'top top top' 'live live live' 'seats field side' 'seats hand side';
-  grid-template-columns: minmax(8.5rem, 21%) minmax(0, 1fr) minmax(7.5rem, 17%);
-  grid-template-rows: auto auto minmax(0, 1fr) clamp(5.5rem, 31vh, 8.5rem);
+  grid-template-areas: 'top top top' 'strip strip strip' 'seats field side' 'seats hand side';
+  grid-template-columns: minmax(7.5rem, 17%) minmax(0, 1fr) minmax(7rem, 15%);
+  /* default: a decision (or the table) in the middle, the hand peeking below */
+  grid-template-rows: auto auto minmax(0, 1fr) clamp(4.75rem, 23vh, 6.25rem);
+  transition: grid-template-rows 320ms ease;
 }
+/* nothing to decide while the shared screen shows the table: the hand is the star */
+.boss-game[data-focus='hand'] { grid-template-rows: auto auto 0 minmax(0, 1fr); }
+.boss-game[data-focus='hand'] .boss-field { visibility: hidden; }
 .boss-top { grid-area: top; }
-.boss-live { grid-area: live; }
+.boss-strip { grid-area: strip; }
 .boss-seats { grid-area: seats; }
 .boss-field { grid-area: field; }
 .boss-side { grid-area: side; }
 .boss-hand-row { grid-area: hand; overflow: visible; }
+/* a decision slides in over the table */
+.boss-field-in { animation: boss-field-in 320ms cubic-bezier(.2,.8,.3,1.1) both; }
+@keyframes boss-field-in { from { transform: translateY(14%) scale(0.96); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .boss-field-in { animation: none; } }
 
 .boss-space-wrap { transition: transform 200ms ease; }
 .boss-space-wrap:is(button):hover { transform: translateY(-2px); }
@@ -30,7 +39,7 @@
 .boss-face-pop { animation: boss-face-pop 520ms cubic-bezier(.2,.9,.3,1.4) both; }
 @keyframes boss-face-pop { from { transform: scale(0.6) translateY(12%); } }
 
-.boss-hand-card { animation: boss-deal-in 420ms cubic-bezier(.2,.8,.3,1.15) both; }
+.boss-hand-card { animation: boss-deal-in 420ms cubic-bezier(.2,.8,.3,1.15) backwards; }
 @keyframes boss-deal-in { from { transform: translateY(70%) rotate(-8deg); opacity: 0; } }
 
 .boss-slam { animation: boss-slam 2.6s cubic-bezier(.2,.9,.3,1.25) both; }
@@ -178,3 +187,10 @@
 .boss-celebrate::before { content: ''; position: absolute; inset: -20%; border-radius: 50%; background: radial-gradient(circle, rgb(255 213 74 / .75), transparent 65%); animation: boss-celebrate-glow 2.4s ease-out both; pointer-events: none; }
 @keyframes boss-celebrate-glow { 0% { opacity: 0; transform: scale(.4); } 30% { opacity: 1; transform: scale(1.2); } 100% { opacity: 0; transform: scale(1.6); } }
 @media (prefers-reduced-motion: reduce) { .boss-price-pop, .boss-celebrate .boss-space-inner, .boss-celebrate::before { animation: none; } }
+
+/* dust where the $ marker lands */
+.boss-puff { position: absolute; z-index: 25; width: 9cqmin; height: 9cqmin; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle, rgb(255 240 200 / .95) 0 25%, rgb(255 213 74 / .55) 45%, transparent 70%); }
+
+/* The table screen has its own exit and fullscreen buttons: hide the stage bar so nothing sits on the board. */
+.game-stage-bar:has(~ * .boss-table) { display: none; }

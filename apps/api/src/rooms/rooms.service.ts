@@ -177,6 +177,11 @@ export class RoomsService {
   }
 
   /** What one viewer may see. Secrets are projected here, never filtered in the browser. */
+  /** Seated players plus anyone watching who is not seated (the owner may make one of them the Board Screen). */
+  private known(r: Internal) {
+    return [...new Set([...r.playerIds, ...(r.game === 'boss' ? this.presence.watchers(r.code) : [])])]
+  }
+
   private render(r: Internal, revision: number, people: People, boards: RoomBoard[], viewer: RoomViewer): Room {
     const playerId = viewer.kind === 'seat' ? viewer.playerId : null
     const isBoard = viewer.kind === 'board'
@@ -199,6 +204,8 @@ export class RoomsService {
         boss: r.boss && (joined || isBoard) ? projectBossView(r.boss, playerId ?? '', bossBoard) : null,
         boardOnline: boards.some((b) => b.status === 'approved' && this.presence.isOnline(r.code, `board:${b.id}`)),
         restart: r.restart ?? null,
+        // only the owner sees who is watching without a seat
+        spectators: playerId === r.hostId ? this.presence.watchers(r.code).filter((id) => !r.playerIds.includes(id)).flatMap((id) => { const p = people.get(id); return p ? [{ userId: id, displayName: p.displayName }] : [] }) : [],
         restartCooldownUntil: r.restartCooldownUntil ?? null,
       }
     }
@@ -224,7 +231,7 @@ export class RoomsService {
   }
 
   private async view(c: PoolClient, loaded: Loaded, viewer: RoomViewer): Promise<Room> {
-    const [people, boards] = await Promise.all([this.people(c, loaded.room.playerIds), this.boardList(c, loaded.room.code)])
+    const [people, boards] = await Promise.all([this.people(c, this.known(loaded.room)), this.boardList(c, loaded.room.code)])
     return this.render(loaded.room, loaded.revision, people, boards, viewer)
   }
 
@@ -234,7 +241,7 @@ export class RoomsService {
     const row = (await db.query<{ data: Internal; revision: string }>('SELECT data,revision FROM game_rooms WHERE code=$1 AND expires_at>clock_timestamp()', [code])).rows[0]
     if (!row) return null
     const [people, boards, all] = await Promise.all([
-      this.people(db, row.data.playerIds), this.boardList(db, code),
+      this.people(db, this.known(row.data)), this.boardList(db, code),
       db.query<{ id: string; label: string; status: RoomBoardStatus }>('SELECT id,label,status FROM game_room_boards WHERE room_code=$1', [code]),
     ])
     const revision = Number(row.revision)
@@ -352,9 +359,12 @@ export class RoomsService {
     if (type === 'boardApprove' || type === 'boardReject' || type === 'boardRevoke') { await this.decideBoard(c, r, type, body); return }
     if (type === 'makeBoard') {
       const b = object(body), target = b.targetId
-      if (Object.keys(b).length !== 1 || typeof target !== 'string' || !r.playerIds.includes(target) || target === viewer) throw invalid()
-      if (r.state !== 'lobby') throw conflict('ROOM_STARTED')
-      this.leave(r, target)
+      if (Object.keys(b).length !== 1 || typeof target !== 'string' || target === viewer) throw invalid()
+      // In the lobby: a player's device. During a game: only a device that is watching without a seat.
+      const spectator = !r.playerIds.includes(target) && this.presence.isOnline(r.code, target)
+      if (!r.playerIds.includes(target) && !spectator) throw invalid()
+      if (r.state !== 'lobby' && !spectator) throw conflict('ROOM_STARTED')
+      if (!spectator) this.leave(r, target)
       r.boardInvites = [...(r.boardInvites ?? []).filter((id) => id !== target), target]
       return
     }

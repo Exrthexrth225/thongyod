@@ -10,12 +10,12 @@ import { InviteFriendsSheet } from './InviteFriendsSheet'
 import { roomUrl } from './url'
 
 // Every way to bring friends in: big room code, QR, share/copy link, invite from my friends list.
-export function RoomShare({ code, exclude, game }: { code: string; exclude: string[]; game?: string }) {
+export function RoomShare({ code, exclude }: { code: string; exclude: string[] }) {
   const { t } = useTranslation()
   const account = useRoomIdentity().data?.kind === 'account'
   const [qr, setQr] = useState(false)
   const [invite, setInvite] = useState(false)
-  const url = roomUrl(code, game)
+  const url = roomUrl(code)
 
   async function share() {
     const text = t('rooms.shareText', { code })

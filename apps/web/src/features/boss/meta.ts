@@ -43,6 +43,8 @@ export function seatTeam(view: BossView, userId: string): InvestorTeam {
 }
 
 export const nameOf = (players: RoomPlayer[], userId: string | null | undefined) => players.find((p) => p.userId === userId)?.displayName ?? '?'
+/** A name as plain text in a line (banners, notes): about six letters, cut at a word or letter boundary. */
+export const shortOf = (players: RoomPlayer[], userId: string | null | undefined) => shortName(nameOf(players, userId))
 
 const segmenter = (granularity: 'grapheme' | 'word') => (typeof Intl !== 'undefined' && 'Segmenter' in Intl ? new Intl.Segmenter('th', { granularity }) : null)
 const graphemes = segmenter('grapheme'), words = segmenter('word')
@@ -51,7 +53,7 @@ const count = (text: string) => (graphemes ? [...graphemes.segment(text)].length
  * A name cut to about `max` characters with "…": at a word boundary when Thai word breaking allows it,
  * else between whole characters (a vowel or tone mark never leaves its letter, a leading vowel never ends the cut).
  */
-export function shortName(name: string, max = 8): string {
+export function shortName(name: string, max = 6): string {
   if (count(name) <= max) return name
   let out = ''
   for (const w of words ? [...words.segment(name)].map((x) => x.segment) : []) {

@@ -8,14 +8,14 @@ const MUST_PLAY = new Set(['deal_settled', 'end_roll', 'game_ended', 'dice_rolle
 const STALE_MS = 6000
 
 /** Dice: tumble ~1.5 s, hold the face, hop space by space, then light up the destination. */
-export const ROLL = { tumble: 1500, hold: 600, step: 260, land: 500 }
+export const ROLL = { tumble: 1500, hold: 600, step: 360, off: 420, land: 500 }
 const reduced = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 /** How long one effect holds the screen before the next one starts. */
 export function effectMs(e: BossEvent): number {
   const quick = reduced()
   switch (e.kind) {
-    case 'dice_rolled': return quick ? 900 : ROLL.tumble + ROLL.hold + (e.path?.length ?? 1) * ROLL.step + ROLL.land
+    case 'dice_rolled': return quick ? 900 : ROLL.tumble + ROLL.hold + (e.path?.length ?? 1) * ROLL.step + ROLL.off + ROLL.land
     case 'deal_settled': return 3400 // stamp, then coins fly to everyone paid
     case 'end_roll': return 3600
     case 'game_ended': return 4000

@@ -65,7 +65,8 @@ export function GameStage({ exitLabel, onExit, title, actions, className, childr
         className,
       )}
     >
-      <div className="flex shrink-0 items-center gap-2 px-3 py-2">
+      {/* hidden when the page draws its own top bar (I'm the Boss! table screen) */}
+      <div className="game-stage-bar flex shrink-0 items-center gap-2 px-3 py-2">
         <Button variant="ghost" size="icon" className="rounded-full bg-card" aria-label={exitLabel} onClick={() => { void exitFullscreen(); onExit() }}>
           <X className="size-5" aria-hidden="true" />
         </Button>

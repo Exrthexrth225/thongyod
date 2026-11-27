@@ -99,6 +99,9 @@ function mockApi(): Plugin {
  * sw.js for the real app (not the Pages demo, which runs MSW's worker): caches the app shell so the
  * phone can open Thongyod and show our own wake-up screen while the free Render server starts.
  */
+/** One id per build: compiled into the app and written to /version.json, so an open page can tell it is out of date. */
+const BUILD_ID = Date.now().toString(36)
+
 function serviceWorker(): Plugin {
   let base = '/'
   return {
@@ -116,12 +119,14 @@ function serviceWorker(): Plugin {
         .replace('__BASE__', base)
         .replace('__PRECACHE__', JSON.stringify([`${base}index.html`, ...files.map((f) => base + f)]))
       this.emitFile({ type: 'asset', fileName: 'sw.js', source })
+      this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ build: BUILD_ID }) })
     },
   }
 }
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), mockApi(), serviceWorker()],
+  define: { __BUILD_ID__: JSON.stringify(BUILD_ID) },
   server: {
     // Bridge/editor writes on Windows may not fire file events; polling keeps hot reload reliable.
     watch: { usePolling: true, interval: 300 },

@@ -34,7 +34,7 @@ export function missingText(view: BossView, deal: BossDealState, t: TFunction) {
  * `rolling`: the dice animation is still playing, so the result is not announced yet.
  */
 export function instruction(view: BossView, players: RoomPlayer[], meId: string | null, t: TFunction, rolling = false): string {
-  const who = (id: string | null | undefined) => shortName(nameOf(players, id), 8)
+  const who = (id: string | null | undefined) => shortName(nameOf(players, id))
   const deal = view.deal
   switch (view.phase) {
     case 'game_over': return t('boss.say.over')
