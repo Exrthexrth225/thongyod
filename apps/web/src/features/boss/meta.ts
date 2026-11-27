@@ -24,7 +24,10 @@ export const faceArt = (team: InvestorTeam, mood: Mood = 'calm') => pick(FACES, 
 export const teamArt = (team: InvestorTeam) => pick(TEAM_ART, team)
 export const cardArt = (kind: 'travel' | 'stop' | 'boss' | 'recruit') => pick(CARD_ART, kind)
 export const moneyArt = (name: 'coin' | 'coins' | 'cash' | 'sack' | 'briefcase' | 'goldbars') => pick(MONEY_ART, name)
-export const fxArt = (name: 'stamp' | 'pawn' | 'trophy' | 'burst' | 'confetti' | 'ribbon') => pick(FX_ART, name)
+export type FxName = 'stamp' | 'pawn' | 'trophy' | 'burst' | 'confetti' | 'ribbon' | 'plane' | 'crown' | 'magnet' | 'stop' | 'medal-gold' | 'medal-coin'
+export const fxArt = (name: FxName) => pick(FX_ART, name)
+/** The sticker that acts out each trouble card: plane flies a team away, crown drops on the new boss, magnet pulls an investor, a hand stops it. */
+export const PLAY_FX = { travel: 'plane', boss: 'crown', recruit: 'magnet', stop: 'stop' } as const satisfies Record<string, FxName>
 
 /** All game money is whole millions of dollars. */
 export const M = 1_000_000
@@ -65,6 +68,13 @@ const RING: [number, number][] = [
   [5, 5], [4, 5], [3, 5], [2, 5], [1, 5], [1, 4], [1, 3], [1, 2],
 ]
 export const ringCell = (index: number) => ({ gridColumn: RING[index][0], gridRow: RING[index][1] })
+/** Where the $ marker sits on a space: on its inner edge, half over the centre picture, so it never hides the space's icons. */
+export function markerSpot(index: number): { left: string; top: string } {
+  const [col, row] = RING[index]
+  const x = col === 1 ? '100%' : col === 5 ? '0%' : '50%'
+  const y = row === 1 ? '100%' : row === 5 ? '0%' : '50%'
+  return { left: x, top: y }
+}
 
 /** A card's name as printed on it. */
 export function cardName(card: BossHandCard, t: TFunction) {

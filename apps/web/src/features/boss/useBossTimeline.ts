@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { BossView } from '@/api/types'
 import type { Mood } from './meta'
 
-const FX_KINDS = new Set(['deal_opened', 'travel_played', 'boss_played', 'recruit_played', 'stop_played', 'deal_settled', 'deal_failed', 'end_roll', 'game_ended', 'dice_rolled', 'interrupt_resolved'])
+const FX_KINDS = new Set(['deal_opened', 'team_played', 'travel_played', 'boss_played', 'recruit_played', 'stop_played', 'deal_settled', 'deal_failed', 'end_roll', 'game_ended', 'dice_rolled', 'interrupt_resolved'])
 const FRESH_MS = 4500
 
 /** The clock, ticking only until `until` (ms) has passed. */

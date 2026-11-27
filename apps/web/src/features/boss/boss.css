@@ -18,7 +18,8 @@
 .boss-space-wrap:is(button):hover { transform: translateY(-2px); }
 .boss-space-inner { transition: transform 900ms cubic-bezier(.3,1.3,.5,1); }
 .boss-space-inner.boss-flipped { transform: rotateY(180deg); }
-.boss-space-active { box-shadow: 0 0 0 3px #ffd54a, 0 0 18px 4px rgb(255 213 74 / 0.7) !important; }
+.boss-space-active { box-shadow: 0 0 0 0.7cqmin #ffd54a, 0 0 3cqmin 1cqmin rgb(255 213 74 / 0.8) !important; animation: boss-active 1.2s ease-in-out infinite alternate; }
+@keyframes boss-active { to { box-shadow: 0 0 0 0.5cqmin #fff3b0, 0 0 4cqmin 1.5cqmin rgb(255 213 74 / 0.95); } }
 
 .boss-pawn { animation: boss-bob 1.6s ease-in-out infinite alternate; }
 @keyframes boss-bob { to { transform: translateY(-6%); } }
@@ -114,3 +115,36 @@
 @media (prefers-reduced-motion: reduce) {
   .boss-banner, .boss-role, .boss-pulse, .boss-contract, .boss-mine, .boss-card-ready::after, .boss-tut-art img, .boss-tut-text { animation: none; }
 }
+
+/* Trouble cards acted out by stickers: the plane flies a team away, the crown drops on the new boss, the magnet pulls. */
+.boss-fx-travel { right: -3.2rem; top: -1.6rem; animation: boss-fx-fly 1.6s ease-in-out infinite; }
+@keyframes boss-fx-fly { 0% { transform: translate(-40%, 30%) rotate(-8deg) scale(.8); opacity: 0; } 20% { opacity: 1; } 70% { opacity: 1; } 100% { transform: translate(90%, -30%) rotate(6deg) scale(1); opacity: 0; } }
+.boss-fx-boss { left: -3.6rem; top: -2.6rem; animation: boss-fx-drop 1.8s cubic-bezier(.3,.7,.4,1.4) infinite; }
+@keyframes boss-fx-drop { 0% { transform: translateY(-70%) rotate(-14deg); opacity: 0; } 35% { transform: translateY(8%) rotate(-6deg); opacity: 1; } 50% { transform: translateY(0) rotate(-6deg); } 85% { opacity: 1; } 100% { opacity: 0; } }
+.boss-fx-recruit { left: -3.4rem; bottom: -1rem; animation: boss-fx-wiggle .5s ease-in-out infinite alternate; }
+@keyframes boss-fx-wiggle { from { transform: rotate(-10deg) scale(.95); } to { transform: rotate(8deg) scale(1.05); } }
+.boss-fx-pulled { animation: boss-fx-pull 1s ease-in-out infinite alternate; }
+@keyframes boss-fx-pull { to { transform: translateX(-14px) rotate(-4deg); } }
+.boss-fx-shake { animation: boss-fx-shake .45s ease-in-out infinite; }
+@keyframes boss-fx-shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
+.boss-fx-crowned { animation: boss-fx-bob 1.8s ease-in-out infinite; }
+@keyframes boss-fx-bob { 50% { transform: translateY(-4px) scale(1.05); } }
+.boss-fx-stopslam { animation: boss-fx-stopslam 450ms cubic-bezier(.2,.9,.3,1.4) both; }
+@keyframes boss-fx-stopslam { from { transform: scale(3) rotate(-30deg); opacity: 0; } }
+/* After the 5 s: the result, once. */
+.boss-fx-plane-done { animation: boss-fx-plane-done 1.8s ease-in both; }
+@keyframes boss-fx-plane-done { 0% { transform: translateX(-60vw) rotate(-10deg); } 45% { transform: translateX(0) rotate(0); } 70% { transform: translateX(0) translateY(-6px); } 100% { transform: translateX(70vw) translateY(-20vh) rotate(-12deg); } }
+.boss-fx-crown-done { animation: boss-fx-crown-done 900ms cubic-bezier(.3,.7,.4,1.5) both; }
+@keyframes boss-fx-crown-done { from { transform: translateY(-50vh) rotate(-30deg); } }
+.boss-fx-magnet-done { animation: boss-fx-wiggle .35s ease-in-out 5 alternate both; }
+.boss-fx-stop-done { animation: boss-fx-stopslam 500ms cubic-bezier(.2,.9,.3,1.4) both; }
+.boss-toast { animation: boss-toast 4.5s ease both; }
+@keyframes boss-toast { 0% { transform: translateY(-120%); opacity: 0; } 8%, 85% { transform: none; opacity: 1; } 100% { opacity: 0; } }
+.boss-how { animation: boss-how 500ms cubic-bezier(.2,.9,.3,1.3) both; }
+@keyframes boss-how { from { transform: translateY(12px) scale(.9); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .boss-fx-travel, .boss-fx-boss, .boss-fx-recruit, .boss-fx-pulled, .boss-fx-shake, .boss-fx-crowned, .boss-fx-stopslam, .boss-fx-plane-done, .boss-fx-crown-done, .boss-fx-magnet-done, .boss-fx-stop-done, .boss-toast, .boss-how { animation: none; }
+}
+.boss-marker-ring { box-shadow: 0 0 0 0.6cqmin #ffd54a, 0 0 3cqmin 1cqmin rgb(255 213 74 / .75); background: radial-gradient(circle, rgb(255 213 74 / .35), transparent 70%); animation: boss-marker-ring 1.4s ease-out infinite; }
+@keyframes boss-marker-ring { 0% { transform: scale(.85); opacity: 1; } 100% { transform: scale(1.35); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .boss-marker-ring { animation: none; } }

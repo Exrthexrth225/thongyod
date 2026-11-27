@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import type { BossEvent, BossView } from '@/api/types'
 import { cn } from '@/lib/utils'
-import { centerArt, fxArt, hopPath, ringCell } from './meta'
+import { centerArt, fxArt, hopPath, markerSpot, ringCell } from './meta'
 import { DeckPile, PlacardStack, SpaceTile } from './parts'
 
 type Props = {
@@ -20,7 +20,7 @@ type Props = {
 /** The board: 16 deal spaces around a felt table, the $ marker, and whatever goes in the middle. */
 export function BossBoard({ view, roll, onPick, children, piles, className }: Props) {
   const grid = useRef<HTMLDivElement>(null)
-  const marker = useRef<HTMLImageElement>(null)
+  const marker = useRef<HTMLSpanElement>(null)
   const markerSpace = view.markerSpace
   const rollKey = roll?.id
 
@@ -31,7 +31,8 @@ export function BossBoard({ view, roll, onPick, children, piles, className }: Pr
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const closed = new Set(view.spaces.filter((s) => s.closedByDeal !== null).map((s) => s.index))
     const path = [roll.fromSpace, ...hopPath(roll.fromSpace, roll.spaceIndex, closed)]
-    const end = pawn.getBoundingClientRect()
+    // Offsets from the end space (the marker keeps the same spot on every tile, so tile centre to tile centre works).
+    const end = root.querySelector<HTMLElement>(`[data-space="${roll.spaceIndex}"]`)!.getBoundingClientRect()
     const at = (i: number) => {
       const tile = root.querySelector<HTMLElement>(`[data-space="${i}"]`)!.getBoundingClientRect()
       return { x: tile.left + tile.width / 2 - (end.left + end.width / 2), y: tile.top + tile.height / 2 - (end.top + end.height / 2) }
@@ -59,7 +60,10 @@ export function BossBoard({ view, roll, onPick, children, piles, className }: Pr
             <div key={space.index} data-space={space.index} style={ringCell(space.index)} className="relative min-h-0 min-w-0">
               <SpaceTile space={space} active={markerSpace === space.index} onPick={onPick ? () => onPick(space.index) : undefined} className="size-full" />
               {markerSpace === space.index && (
-                <img ref={marker} src={fxArt('pawn')} alt="$" className="boss-pawn pointer-events-none absolute left-1/2 top-1/2 z-20 size-[7vmin] min-h-10 min-w-10 -translate-x-1/2 -translate-y-[70%] drop-shadow-[0_6px_4px_rgba(0,0,0,0.45)]" />
+                <span ref={marker} className="boss-marker pointer-events-none absolute z-20 size-[11cqmin] -translate-x-1/2 -translate-y-1/2" style={markerSpot(space.index)}>
+                  <span className="boss-marker-ring absolute inset-0 rounded-full" aria-hidden="true" />
+                  <img src={fxArt('pawn')} alt="$" className="boss-pawn relative size-full drop-shadow-[0_6px_4px_rgba(0,0,0,0.55)]" />
+                </span>
               )}
             </div>
           )

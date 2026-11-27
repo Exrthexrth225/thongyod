@@ -8,6 +8,7 @@ import { BossBoard } from './BossBoard'
 import { ClosingRing, Die, EndRoll, FxBanner, InterruptOverlay, MoneyFly } from './BossFx'
 import { BossGame } from './BossGame'
 import { DealPanel } from './DealPanel'
+import { GuideBar } from './GuideBar'
 import { useBossTimeline } from './useBossTimeline'
 import { faceArt, nameOf, TEAMS } from './meta'
 import { SeatCard } from './parts'
@@ -73,6 +74,7 @@ export function BossTableScreen({ room }: { room: BossRoomData }) {
         <div className="grid grid-cols-2 gap-2">
           {view.seats.map((s) => <SeatCard key={s.userId} view={view} seat={s} players={room.players} online={room.online.includes(s.userId)} mood={moods[s.userId] ?? 'calm'} dark />)}
         </div>
+        <GuideBar view={view} players={room.players} />
         {view.deal && <DealPanel view={view} players={room.players} />}
       </aside>
       <FxBanner event={latest} view={view} players={room.players} />

@@ -14,10 +14,11 @@ import { BossBoard } from './BossBoard'
 import { ClosingRing, Die, EndRoll, FxBanner, InterruptOverlay, MoneyFly } from './BossFx'
 import { ContractCard } from './DealPanel'
 import { DiscardSheet, HandBar } from './Hand'
-import { M, nameOf, seatTeam, TEAM_COLOR, tutorialSeen } from './meta'
+import { fxArt, M, nameOf, seatTeam, TEAM_COLOR, tutorialSeen } from './meta'
 import { BossTutorial } from './Tutorial'
 import { AskSheet } from './OfferSheet'
 import { Face, Money, SpaceTile, TeamBadge, CashTag } from './parts'
+import { GuideBar } from './GuideBar'
 import { useBossTimeline } from './useBossTimeline'
 import './boss.css'
 
@@ -87,7 +88,6 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   const isContributor = deal?.contributorIds.includes(meId) ?? false
   const others = view.seats.filter((s) => s.userId !== meId)
   /** What this player should do in the open deal. */
-  const role: 'boss' | 'needed' | 'accept' | 'outside' = isBoss ? 'boss' : deal?.offered && isContributor && !deal.acceptedIds.includes(meId) ? 'accept' : isContributor ? 'needed' : 'outside'
 
   // ── boss split (inline, like haggling at the table) ──
   const amounts = deal && isBoss
@@ -113,7 +113,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   else if (deal) {
     field = (
       <div className="flex w-full flex-col items-center gap-1.5">
-        {view.phase === 'closing' ? <ClosingRing deadline={deal.closingDeadlineAt} /> : <span key={role} className="boss-role rounded-full bg-black/40 px-3 py-1 text-center text-xs font-bold text-white/90">{t(`boss.role.${role}`)}</span>}
+        {view.phase === 'closing' && <ClosingRing deadline={deal.closingDeadlineAt} />}
         <ContractCard view={view} players={players} meId={meId} />
       </div>
     )
@@ -257,7 +257,10 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
         </aside>
 
         <main className="boss-field relative min-h-0 min-w-0 px-1">
-          <div className="boss-oval flex size-full items-center justify-center overflow-y-auto rounded-[50%/42%] bg-[radial-gradient(ellipse_at_center,#2c2360,#221a4b_72%)] px-6 py-3 shadow-[inset_0_0_0_2px_rgba(233,185,73,0.5),inset_0_0_50px_rgba(0,0,0,0.5),0_10px_40px_rgba(0,0,0,0.4)] [scrollbar-width:none]">{field}</div>
+          <div className="boss-oval flex size-full flex-col items-center gap-1.5 overflow-y-auto rounded-[2.2rem] bg-[radial-gradient(ellipse_at_center,#2c2360,#221a4b_75%)] p-2 shadow-[inset_0_0_0_2px_rgba(233,185,73,0.5),inset_0_0_40px_rgba(0,0,0,0.45),0_10px_40px_rgba(0,0,0,0.4)] [scrollbar-width:none]">
+            <GuideBar view={view} players={players} meId={meId} />
+            <div className="flex w-full flex-1 items-center justify-center">{field}</div>
+          </div>
         </main>
 
         <nav className="boss-side flex min-h-0 flex-col justify-end gap-1.5 p-1.5">{side}</nav>
@@ -334,6 +337,8 @@ export function PlacardLine({ view, light }: { view: BossView; light?: boolean }
   )
 }
 
+const AWARD_ART = { deals: 'medal-gold', biggest: 'medal-coin', bribesPaid: 'magnet', travels: 'plane', stops: 'stop' } as const
+
 function Results({ view, players }: { view: BossView; players: RoomPlayer[] }) {
   const { t } = useTranslation()
   const ranked = [...view.seats].sort((a, b) => (b.exactCash ?? 0) - (a.exactCash ?? 0))
@@ -367,7 +372,7 @@ function Results({ view, players }: { view: BossView; players: RoomPlayer[] }) {
         <ul className="mt-1 grid grid-cols-2 gap-1.5">
           {awards.map((w, i) => (
             <li key={w.key} className="boss-rank flex items-center gap-2 rounded-xl bg-[#241b4b] p-1.5 text-white" style={{ animationDelay: `${(ranked.length + i) * 120}ms` }}>
-              <Face team={seatTeam(view, w.id)} className="size-8 rounded-full" />
+              <span className="relative shrink-0"><Face team={seatTeam(view, w.id)} className="size-9 rounded-full" /><img src={fxArt(AWARD_ART[w.key])} alt="" className="boss-how absolute -bottom-1 -right-2 size-6 drop-shadow" style={{ animationDelay: `${(ranked.length + i) * 120 + 300}ms` }} /></span>
               <span className="min-w-0 leading-tight">
                 <span className="block truncate text-[10px] font-bold text-[#ffd77a]">{w.title}</span>
                 <span className="block truncate text-xs font-bold">{nameOf(players, w.id)} · {w.value}</span>
