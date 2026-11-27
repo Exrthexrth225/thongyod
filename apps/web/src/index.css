@@ -527,3 +527,22 @@
         animation: none;
     }
 }
+/* "Waking the server" progress (ServerWake): a short bar sliding across, no promise of a percentage. */
+.wake-bar {
+    animation: wake-slide 1.4s ease-in-out infinite;
+}
+@keyframes wake-slide {
+    from {
+        transform: translateX(-110%);
+    }
+    to {
+        transform: translateX(310%);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .wake-bar {
+        animation: none;
+        width: 100%;
+        opacity: 0.6;
+    }
+}

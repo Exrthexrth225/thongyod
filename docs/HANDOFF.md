@@ -1,5 +1,35 @@
 # Backend handoff
 
+## Multiplayer room platform, stage 1 — 2026-11-27 — Claude (owns rooms, web + api)
+
+Earth made Claude the lead for multiplayer (rooms, Socket.IO and the new games: I'm the Boss!, Exploding Kittens, Family Style, Gartic Phone) across apps/web, apps/api and packages/shared, with permission to rework anything. Codex reviews. Branch `claude/multiplayer`, merged by Earth through a PR (a merge deploys to Render).
+
+Contracts (packages/shared/src/rooms.ts), written before the implementation:
+- Every `Room` view now has `revision` (bumped once per committed change; clients keep the highest), `phase` (match id + state + round), `online` (seated players with a live socket), `boards` (owner only), `canClaimHost`, `isBoard`. Spy rounds have `timeUp`.
+- Socket.IO on the API's own HTTP server, path `/api/socket.io`, same origin, cookie credentials, origin = APP_ORIGIN (local: localhost:5173). Client → server: `room:watch {code, takeControl?}` and `room:command {code, actionId, type, phase?, payload?}`, both answered by ack `RoomCommandResult`. Server → client: `room:view {room, control}` (a full per-viewer snapshot), `room:board {code, board}`, `room:closed {code}`. Handshake `auth: {as:'board'}` connects as a Board Screen even on a signed-in device.
+- Command types: join, leave, start, reveal, lobby, vote, settings, claimHost, boardApprove, boardReject, boardRevoke. start/reveal/lobby/vote must send `phase`; another phase → 409 STALE_PHASE. Same `actionId` + same payload → the first result (accepted or refused) without a second change; same id with another payload or another actor → 409 ACTION_ID_REUSED. Other errors: NOT_CONTROLLER, NOT_WATCHING, BOARD_READ_ONLY, BOARD_OTHER_ROOM, HOST_ACTIVE, BOARD_LIMIT, BOARD_NOT_FOUND, RATE_LIMITED (429), plus the existing room errors.
+- REST stays compatible (all original endpoints and shapes); it is also the fallback while a socket is down, and polls only then. New REST: `POST /rooms/:code/claimHost|boardApprove|boardReject|boardRevoke`, `POST /rooms/:code/boards` (a device asks to pair; sets an HttpOnly `thongyod_room_board` cookie bound to that room, 3 h) and `GET /rooms/:code/board` (that board's status and, once approved, its public view).
+
+Server rules:
+- One authoritative store per room: the `game_rooms` row in Neon, locked FOR UPDATE for every change. Revision bump, action record and state change commit together; acks and broadcasts happen after COMMIT. Each socket gets its own projection; boards get the public one. No secrets are filtered in the browser.
+- Deadlines are absolute (`next_deadline` column = earliest of a game timer and room expiry). A 1 s sweeper (and one sweep at startup) resolves due rows with FOR UPDATE SKIP LOCKED, so overdue work after a restart or a Render sleep happens exactly once. Spy rounds are marked `timeUp`; the host still reveals (old rule kept). Expired rooms close and watchers get `room:closed`.
+- Seats: identity is the existing account session or hash-only guest session (cookies, never socket ids or room codes). The newest tab/device that opens a room controls the seat; older ones get `control:false` and a "ใช้เครื่องนี้แทน" button. Joining does not need control. A reconnect re-watches and gets a fresh snapshot; it never repeats an action.
+- Owner away: any seated player can claimHost after the owner has had no socket for 2 minutes (presence is in memory; after a restart everyone counts as away from the restart time).
+- Board Screens: anyone with the code can ask (rate limited, max 5 open); only the owner approves (max 2 approved); unapproved requests lapse after 2 minutes. A board has no seat, cannot send commands and sees only public data.
+- Loading readiness (wait up to 20 s, then the owner may start) is agreed but lands with the first game that preloads pictures (I'm the Boss!); the three old games load nothing extra.
+- Rate limits (in memory, one instance): room create 10/min per player, room lookups 60/min and board requests 6/min per address, socket connects 30/min per address, commands 20/s per socket.
+- One backend instance on purpose (Render free). Scaling out would need a shared presence/limit store and the Socket.IO adapter; not planned.
+
+Migration 0008 (additive only): `game_rooms.revision` (default 0), `game_rooms.next_deadline`, tables `game_room_actions` (PK room+actionId, cascade with the room) and `game_room_boards`. Existing rooms keep working (revision 0, no match id). Seed truncation lists the new tables. Rollback: the previous app version ignores the new columns and tables, so rolling the app back does not need the migration reversed.
+
+Frontend: `useRoom` watches over the socket and polls only while it is down; command hooks send actionId/phase over the socket and fall back to REST. New: `RoomLiveBar`, `BoardSection`, `BoardView`, `GameStage`, `/games/rooms/:code/board`, online dots on players. Pages demo: no socket, mock rooms unchanged (plus the new view fields); the board page explains it needs the real app and links to thongyod.onrender.com.
+
+Render sleep: real-app builds emit `sw.js` (build-time precache of the app shell, JS/CSS/fonts; pictures cached on use; never API calls). After the first visit the phone opens the app from that cache and `ServerWake` shows "กำลังปลุกเซิร์ฟเวอร์…" until `/api/health` answers with JSON. The demo build has no sw.js and keeps MSW's worker. `sw.js` and `index.html` are served with `Cache-Control: no-cache`.
+
+Verified locally: API 44/44 tests (11 new socket tests with real Socket.IO clients: origin, private views, ordering, duplicate/reused action ids, simultaneous votes, two tabs, board pairing and privacy, reconnect, claimHost, deadline exactly once across a restart, expiry close, revoked guest, rate limit). Web gate: lint, 320 tests in Asia/Bangkok and UTC, link test, Pages mock build. Browser (Playwright, local same-origin server): four phones (one dark) and an iPad board as separate contexts; no REST polling while live; board updated 0.1 s after start; newest-tab control and take-back; offline phone returns; reveal on the board; zero JS errors. Service worker: with the server stopped, a reload shows the wake screen in about 1.5 s and the app returns 0.8 s after the server starts. Not tested: real phones, Render itself, Neon.
+
+Later (Earth, 2026-11-27): other ways to sign in; let guests use the rest of the app normally instead of being blocked outside rooms.
+
 ## Approved Logout and room-only guests — 2026-11-25
 
 Earth approved creating/joining existing spy, mostLikely and neverHave rooms as a nickname-only guest, plus Logout on Me and room screens. This supersedes decision #88's proposal to create general guest accounts or automatically link them to LINE. Keep REST, six-digit codes, 12 seats, existing rules, 3-hour rooms and 1.5-second polling. No new game, dependency, Redis or WebSocket.

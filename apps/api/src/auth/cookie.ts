@@ -4,6 +4,8 @@ import { secureCookie } from './policy.js'
 
 export const SESSION_COOKIE = 'thongyod_session'
 export const GUEST_COOKIE = 'thongyod_room_guest'
+/** Board Screen credential: bound to one room, read-only, approved by the owner. */
+export const BOARD_COOKIE = 'thongyod_room_board'
 export const SESSION_SECONDS = 30 * 24 * 60 * 60
 export function sessionHash(token: string): string {
   return createHash('sha256').update(token).digest('hex')
@@ -15,6 +17,10 @@ export function readSessionCookie(request: IncomingMessage): string | null {
 
 export function readGuestCookie(request: IncomingMessage): string | null {
   return readOpaqueCookie(request, GUEST_COOKIE)
+}
+
+export function readBoardCookie(request: IncomingMessage): string | null {
+  return readOpaqueCookie(request, BOARD_COOKIE)
 }
 
 function readOpaqueCookie(request: IncomingMessage, name: string): string | null {

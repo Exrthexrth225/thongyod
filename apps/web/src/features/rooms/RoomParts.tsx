@@ -6,6 +6,7 @@ import { Avatar } from '@/components/common/Avatar'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { RoomShare } from './RoomShare'
+import { BoardSection } from './RoomLiveBar'
 import '@/components/games/games.css'
 
 /** Players in a room as a 2-column grid; `highlight` = shown dark (e.g. the spies); `extra` = something per player (fingers). */
@@ -15,7 +16,14 @@ export function PlayerList({ room, highlight, extra }: { room: Room; highlight?:
     <ul className="grid grid-cols-2 gap-2" aria-label={t('rooms.players', { count: room.players.length })}>
       {room.players.map((p) => (
         <li key={p.userId} className={cn('game-card-in flex items-center gap-2 rounded-3xl bg-card px-3 py-2', highlight?.includes(p.userId) && 'border-foreground bg-foreground text-background')}>
-          <Avatar name={p.displayName} src={p.avatarUrl} className="size-8" />
+          <span className="relative shrink-0">
+            <Avatar name={p.displayName} src={p.avatarUrl} className={cn('size-8', !room.online.includes(p.userId) && 'opacity-50 grayscale')} />
+            <span
+              className={cn('absolute -right-0.5 -bottom-0.5 size-3 rounded-full ring-2 ring-card', room.online.includes(p.userId) ? 'bg-tone-success-foreground' : 'bg-muted-foreground')}
+              role="img"
+              aria-label={room.online.includes(p.userId) ? t('rooms.live.online') : t('rooms.live.offline')}
+            />
+          </span>
           <span className="min-w-0 flex-1 truncate text-sm font-medium">{p.displayName}</span>
           {p.isHost && <Crown className="size-4 shrink-0 text-tone-warning-foreground" aria-label={t('rooms.host')} />}
           {extra?.(p.userId)}
@@ -51,6 +59,7 @@ export function RoomLobby({ room, isHost, minPlayers, starting, onStart, onLeave
         </h2>
         <PlayerList room={room} />
       </section>
+      {isHost && <BoardSection room={room} />}
       {isHost ? (
         children && <section className="flex flex-col gap-3 rounded-3xl bg-card p-4">{children}</section>
       ) : (

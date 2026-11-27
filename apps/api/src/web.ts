@@ -17,5 +17,5 @@ export function configureWeb(app:NestExpressApplication){
     if(/^\/api(?:\/|\?|$)/.test(req.url??''))req.url=(req.url??'').slice(4)||'/'
     next()
   })
-  if(serve)app.useStaticAssets(root,{index:false,dotfiles:'deny',setHeaders:(res)=>{res.setHeader('X-Content-Type-Options','nosniff')}})
+  if(serve)app.useStaticAssets(root,{index:false,dotfiles:'deny',setHeaders:(res,path)=>{res.setHeader('X-Content-Type-Options','nosniff');if(/[\\/](sw\.js|index\.html)$/.test(path))res.setHeader('Cache-Control','no-cache')}})
 }

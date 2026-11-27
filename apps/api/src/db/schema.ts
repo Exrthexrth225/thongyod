@@ -168,7 +168,25 @@ export const notifications = pgTable('app_notifications', {
 export const gameRooms = pgTable('game_rooms', {
   code:text('code').primaryKey(),data:jsonb('data').notNull(),
   createdAt:instant('created_at').notNull(),expiresAt:instant('expires_at').notNull(),
-},t=>[index('rooms_expiry').on(t.expiresAt),check('room_code',sql`${t.code} ~ '^[0-9]{6}$'`),check('room_expiry',sql`${t.expiresAt}>${t.createdAt}`)])
+  // Bumped once per committed change; clients drop snapshots older than the one they hold.
+  revision:bigint('revision',{mode:'number'}).notNull().default(0),
+  // Earliest server deadline (room expiry or a game timer); the sweeper resolves it once.
+  nextDeadline:instant('next_deadline'),
+},t=>[index('rooms_expiry').on(t.expiresAt),index('rooms_next_deadline').on(t.nextDeadline),check('room_code',sql`${t.code} ~ '^[0-9]{6}$'`),check('room_expiry',sql`${t.expiresAt}>${t.createdAt}`)])
+
+// One row per accepted or rejected command, so a retried actionId returns its first result.
+export const gameRoomActions = pgTable('game_room_actions', {
+  roomCode:text('room_code').notNull().references(()=>gameRooms.code,{onDelete:'cascade'}),
+  actionId:uuid('action_id').notNull(),actorId:uuid('actor_id').notNull(),payloadHash:text('payload_hash').notNull(),
+  result:jsonb('result').notNull(),createdAt:instant('created_at').notNull().defaultNow(),
+},t=>[primaryKey({columns:[t.roomCode,t.actionId]})])
+
+// Shared Board Screens: no seat, read-only public view, approved by the room owner.
+export const gameRoomBoards = pgTable('game_room_boards', {
+  id:uuid('id').primaryKey(),roomCode:text('room_code').notNull().references(()=>gameRooms.code,{onDelete:'cascade'}),
+  tokenHash:text('token_hash').notNull().unique(),label:text('label').notNull(),status:text('status').notNull(),
+  createdAt:instant('created_at').notNull().defaultNow(),expiresAt:instant('expires_at').notNull(),
+},t=>[index('room_boards_room').on(t.roomCode),check('room_board_status',sql`${t.status} in ('pending','approved','rejected','revoked')`),check('room_board_label',sql`${t.label} ~ '^[A-Z0-9]{4}$'`)])
 
 export const mediaDeletes = pgTable('media_deletes', {
   url:text('url').primaryKey(),createdAt:instant('created_at').notNull().defaultNow(),

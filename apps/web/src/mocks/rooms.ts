@@ -44,9 +44,18 @@ function newCode(): string {
   }
 }
 
+/** Every mock read is "newer" than the last one: there is no socket in the demo, only polling. */
+let mockRevision = 0
+
 function view(r: Internal, me: string): Room {
   const joined = r.playerIds.includes(me)
   const base = {
+    revision: ++mockRevision,
+    phase: `${r.state}:${r.game === 'spy' ? (r.spy.round?.number ?? 0) : (r.party.round?.number ?? 0)}`,
+    online: [...r.playerIds],
+    boards: [],
+    canClaimHost: false,
+    isBoard: false,
     code: r.code,
     state: r.state,
     hostId: r.hostId,

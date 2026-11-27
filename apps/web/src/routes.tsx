@@ -29,6 +29,7 @@ import { RacePage } from '@/pages/RacePage'
 import { PetAlbumPage } from '@/pages/PetAlbumPage'
 import { GamesPage } from '@/pages/GamesPage'
 import { RoomNewPage } from '@/pages/RoomNewPage'
+import { RoomBoardPage } from '@/pages/RoomBoardPage'
 import { RoomPage } from '@/pages/RoomPage'
 import { RoomsPage } from '@/pages/RoomsPage'
 import { SpyPage } from '@/pages/SpyPage'
@@ -129,6 +130,7 @@ export const routes: RouteObject[] = [
       { path: 'games/rooms', element: <RoomsPage /> },
       { path: 'games/rooms/new', element: <RoomNewPage /> },
       { path: 'games/rooms/:code', element: <RoomPage /> },
+      { path: 'games/rooms/:code/board', element: <RoomBoardPage /> },
       { path: 'head-guess', element: <HeadsUpPage /> },
       { path: 'flashcards', element: <FlashcardsPage /> },
       { path: 'lucky-color', element: <LuckyColorPage /> },

@@ -24,6 +24,8 @@ export type RoomRound = {
   firstPlayerId: string
   /** Set after the host reveals: who the spies were and the words. */
   reveal: { spyIds: string[]; secret: string; spyWord: string | null } | null
+  /** The server marks the round once its time is up. The host still decides when to reveal. */
+  timeUp?: boolean
 }
 
 /**
@@ -46,9 +48,25 @@ export type PartyRound = {
   } | null
 }
 
+/** A shared Board Screen (e.g. an iPad on the table). It holds no seat and cannot act. */
+export type RoomBoardStatus = 'pending' | 'approved' | 'rejected' | 'revoked'
+export type RoomBoard = { id: string; /** 4 characters shown on the board and on the owner's phone. */ label: string; status: RoomBoardStatus; createdAt: string }
+
 type RoomBase = {
   /** 6 digits; also used in the join link /games/rooms/:code. */
   code: string
+  /** Bumped by every committed change. A client keeps the snapshot with the highest revision. */
+  revision: number
+  /** Match + state + round. Commands send it back; a command for an old phase is rejected (STALE_PHASE). */
+  phase: string
+  /** Seated players with a live connection to this room. */
+  online: string[]
+  /** Owner only: Board Screens asking to pair, or paired. Empty for everyone else. */
+  boards: RoomBoard[]
+  /** True when the owner has been away long enough that this player may take over (claimHost). */
+  canClaimHost: boolean
+  /** True on a paired Board Screen's view (public data only). */
+  isBoard: boolean
   state: RoomState
   hostId: string
   players: RoomPlayer[]
@@ -76,3 +94,38 @@ export type PartyRoomData = RoomBase & {
 
 /** GET /rooms/:code — poll every ~1.5 s while open (real-time push can replace polling later). */
 export type Room = SpyRoomData | PartyRoomData
+
+/** Commands sent over the room socket (or REST as a fallback). */
+export type RoomCommandType =
+  | 'join' | 'leave' | 'start' | 'reveal' | 'lobby' | 'vote' | 'settings'
+  | 'claimHost' | 'boardApprove' | 'boardReject' | 'boardRevoke'
+
+export type RoomCommand = {
+  code: string
+  /** UUID made by the client. Retrying with the same id and payload returns the first result. */
+  actionId: string
+  type: RoomCommandType
+  /** The `phase` of the snapshot the player acted on. Required for in-game commands. */
+  phase?: string
+  payload?: unknown
+}
+
+export type RoomCommandResult = { ok: true; revision: number } | { ok: false; status: number; code: string }
+
+/** Socket events (path /api/socket.io). Server → client: */
+export type RoomServerEvents = {
+  /** A full snapshot for this connection. `control`: this tab may act for the seat. */
+  'room:view': (data: { room: Room; control: boolean }) => void
+  /** Board Screen pairing state while it is not approved. */
+  'room:board': (data: { code: string; board: Pick<RoomBoard, 'label' | 'status'> }) => void
+  'room:closed': (data: { code: string }) => void
+}
+
+/** Client → server. Every handler answers through the acknowledgement callback. */
+export type RoomClientEvents = {
+  'room:watch': (data: { code: string; takeControl?: boolean }, ack: (result: RoomCommandResult) => void) => void
+  'room:command': (command: RoomCommand, ack: (result: RoomCommandResult) => void) => void
+}
+
+/** POST /rooms/:code/boards and GET /rooms/:code/board (Board Screen, cookie-bound). */
+export type RoomBoardSession = { board: Pick<RoomBoard, 'id' | 'label' | 'status'>; room: Room | null }

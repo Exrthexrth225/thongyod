@@ -76,4 +76,4 @@ export type {
   PetSummary,
 } from './home.js'
 
-export type { RoomGame, RoomState, SpyRoomSettings, PartyRoomSettings, RoomPlayer, SpySecret, RoomRound, PartyRound, SpyRoomData, PartyRoomData, Room } from './rooms.js'
+export type { RoomGame, RoomState, SpyRoomSettings, PartyRoomSettings, RoomPlayer, SpySecret, RoomRound, PartyRound, SpyRoomData, PartyRoomData, Room, RoomBoard, RoomBoardStatus, RoomCommand, RoomCommandType, RoomCommandResult, RoomServerEvents, RoomClientEvents, RoomBoardSession } from './rooms.js'

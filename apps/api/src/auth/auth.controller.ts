@@ -4,7 +4,7 @@ import { SessionService } from './session.service.js'
 import { assertMutationOrigin } from './policy.js'
 import { clearSessionCookie } from './cookie.js'
 import { guestCookie } from './room-guest.service.js'
-import { RoomsService } from '../social/rooms.service.js'
+import { RoomsService } from '../rooms/rooms.service.js'
 
 @Controller()
 export class AuthController {

@@ -1,4 +1,5 @@
 /// <reference types="vitest/config" />
+import { readFileSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
@@ -94,13 +95,42 @@ function mockApi(): Plugin {
 }
 
 // https://vite.dev/config/
+/**
+ * sw.js for the real app (not the Pages demo, which runs MSW's worker): caches the app shell so the
+ * phone can open Thongyod and show our own wake-up screen while the free Render server starts.
+ */
+function serviceWorker(): Plugin {
+  let base = '/'
+  return {
+    name: 'thongyod-service-worker',
+    apply: 'build',
+    configResolved(config) { base = config.base },
+    generateBundle(_, bundle) {
+      if (process.env.VITE_DEPLOY_MOCKS === 'true') return
+      const files = Object.keys(bundle).filter((name) => /\.(js|css|woff2)$/.test(name) && name.startsWith('assets/'))
+      const build = Object.keys(bundle).filter((name) => name.endsWith('.js')).sort().join('|')
+      let hash = 0
+      for (const ch of build) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
+      const source = readFileSync(new URL('./sw/sw.template.js', import.meta.url), 'utf8')
+        .replace('__BUILD__', hash.toString(36))
+        .replace('__BASE__', base)
+        .replace('__PRECACHE__', JSON.stringify([`${base}index.html`, ...files.map((f) => base + f)]))
+      this.emitFile({ type: 'asset', fileName: 'sw.js', source })
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [react(), tailwindcss(), mockApi()],
+  plugins: [react(), tailwindcss(), mockApi(), serviceWorker()],
   server: {
     // Bridge/editor writes on Windows may not fire file events; polling keeps hot reload reliable.
     watch: { usePolling: true, interval: 300 },
     // Real backend (NestJS, apps/api) when mocks are off or a path has no mock.
-    proxy: { '/api': { target: 'http://127.0.0.1:3000', rewrite: (path) => path.replace(/^\/api/, '') } },
+    // The room socket keeps its /api prefix (Socket.IO listens on that exact path) and needs WebSocket upgrades.
+    proxy: {
+      '/api/socket.io': { target: 'http://127.0.0.1:3000', ws: true },
+      '/api': { target: 'http://127.0.0.1:3000', rewrite: (path) => path.replace(/^\/api/, '') },
+    },
   },
   test: { include: ['src/**/*.test.ts'], environment: 'node' },
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
