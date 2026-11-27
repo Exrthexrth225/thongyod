@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Crown, Layers, WifiOff } from 'lucide-react'
 import type { BossBoardSpace, BossSeatView, BossView, InvestorTeam, RoomPlayer } from '@/api/types'
 import { cn } from '@/lib/utils'
-import { cardBackArt, faceArt, millions, moneyArt, seatTeam, teamArt, TEAM_COLOR, type Mood } from './meta'
+import { cardBackArt, faceArt, millions, moneyArt, seatTeam, teamArt, TEAM_COLOR, type Mood, type TileShape } from './meta'
 
 export function TeamBadge({ team, className, dim }: { team: InvestorTeam; className?: string; dim?: boolean }) {
   const { t } = useTranslation()
@@ -40,12 +40,18 @@ export function CashTag({ seat, className }: { seat: BossSeatView; className?: s
  * Small tiles size everything from the board (cqmin of the board grid), so every header is the same size.
  * When the deal closes, the tile flips over to show the placard that closed it.
  */
-export function SpaceTile({ space, big, active, onPick, className }: { space: BossBoardSpace; big?: boolean; active?: boolean; onPick?: () => void; className?: string }) {
+export function SpaceTile({ space, big, shape = 'corner', active, onPick, className }: { space: BossBoardSpace; big?: boolean; shape?: TileShape; active?: boolean; onPick?: () => void; className?: string }) {
   const { t } = useTranslation()
   const closed = space.closedByDeal !== null
   const rich = space.dividends >= 6
   const Tag = onPick && !closed ? 'button' : 'div'
   const u = (n: number) => (big ? `${n * 0.46}rem` : `${n}cqmin`) // board units
+  const side = !big && shape !== 'corner'
+  const icon = u(side ? 3.4 : 4.2), pickSize = u(side ? 2.5 : 2.8)
+  const pick = (n: number) => <span className="flex shrink-0 items-center justify-center rounded-full bg-[#241b4b] font-black text-white" style={{ width: pickSize, height: pickSize, fontSize: u(side ? 1.6 : 1.8) }} aria-label={t('boss.deal.pick', { count: n })}>{n}</span>
+  const icons = (teams: InvestorTeam[]) => teams.map((team) => <img key={team} src={teamArt(team)} alt={t(`boss.teams.${team}`)} draggable={false} style={{ width: icon, height: icon }} />)
+  const wide = (shape === 'left' || shape === 'right') && !big
+  const tall = (shape === 'top' || shape === 'bottom') && !big
   return (
     <Tag
       type={Tag === 'button' ? 'button' : undefined}
@@ -63,19 +69,31 @@ export function SpaceTile({ space, big, active, onPick, className }: { space: Bo
           )}
           style={{ borderRadius: u(1.4), boxShadow: `0 ${u(0.5)} 0 #d9cfb2, 0 ${u(0.9)} ${u(1.4)} rgba(0,0,0,0.35)` }}
         >
-          <div className="flex shrink-0 items-center justify-between font-black" style={{ height: u(4.4), padding: `${u(0.6)} ${u(0.8)} 0`, fontSize: u(2.3) }}>
-            <span className="flex items-center justify-center rounded-[0.35em] bg-[#241b4b] text-white" style={{ width: u(3.4), height: u(3.4) }}>{space.teamCount}</span>
-            <span className={rich ? 'text-[#c98a00]' : 'text-[#9a6b00]'}>$×{space.dividends}</span>
-          </div>
-          <div className="flex min-h-0 flex-1" style={{ padding: `${u(0.6)} ${u(0.3)}` }}>
-            {space.groups.map((g, i) => (
-              <div key={i} className={cn('flex min-w-0 flex-1 flex-col items-center', i > 0 && 'border-l border-[#d9cfb2]')}>
-                <div className="flex min-h-0 flex-1 flex-wrap content-center items-center justify-center" style={{ gap: u(0.4) }}>
-                  {g.teams.map((team) => <img key={team} src={teamArt(team)} alt={t(`boss.teams.${team}`)} draggable={false} style={{ width: u(4.2), height: u(4.2) }} />)}
-                </div>
-                <span className="flex shrink-0 items-center justify-center rounded-full bg-[#241b4b] font-black text-white" style={{ width: u(2.8), height: u(2.8), fontSize: u(1.8) }} aria-label={t('boss.deal.pick', { count: g.pick })}>{g.pick}</span>
+          <div className={cn('flex min-h-0 flex-1', wide ? (shape === 'right' ? 'flex-row-reverse' : 'flex-row') : tall && shape === 'bottom' ? 'flex-col-reverse' : 'flex-col')}>
+            <div className={cn('flex shrink-0 items-center font-black', wide ? cn('flex-col justify-center gap-[0.6cqmin] border-[#d9cfb2]', shape === 'right' ? 'border-l' : 'border-r') : 'justify-between')}
+              style={wide ? { width: u(5.4), fontSize: u(2), padding: `0 ${u(0.4)}` } : { height: u(4.4), padding: shape === 'bottom' && !big ? `0 ${u(0.8)} ${u(0.6)}` : `${u(0.6)} ${u(0.8)} 0`, fontSize: u(side ? 2.1 : 2.3) }}>
+              <span className="flex items-center justify-center rounded-[0.35em] bg-[#241b4b] text-white" style={{ width: u(side ? 3.1 : 3.4), height: u(side ? 3.1 : 3.4) }}>{space.teamCount}</span>
+              <span className={cn(rich ? 'text-[#c98a00]' : 'text-[#9a6b00]', wide && 'text-center leading-none')}>$×{space.dividends}</span>
+            </div>
+            {tall ? (
+              <div className="flex min-h-0 flex-1 flex-col" style={{ padding: `${u(0.3)} ${u(0.5)}` }}>
+                {space.groups.map((g, i) => (
+                  <div key={i} className={cn('flex min-h-0 flex-1 items-center', i > 0 && 'border-t border-[#d9cfb2]')} style={{ gap: u(0.4) }}>
+                    <div className="flex min-w-0 flex-1 flex-wrap content-center items-center justify-center" style={{ gap: u(0.3) }}>{icons(g.teams)}</div>
+                    {pick(g.pick)}
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              <div className="flex min-h-0 min-w-0 flex-1" style={{ padding: `${u(0.6)} ${u(0.3)}` }}>
+                {space.groups.map((g, i) => (
+                  <div key={i} className={cn('flex min-w-0 flex-1 flex-col items-center', i > 0 && 'border-l border-[#d9cfb2]')}>
+                    <div className="flex min-h-0 flex-1 flex-wrap content-center items-center justify-center" style={{ gap: u(side ? 0.3 : 0.4) }}>{icons(g.teams)}</div>
+                    {pick(g.pick)}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         {/* back: closed — dim navy with a gold stamp */}

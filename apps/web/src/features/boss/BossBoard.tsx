@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import type { BossEvent, BossView } from '@/api/types'
 import { cn } from '@/lib/utils'
-import { centerArt, fxArt, hopPath, markerSpot, ringCell } from './meta'
+import { centerArt, fxArt, hopPath, markerSpot, ringCell, ringShape } from './meta'
 import { DeckPile, PlacardStack, SpaceTile } from './parts'
 
 type Props = {
@@ -58,7 +58,7 @@ export function BossBoard({ view, roll, onPick, children, piles, className }: Pr
         {view.spaces.map((space) => {
           return (
             <div key={space.index} data-space={space.index} style={ringCell(space.index)} className="relative min-h-0 min-w-0">
-              <SpaceTile space={space} active={markerSpace === space.index} onPick={onPick ? () => onPick(space.index) : undefined} className="size-full" />
+              <SpaceTile space={space} shape={ringShape(space.index)} active={markerSpace === space.index} onPick={onPick ? () => onPick(space.index) : undefined} className="size-full" />
               {markerSpace === space.index && (
                 <span ref={marker} className="boss-marker pointer-events-none absolute z-20 size-[11cqmin] -translate-x-1/2 -translate-y-1/2" style={markerSpot(space.index)}>
                   <span className="boss-marker-ring absolute inset-0 rounded-full" aria-hidden="true" />

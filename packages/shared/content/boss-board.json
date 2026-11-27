@@ -6,19 +6,23 @@
    "groups": [
     {
      "teams": [
-      "red"
+      "yellow",
+      "purple"
      ],
-     "pick": 1
+     "pick": 2
     },
     {
      "teams": [
-      "blue"
+      "red",
+      "green",
+      "blue",
+      "orange"
      ],
-     "pick": 1
+     "pick": 3
     }
    ],
-   "teamCount": 2,
-   "dividends": 3
+   "teamCount": 5,
+   "dividends": 6
   },
   {
    "index": 1,
@@ -70,15 +74,13 @@
    "groups": [
     {
      "teams": [
-      "orange",
-      "yellow"
+      "red"
      ],
      "pick": 1
     },
     {
      "teams": [
-      "green",
-      "red"
+      "blue"
      ],
      "pick": 1
     }

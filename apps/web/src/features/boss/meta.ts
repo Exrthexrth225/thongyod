@@ -68,11 +68,20 @@ const RING: [number, number][] = [
   [5, 5], [4, 5], [3, 5], [2, 5], [1, 5], [1, 4], [1, 3], [1, 2],
 ]
 export const ringCell = (index: number) => ({ gridColumn: RING[index][0], gridRow: RING[index][1] })
+export type TileShape = 'corner' | 'top' | 'bottom' | 'left' | 'right'
+/** Corners are the big squares; top/bottom spaces stand tall, left/right spaces lie wide, each with its header on the outer edge (like the printed board). */
+export function ringShape(index: number): TileShape {
+  const [col, row] = RING[index]
+  const edgeCol = col === 1 || col === 5, edgeRow = row === 1 || row === 5
+  if (edgeCol && edgeRow) return 'corner'
+  return row === 1 ? 'top' : row === 5 ? 'bottom' : col === 1 ? 'left' : 'right'
+}
 /** Where the $ marker sits on a space: on its inner edge, half over the centre picture, so it never hides the space's icons. */
 export function markerSpot(index: number): { left: string; top: string } {
   const [col, row] = RING[index]
-  const x = col === 1 ? '100%' : col === 5 ? '0%' : '50%'
-  const y = row === 1 ? '100%' : row === 5 ? '0%' : '50%'
+  // mostly over the centre picture: 3.5cqmin past the inner edge
+  const x = col === 1 ? 'calc(100% + 3.5cqmin)' : col === 5 ? 'calc(0% - 3.5cqmin)' : '50%'
+  const y = row === 1 ? 'calc(100% + 3.5cqmin)' : row === 5 ? 'calc(0% - 3.5cqmin)' : '50%'
   return { left: x, top: y }
 }
 

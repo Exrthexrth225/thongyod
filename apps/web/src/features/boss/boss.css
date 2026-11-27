@@ -96,7 +96,7 @@
 .boss-rotate-icon { animation: boss-rotate 2.2s ease-in-out infinite; }
 @keyframes boss-rotate { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(90deg); } }
 .boss-card-glow { box-shadow: 0 0 0 3px #ffc21a, 0 0 24px 6px rgb(255 194 26 / 0.7); }
-.boss-banner { max-width: 62%; }
+.boss-top .boss-banner { max-width: 62%; }
 
 .boss-banner { animation: boss-banner 420ms cubic-bezier(.2,.9,.3,1.3) both; }
 @keyframes boss-banner { from { transform: translateY(-120%) scale(0.9); opacity: 0; } }
@@ -164,3 +164,6 @@
 /* A dark plaque with a gold rim for status lines over the busy board picture. */
 .boss-plaque { border-radius: 999px; background: linear-gradient(180deg, rgb(36 27 75 / .94), rgb(18 13 43 / .94)); box-shadow: inset 0 0 0 2px #e9b949, inset 0 0 0 4px rgb(18 13 43 / .9), inset 0 0 0 5px rgb(233 185 73 / .45), 0 8px 22px rgb(0 0 0 / .5); }
 @media (prefers-reduced-motion: reduce) { .boss-word::after { animation: none; } }
+
+/* The square board: big corners, three small spaces per side (tall on top/bottom, wide on left/right). */
+.boss-grid { grid-template-columns: 1.8fr 1fr 1fr 1fr 1.8fr; grid-template-rows: 1.8fr 1fr 1fr 1fr 1.8fr; }

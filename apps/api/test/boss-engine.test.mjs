@@ -20,7 +20,7 @@ const zero = () => 0
 let n = 0
 const id = () => `a${++n}`
 
-/** p1..p4 with fixed investors and hands; marker on space 0 (red+blue, 2 teams, x3). */
+/** p1..p4 with fixed investors and hands; marker on space 3 (red+blue, 2 teams, x3). */
 function table(hands = {}) {
   const s = createBossGame(['p1', 'p2', 'p3', 'p4'], {}, board, zero, 0)
   const investors = { p1: ['red'], p2: ['blue'], p3: ['green'], p4: ['yellow'] }
@@ -32,7 +32,7 @@ function table(hands = {}) {
   s.firstPlayerId = s.turnPlayerId = 'p1'
   s.markerChooserId = 'p4'
   s.phase = 'turn_choice'
-  s.markerSpace = 0
+  s.markerSpace = 3
   return s
 }
 
@@ -91,8 +91,8 @@ test('a deal pays a bribe to someone outside it and only contributors must accep
   assert.equal(s.turnPlayerId, 'p2')
   assert.deepEqual(s.seats.map((x) => x.cash), [3_000_000, 2_000_000, 1_000_000, 0])
   assert.deepEqual(s.lastSettlement.payouts, { p1: 3_000_000, p2: 2_000_000, p3: 1_000_000 })
-  assert.equal(s.spaces[0].closedByDeal, 1)
-  assert.equal(s.markerSpace, 1)
+  assert.equal(s.spaces[3].closedByDeal, 1)
+  assert.equal(s.markerSpace, 4)
   assert.equal(s.dealIndex, 1)
   assert.deepEqual(s.stats.p1, { deals: 1, biggest: 6_000_000, bribesPaid: 1_000_000, travels: 0, stops: 0 })
 })

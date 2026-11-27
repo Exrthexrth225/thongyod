@@ -57,12 +57,12 @@ export function BossTableScreen({ room }: { room: BossRoomData }) {
       <div className="boss-table-board flex min-h-0 min-w-0 items-center justify-center">
         <BossBoard view={view} roll={lastRoll} piles className="h-full">
           <div className="flex size-full flex-col items-center justify-center gap-2 overflow-hidden">
-            {view.phase === 'pick_start' && <p className="boss-plaque boss-banner px-6 py-2.5"><Word text={t('boss.phase.pickStart', { name: nameOf(room.players, view.markerChooserId) })} className="text-[clamp(16px,2.7vmin,30px)]" /></p>}
-            {!view.deal && view.phase !== 'pick_start' && view.phase !== 'game_over' && <p key={view.turnPlayerId} className="boss-plaque boss-banner px-6 py-2.5"><Word text={t('boss.phase.turn', { name: nameOf(room.players, view.turnPlayerId) })} className="text-[clamp(18px,3.2vmin,36px)]" /></p>}
-            {view.deal && <p key={view.deal.bossId} className="boss-plaque boss-banner px-6 py-2.5"><Word text={t('boss.phase.negotiating', { boss: nameOf(room.players, view.deal.bossId) })} className="text-[clamp(16px,2.7vmin,30px)]" /></p>}
+            {view.phase === 'pick_start' && <p className="boss-plaque boss-banner max-w-[94%] px-6 py-2.5"><Word text={t('boss.phase.pickStart', { name: nameOf(room.players, view.markerChooserId) })} className="text-[clamp(16px,2.7vmin,30px)]" /></p>}
+            {!view.deal && view.phase !== 'pick_start' && view.phase !== 'game_over' && <p key={view.turnPlayerId} className="boss-plaque boss-banner max-w-[94%] px-6 py-2.5"><Word text={t('boss.phase.turn', { name: nameOf(room.players, view.turnPlayerId) })} className="text-[clamp(18px,3.2vmin,36px)]" /></p>}
+            {view.deal && <p key={view.deal.bossId} className="boss-plaque boss-banner max-w-[94%] px-6 py-2.5"><Word text={t('boss.phase.negotiating', { boss: nameOf(room.players, view.deal.bossId) })} className="text-[clamp(16px,2.7vmin,30px)]" /></p>}
             {view.phase === 'closing' && view.deal && <ClosingRing deadline={view.deal.closingDeadlineAt} className="text-lg" />}
             {view.phase === 'rolled_choice' && lastRoll && <Die key={lastRoll.id} value={lastRoll.roll ?? 1} size={88} />}
-            {view.phase === 'game_over' && <p className="boss-plaque boss-banner px-6 py-3"><Word text={t('boss.fx.winner', { name: view.winnerIds.map((id) => nameOf(room.players, id)).join(', ') })} className="text-[clamp(24px,4.5vmin,48px)]" /></p>}
+            {view.phase === 'game_over' && <p className="boss-plaque boss-banner max-w-[94%] px-6 py-3"><Word text={t('boss.fx.winner', { name: view.winnerIds.map((id) => nameOf(room.players, id)).join(', ') })} className="text-[clamp(24px,4.5vmin,48px)]" /></p>}
           </div>
         </BossBoard>
       </div>
