@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { Word } from './Word'
 import { cardArt, faceArt, fxArt, markTutorialSeen, moneyArt } from './meta'
 
 /** Four quick pages the first time someone plays (and from the menu): goal, your turn, the deal, trouble cards. */
@@ -25,7 +26,7 @@ export function BossTutorial({ onClose }: { onClose: () => void }) {
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <span className="text-xs font-bold text-[#9a6b00]">{page + 1}/{pages.length}</span>
-          <h2 key={`t${page}`} className="boss-tut-text font-heading text-2xl leading-tight font-black">{p.title}</h2>
+          <h2 key={`t${page}`} className="boss-tut-text"><Word text={p.title} className="text-left text-[26px]" /></h2>
           <p key={`d${page}`} className="boss-tut-text text-sm leading-snug">{p.text}</p>
           <div className="mt-2 flex items-center gap-2">
             <div className="flex flex-1 gap-1.5" aria-hidden="true">

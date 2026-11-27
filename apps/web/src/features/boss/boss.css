@@ -148,3 +148,19 @@
 .boss-marker-ring { box-shadow: 0 0 0 0.6cqmin #ffd54a, 0 0 3cqmin 1cqmin rgb(255 213 74 / .75); background: radial-gradient(circle, rgb(255 213 74 / .35), transparent 70%); animation: boss-marker-ring 1.4s ease-out infinite; }
 @keyframes boss-marker-ring { 0% { transform: scale(.85); opacity: 1; } 100% { transform: scale(1.35); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .boss-marker-ring { animation: none; } }
+
+/* Game lettering: chunky Kanit with a thick dark outline + drop shadow (::before) under a shiny gradient fill (::after).
+   The element's own glyphs are transparent and only hold the layout, so both copies wrap exactly like it. */
+.boss-word { position: relative; display: inline-block; font-family: var(--font-heading); font-weight: 800; line-height: 1.15; letter-spacing: .01em; white-space: pre-wrap; text-align: center; color: transparent; -webkit-text-fill-color: transparent; }
+.boss-word::before, .boss-word::after { content: attr(data-text); position: absolute; inset: 0; white-space: pre-wrap; text-align: inherit; pointer-events: none; }
+.boss-word::before { -webkit-text-fill-color: var(--word-ink, #2a1606); -webkit-text-stroke: .2em var(--word-ink, #2a1606); text-shadow: 0 .14em 0 var(--word-ink, #2a1606), 0 .28em .4em rgb(0 0 0 / .55); }
+.boss-word::after { background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / .9) 48%, transparent 58%) no-repeat, var(--word-fill, linear-gradient(180deg, #fffbe0 0%, #ffe066 40%, #ffb703 58%, #ffcf4a 100%));
+  background-size: 250% 100%, 100% 100%; background-position: 160% 0, 0 0; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: boss-word-shine 3.2s ease-in-out .4s infinite; }
+@keyframes boss-word-shine { 0% { background-position: 160% 0, 0 0; } 45%, 100% { background-position: -60% 0, 0 0; } }
+.boss-word-red { --word-fill: linear-gradient(180deg, #ffe1da 0%, #ff7a63 42%, #e11d2a 60%, #ff4d4d 100%); --word-ink: #3b0707; }
+.boss-word-green { --word-fill: linear-gradient(180deg, #eafff0 0%, #7ef0a0 42%, #16a34a 62%, #34d17a 100%); --word-ink: #052e16; }
+.boss-word-white { --word-fill: linear-gradient(180deg, #ffffff 0%, #f4f1ff 50%, #cfc6ff 100%); --word-ink: #160f38; }
+.boss-word-gray { --word-fill: linear-gradient(180deg, #ffffff 0%, #cbd5e1 55%, #94a3b8 100%); --word-ink: #1e293b; }
+/* A dark plaque with a gold rim for status lines over the busy board picture. */
+.boss-plaque { border-radius: 999px; background: linear-gradient(180deg, rgb(36 27 75 / .94), rgb(18 13 43 / .94)); box-shadow: inset 0 0 0 2px #e9b949, inset 0 0 0 4px rgb(18 13 43 / .9), inset 0 0 0 5px rgb(233 185 73 / .45), 0 8px 22px rgb(0 0 0 / .5); }
+@media (prefers-reduced-motion: reduce) { .boss-word::after { animation: none; } }

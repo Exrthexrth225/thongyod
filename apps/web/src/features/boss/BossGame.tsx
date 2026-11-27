@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { BookOpen, DoorOpen, LayoutGrid, LogOut, Menu, Minus, Plus, RotateCw, Trophy, WifiOff, XCircle } from 'lucide-react'
+import { BookOpen, DoorOpen, LayoutGrid, LogOut, Menu, Minus, Plus, RotateCw, WifiOff, XCircle } from 'lucide-react'
 import { ApiError } from '@/api/client'
 import { useBackToLobby, useBossAction, useBossHost, useCloseRoom, useLeaveRoom } from '@/api/rooms'
 import type { BossActionPayload, BossRoomData, BossView, RoomPlayer } from '@/api/types'
@@ -14,6 +14,7 @@ import { BossBoard } from './BossBoard'
 import { ClosingRing, Die, EndRoll, FxBanner, InterruptOverlay, MoneyFly } from './BossFx'
 import { ContractCard } from './DealPanel'
 import { DiscardSheet, HandBar } from './Hand'
+import { Word } from './Word'
 import { fxArt, M, nameOf, seatTeam, TEAM_COLOR, tutorialSeen } from './meta'
 import { BossTutorial } from './Tutorial'
 import { AskSheet } from './OfferSheet'
@@ -234,7 +235,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
         <header className="boss-top relative z-40 flex items-center gap-2 px-2 pt-1.5">
           <button type="button" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/10" aria-label={t('boss.menu.title')} onClick={() => setMenuOpen(true)}><Menu className="size-4" /></button>
           <span className="min-w-0 flex-1" />
-          <span key={banner} className="boss-banner truncate rounded-full bg-[#ffc21a] px-4 py-1 text-sm font-black text-[#241b4b] shadow-[0_3px_0_#b9821c]">{banner} · {t('boss.status.dealOf', { n: Math.min(view.dealsDone + 1, view.dealsTotal), total: view.dealsTotal })}</span>
+          <span key={banner} className="boss-plaque boss-banner flex min-w-0 items-center gap-2 px-4 py-1"><Word text={banner} className="truncate text-[17px]" /><span className="shrink-0 text-[11px] font-bold text-[#ffd77a]/90">{t('boss.status.dealOf', { n: Math.min(view.dealsDone + 1, view.dealsTotal), total: view.dealsTotal })}</span></span>
           {view.phase !== 'game_over' && (view.currentEndRollFaces.length > 0
             ? <span className="boss-pulse shrink-0 rounded-full bg-red-600 px-2.5 py-1 text-[11px] font-black">{t('boss.status.endFaces', { faces: view.currentEndRollFaces.join(' ') })}</span>
             : view.dealsTotal - view.dealsDone === 7 && <span className="shrink-0 rounded-full bg-red-600/70 px-2.5 py-1 text-[11px] font-black">{t('boss.status.endSoon')}</span>)}
@@ -357,7 +358,7 @@ function Results({ view, players }: { view: BossView; players: RoomPlayer[] }) {
   ] as const).flatMap(([key, title, fmt]) => { const b = best(key); return b ? [{ key, title, id: b.id, value: fmt(b.n) }] : [] })
   return (
     <div className="flex w-full max-w-md flex-col gap-2 rounded-3xl bg-[#fff4dc] p-4 text-[#3a2416] shadow-[0_4px_0_#5a3420]">
-      <h2 className="flex items-center justify-center gap-2 text-2xl font-black"><Trophy className="size-6 text-amber-500" />{t('boss.over.title')}</h2>
+      <h2 className="flex items-center justify-center gap-2"><img src={fxArt('trophy')} alt="" className="size-10" /><Word text={t('boss.over.title')} className="text-3xl" /></h2>
       <ol className="flex flex-col gap-1.5">
         {ranked.map((s, i) => (
           <li key={s.userId} className={cn('boss-rank flex items-center gap-3 rounded-2xl bg-white/80 p-2', view.winnerIds.includes(s.userId) && 'ring-4 ring-amber-400')} style={{ animationDelay: `${i * 120}ms` }}>

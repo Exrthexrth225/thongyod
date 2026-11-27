@@ -4,6 +4,7 @@ import type { BossEvent, BossHandCard, BossView, InvestorTeam, RoomPlayer } from
 import { useSecondsLeft } from '@/features/rooms/useSecondsLeft'
 import { cn } from '@/lib/utils'
 import { CardFace } from './Hand'
+import { Word } from './Word'
 import { faceArt, fxArt, millions, moneyArt, nameOf, PLAY_FX, seatTeam, type Mood } from './meta'
 
 /** Big slam banner for the moment that just happened. Keyed by event id so each plays once. */
@@ -50,7 +51,7 @@ export function FxBanner({ event, view, players }: { event: BossEvent | null; vi
     <div key={event.id} className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center" aria-live="polite">
       <div className={cn('boss-slam flex flex-col items-center gap-1 text-center', event.kind === 'deal_settled' && 'boss-stamp')}>
         {art && <img src={art} alt="" className={cn('drop-shadow-xl', event.kind === 'deal_settled' ? 'size-40' : 'size-28', fly && `boss-fx-${fly}-done`)} />}
-        <span className={cn('boss-title rounded-2xl px-4 py-1 text-3xl font-black', tone === 'red' && 'text-red-600', tone === 'gray' && 'text-slate-600', tone === 'gold' && 'text-amber-500', event.kind === 'deal_settled' && '-mt-28 mb-16 rotate-[-12deg] text-4xl')}>{title}</span>
+        <Word text={title} tone={tone === 'red' ? 'red' : tone === 'gray' ? 'gray' : 'gold'} className={cn('px-2 text-[clamp(30px,6.5vmin,64px)]', event.kind === 'deal_settled' && '-mt-28 mb-16 rotate-[-12deg] text-[clamp(36px,8vmin,76px)]')} />
         {sub && <span className={cn('rounded-full bg-black/65 px-3 py-1 text-sm font-bold text-white', event.kind === 'deal_settled' && 'boss-pop-late text-[#ffd77a]')}>{sub}</span>}
       </div>
       {(event.kind === 'deal_settled' || event.kind === 'game_ended') && <img src={fxArt('confetti')} alt="" className="boss-confetti absolute -z-10 size-56 opacity-80" />}
@@ -82,7 +83,7 @@ export function InterruptOverlay({ view, players, canStop, onStop, stopping }: {
   return (
     <div key={intr.id} className="absolute inset-0 z-40 flex items-center justify-center overflow-hidden bg-[#120d2b]/75 backdrop-blur-[3px]">
       <div className="flex max-h-full origin-center flex-col items-center gap-2 overflow-y-auto p-3 [scrollbar-width:none] [@media(min-width:768px)_and_(min-height:600px)]:scale-[1.45] [@media(max-height:500px)]:scale-[0.74]">
-        <span className="boss-role rounded-2xl bg-[#ffc21a] px-4 py-1 text-center text-lg font-black text-[#3a2416] shadow-[0_4px_0_#9a6a00]">{title}</span>
+        <Word text={title} className="boss-role text-[28px]" />
         <div className="flex items-center gap-2">
           {who(actorFace, actor, stopped ? 'upset' : 'happy', intr.kind === 'boss' ? 'boss-fx-crowned' : undefined)}
           <div className="relative">
@@ -99,12 +100,12 @@ export function InterruptOverlay({ view, players, canStop, onStop, stopping }: {
             : who(targetFace, team, 'calm', 'boss-fx-pulled')}
         </div>
         {stopped
-          ? <span className="boss-role rounded-2xl bg-red-600 px-4 py-1.5 text-center text-base font-black text-white">{t('boss.fx.stoppedBy', { name: nameOf(players, intr.stoppedBy) })}</span>
+          ? <Word text={t('boss.fx.stoppedBy', { name: nameOf(players, intr.stoppedBy) })} tone="red" className="boss-role text-[22px]" />
           : <span className="rounded-2xl bg-white/95 px-3 py-1.5 text-center text-sm font-bold text-[#3a2416]"><span className="text-[#b45309]">{t('boss.fx.ifNone')}</span> → {outcome}</span>}
         <span className="text-xs font-semibold text-white/85 tabular-nums">{stopped ? t('boss.fx.resolving', { s: left }) : canStop ? t('boss.fx.stopWindow', { s: left }) : `${t('boss.fx.waitStop')} · ${left}`}</span>
         {canStop && !stopped && (
           <button type="button" disabled={stopping} onClick={onStop} className="boss-stop-btn flex items-center gap-2 rounded-full bg-red-600 py-2 pl-3 pr-8 text-2xl font-black tracking-wide text-white shadow-[0_6px_0_#7f1d1d] active:translate-y-1 active:shadow-[0_2px_0_#7f1d1d] disabled:opacity-60">
-            <img src={fxArt('stop')} alt="" className="size-10" />{t('boss.act.stop')}
+            <img src={fxArt('stop')} alt="" className="size-10" /><Word text={t('boss.act.stop')} tone="white" className="text-[30px] tracking-wide" />
           </button>
         )}
       </div>
@@ -174,7 +175,8 @@ export function MoneyFly({ event, payouts, container }: { event: BossEvent; payo
       // "+$2M" pops up over the seat when the money lands.
       const tag = document.createElement('span')
       tag.textContent = `+$${millions(payouts[id])}M`
-      tag.className = 'pointer-events-none absolute left-0 top-0 rounded-full bg-[#ffc21a] px-2 py-0.5 text-sm font-black text-[#241b4b] shadow-lg'
+      tag.dataset.text = tag.textContent
+      tag.className = 'boss-word pointer-events-none absolute left-0 top-0 text-2xl'
       host.appendChild(tag); made.push(tag)
       tag.animate(
         [
@@ -217,9 +219,7 @@ export function EndRoll({ event, view }: { event: BossEvent; view: BossView }) {
     <div key={event.id} className="pointer-events-none absolute inset-x-0 top-[18%] z-30 flex flex-col items-center gap-2">
       <span className="rounded-full bg-black/60 px-3 py-1 text-sm font-bold text-white">{t('boss.fx.endRoll')} · {faces.join(' ')}</span>
       <Die value={roll} size={72} />
-      <span className={cn('boss-pop-late rounded-2xl px-4 py-1 text-xl font-black', event.cancelled ? 'bg-emerald-500 text-white' : 'bg-red-600 text-white')}>
-        {event.cancelled ? t('boss.fx.endNo', { roll }) : t('boss.fx.endYes', { roll })}
-      </span>
+      <Word text={event.cancelled ? t('boss.fx.endNo', { roll }) : t('boss.fx.endYes', { roll })} tone={event.cancelled ? 'green' : 'red'} className="boss-pop-late text-[clamp(26px,5vmin,48px)]" />
     </div>
   )
 }

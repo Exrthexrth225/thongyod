@@ -70,7 +70,10 @@ export function BossBoard({ view, roll, onPick, children, piles, className }: Pr
         })}
         <div className="relative col-[2/5] row-[2/5] min-h-0 min-w-0 overflow-hidden rounded-[6%] bg-[#241b4b] ring-1 ring-[#e9b949]/35">
           {centerArt ? (
-            <img src={centerArt} alt="" className="absolute inset-0 size-full object-cover" aria-hidden="true" />
+            <>
+              <img src={centerArt} alt="" className="absolute inset-0 size-full object-cover" aria-hidden="true" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgb(18_13_43/0.28)_0%,rgb(18_13_43/0.62)_80%)]" aria-hidden="true" />
+            </>
           ) : (
             <div className="boss-center-felt absolute inset-0" aria-hidden="true">
               <span className="boss-center-title absolute inset-x-0 top-[6%] text-center text-[clamp(18px,5vmin,64px)] font-black italic">I&apos;m the Boss!</span>
