@@ -1,0 +1,37 @@
+{
+  "spaces": [
+    { "index": 0, "required": ["red", "orange"], "optional": ["yellow", "green"], "teamCount": 3, "dividends": 3 },
+    { "index": 1, "required": ["yellow", "green"], "optional": ["blue", "purple"], "teamCount": 3, "dividends": 3 },
+    { "index": 2, "required": ["blue", "purple"], "optional": ["red", "orange"], "teamCount": 3, "dividends": 3 },
+    { "index": 3, "required": ["red", "blue", "green"], "optional": [], "teamCount": 3, "dividends": 4 },
+    { "index": 4, "required": ["orange", "yellow", "purple"], "optional": [], "teamCount": 3, "dividends": 4 },
+    { "index": 5, "required": ["red", "yellow"], "optional": ["blue", "purple", "green"], "teamCount": 4, "dividends": 4 },
+    { "index": 6, "required": ["orange", "blue"], "optional": ["red", "green", "purple"], "teamCount": 4, "dividends": 4 },
+    { "index": 7, "required": ["green", "purple"], "optional": ["red", "orange", "yellow"], "teamCount": 4, "dividends": 4 },
+    { "index": 8, "required": ["red", "orange", "yellow", "green"], "optional": [], "teamCount": 4, "dividends": 5 },
+    { "index": 9, "required": ["yellow", "green", "blue", "purple"], "optional": [], "teamCount": 4, "dividends": 5 },
+    { "index": 10, "required": ["blue", "purple", "red", "orange"], "optional": [], "teamCount": 4, "dividends": 5 },
+    { "index": 11, "required": ["red"], "optional": ["orange", "yellow", "green", "blue"], "teamCount": 3, "dividends": 3 },
+    { "index": 12, "required": ["green"], "optional": ["purple", "yellow", "orange", "blue"], "teamCount": 3, "dividends": 3 },
+    { "index": 13, "required": ["blue", "yellow", "purple"], "optional": ["red", "orange", "green"], "teamCount": 5, "dividends": 5 },
+    { "index": 14, "required": ["red", "green", "orange"], "optional": ["yellow", "blue", "purple"], "teamCount": 5, "dividends": 5 },
+    { "index": 15, "required": ["purple", "yellow", "blue", "orange"], "optional": ["red", "green"], "teamCount": 5, "dividends": 5 }
+  ],
+  "dealPlacards": [
+    { "number": 1, "shareValue": 1000000, "endRollFaces": [] },
+    { "number": 2, "shareValue": 1000000, "endRollFaces": [] },
+    { "number": 3, "shareValue": 2000000, "endRollFaces": [] },
+    { "number": 4, "shareValue": 2000000, "endRollFaces": [] },
+    { "number": 5, "shareValue": 2000000, "endRollFaces": [] },
+    { "number": 6, "shareValue": 3000000, "endRollFaces": [] },
+    { "number": 7, "shareValue": 3000000, "endRollFaces": [] },
+    { "number": 8, "shareValue": 3000000, "endRollFaces": [] },
+    { "number": 9, "shareValue": 4000000, "endRollFaces": [] },
+    { "number": 10, "shareValue": 4000000, "endRollFaces": [1] },
+    { "number": 11, "shareValue": 4000000, "endRollFaces": [1, 2] },
+    { "number": 12, "shareValue": 5000000, "endRollFaces": [1, 2, 3] },
+    { "number": 13, "shareValue": 5000000, "endRollFaces": [1, 2, 3, 4] },
+    { "number": 14, "shareValue": 6000000, "endRollFaces": [1, 2, 3, 4, 5] },
+    { "number": 15, "shareValue": 6000000, "endRollFaces": [1, 2, 3, 4, 5, 6] }
+  ]
+}

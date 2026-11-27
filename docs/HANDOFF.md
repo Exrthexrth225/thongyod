@@ -1,5 +1,19 @@
 # Backend handoff
 
+## Multiplayer ownership and deployment — 2026-11-27
+
+- Claude takes over rooms, guest sessions and all multiplayer games on `claude/multiplayer`, starting from the WIP on `codex/im-the-boss`. This supersedes the earlier push-to-`main` note below. The Boss implementation in this snapshot uses REST and SSE. Codex reviews Claude's PRs when Earth requests a review.
+- The Render dashboard showed the `thongyod` Free web service in Singapore deploying from `main` at `https://thongyod.onrender.com`. Use that origin for cross-device tests after the relevant commit is deployed. Compare the source SHA in Render's Deploys tab with the commit under test. GitHub Pages runs an isolated mock per browser.
+
+## I'm the Boss! playable release — 2026-11-26
+
+Earth approved building **I'm the Boss!** on the existing Neon PostgreSQL `game_rooms` store, keeping opponent cash as coarse tiers during play, adding lively event animations, and pushing to `main` with a short note for Claude. See [IM_THE_BOSS.md](IM_THE_BOSS.md) for the full file summary.
+
+- **Shared contract & engine:** `packages/shared/content/boss-board.json` (16 deal spaces, 15 deal placards), `packages/shared/content/boss-engine.mjs` + `.d.mts`, and types in `packages/shared/src/boss.ts` / `rooms.ts` (`RoomGame` now includes `'boss'`, `BossRoomData`, `BossView`, `BossActionRequest`). Both `apps/api` and `apps/web` MSW mocks run the exact same state machine.
+- **Backend (`apps/api`):** `RoomsService` and `RoomsController` support `game: 'boss'` (3–6 players, Neon `FOR UPDATE` row locks, `actionId` deduplication, `expectedRevision` `409 REVISION_CONFLICT`, lazy deadline resolution for 10s/15s closing and 10s interrupt windows, `POST /rooms/:code/boss`, and `GET /rooms/:code/events` SSE stream). Opponents' hands are omitted and cash is projected as `cashTier` until `game_over`.
+- **Frontend (`apps/web`):** Sliced `image/fcde811b-52f5-468f-97aa-b5582e40d0bc.png` into `src/assets/boss/{red,orange,yellow,green,blue,purple}.webp`. Added `src/features/boss/{BossRoom,BossBoard,BossSeats,BossEventBanner,teamMeta}.ts(x)` and `boss.css` (marker hop, dice tumble, slam/stop/fly banners, confetti, payout splitter, card dialogs, reduced-motion fallbacks). Wired into `config/games.ts`, `config/howTo.ts`, `GameTile.tsx`, `RoomsPage.tsx`, `RoomNewPage.tsx`, `RoomPage.tsx`, `api/rooms.ts`, `mocks/rooms.ts` (demo bots + seeded room `777888`), `mocks/handlers.ts`, and `th.ts`/`en.ts`.
+- **Note for Claude:** Frontend room sync for `boss` uses REST + SSE (`GET /rooms/:code/events`) with polling fallback instead of Socket.IO so it adds zero new dependencies and stays self-contained in the GitHub Pages MSW demo. `RoomsPage.tsx` keeps Earth's local edit without `RoomAccess`.
+
 ## I'm the Boss! tabletop foundation (2026-11-26)
 
 Rules baseline: the standard 3–6 player game in the [Eagle-Gryphon rulebook](https://gamers-hq.de/media/pdf/26/0e/cf/ITB-Rules-public.pdf). Use this edition's random first player. The player on their right picks the initial space. With three players deal two investor placards per player. With four to six deal one each and leave the remainder available to recruit. Each player starts with five influence cards and zero cash.

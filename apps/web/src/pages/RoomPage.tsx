@@ -14,6 +14,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { PartyRoom } from '@/features/rooms/PartyRoom'
 import { SpyRoom } from '@/features/rooms/SpyRoom'
+import { BossRoom } from '@/features/boss/BossRoom'
 import { showErrorToast } from '@/lib/toast'
 import { tintClass } from '@/lib/tones'
 import { cn } from '@/lib/utils'
@@ -81,9 +82,14 @@ function RoomPageContent() {
   } else if (me.isError && !me.data) {
     body = <ErrorState onRetry={() => void me.refetch()} />
   } else if (room.data && me.data) {
-    body = (
-      room.data.game === 'spy' ? <SpyRoom room={room.data} meId={me.data.playerId!} onLeave={onLeave} /> : <PartyRoom room={room.data} meId={me.data.playerId!} onLeave={onLeave} />
-    )
+    body =
+      room.data.game === 'spy' ? (
+        <SpyRoom room={room.data} meId={me.data.playerId!} onLeave={onLeave} />
+      ) : room.data.game === 'boss' ? (
+        <BossRoom room={room.data} meId={me.data.playerId!} onLeave={onLeave} />
+      ) : (
+        <PartyRoom room={room.data} meId={me.data.playerId!} onLeave={onLeave} />
+      )
   } else body = <LoadingState rows={3} />
 
   return (

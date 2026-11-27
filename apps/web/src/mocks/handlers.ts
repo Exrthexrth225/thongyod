@@ -285,6 +285,10 @@ export const handlers = [
     const body = (await request.json().catch(() => null)) as { choice?: unknown } | null
     return replyRoom(rooms.vote(String(params.code), body?.choice))
   }),
+  http.post('/api/rooms/:code/boss', async ({ params, request }) => {
+    const body = (await request.json().catch(() => null)) as import('@/api/types').BossActionRequest | null
+    return replyRoom(rooms.bossAction(String(params.code), body))
+  }),
   http.post('/api/rooms/:code/lobby', async ({ params }) => replyRoom(rooms.backToLobby(String(params.code)))),
   http.post('/api/rooms/:code/invite', async ({ params, request }) => {
     await delay(LATENCY_MS)

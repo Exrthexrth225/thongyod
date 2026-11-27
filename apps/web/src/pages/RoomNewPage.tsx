@@ -10,7 +10,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { loadGameSettings } from '@/lib/gameSettings'
 import { SPY_DEFAULTS, fixSpySettings } from '@/features/spy/settings'
 
-const ROOM_GAMES: RoomGame[] = ['spy', 'mostLikely', 'neverHave']
+const ROOM_GAMES: RoomGame[] = ['spy', 'mostLikely', 'neverHave', 'boss']
 const isRoomGame = (g: string | null): g is RoomGame => ROOM_GAMES.includes(g as RoomGame)
 
 /** The packs last picked for that party game on this phone (all when none). */
@@ -42,6 +42,8 @@ function RoomNewPageContent() {
     if (game === 'spy') {
       const spy = loadGameSettings('spy', SPY_DEFAULTS, fixSpySettings)
       settings = { mode: spy.mode, minutes: spy.minutes, spies: spy.spies, packs: spy.mode === 'places' ? spy.places : spy.pairs }
+    } else if (game === 'boss') {
+      settings = { closingSeconds: 10 as const }
     } else settings = { packs: loadPartyPacks(game) }
     create.mutate({ game, settings }, { onSuccess: (room) => void navigate(`/games/rooms/${room.code}`, { replace: true }) })
   }

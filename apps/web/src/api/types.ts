@@ -178,4 +178,30 @@ export type CursorPage<T> = { items: T[]; nextCursor: string | null }
 
 // ---------- Game rooms: many phones (PROVISIONAL, DECISIONS #76, contract in docs/HANDOFF.md) ----------
 
-export type { RoomGame, RoomState, SpyRoomSettings, PartyRoomSettings, RoomPlayer, SpySecret, RoomRound, PartyRound, SpyRoomData, PartyRoomData, Room } from '@thongyod/shared'
+export type {
+  RoomGame,
+  RoomState,
+  SpyRoomSettings,
+  PartyRoomSettings,
+  BossRoomSettings,
+  RoomPlayer,
+  SpySecret,
+  RoomRound,
+  PartyRound,
+  SpyRoomData,
+  PartyRoomData,
+  BossRoomData,
+  BossView,
+  BossActionPayload,
+  BossActionRequest,
+  BossBoardSpace,
+  BossDealState,
+  BossEvent,
+  BossEventKind,
+  BossHandCard,
+  BossInterrupt,
+  BossSeatView,
+  BossCashTier,
+  InvestorTeam,
+  Room,
+} from '@thongyod/shared'

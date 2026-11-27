@@ -76,6 +76,38 @@ export type {
   PetSummary,
 } from './home.js'
 
-export type { InvestorTeam, InfluenceCard, DealSpace } from './boss.js'
+export type {
+  InvestorTeam,
+  InfluenceCard,
+  BossHandCard,
+  DealSpace,
+  BossCashTier,
+  BossBoardSpace,
+  BossDealPlacard,
+  BossPhase,
+  BossTableCard,
+  BossInterrupt,
+  BossDealState,
+  BossEventKind,
+  BossEvent,
+  BossSeatView,
+  BossRoomSettings,
+  BossView,
+  BossActionPayload,
+  BossActionRequest,
+} from './boss.js'
 
-export type { RoomGame, RoomState, SpyRoomSettings, PartyRoomSettings, RoomPlayer, SpySecret, RoomRound, PartyRound, SpyRoomData, PartyRoomData, Room } from './rooms.js'
+export type {
+  RoomGame,
+  RoomState,
+  SpyRoomSettings,
+  PartyRoomSettings,
+  RoomPlayer,
+  SpySecret,
+  RoomRound,
+  PartyRound,
+  SpyRoomData,
+  PartyRoomData,
+  BossRoomData,
+  Room,
+} from './rooms.js'

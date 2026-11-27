@@ -1,0 +1,106 @@
+/* I'm the Boss! — LINE Get Rich inspired bouncy event & board animations (natural squash/stretch like race.css). */
+
+.boss-hop {
+  transform-origin: 50% 90%;
+  animation: boss-hop 0.28s cubic-bezier(0.3, 0.7, 0.4, 1) both;
+}
+@keyframes boss-hop {
+  0% { transform: translateY(0) scale(1.16, 0.84); }
+  45% { transform: translateY(-42%) scale(0.92, 1.08); }
+  80% { transform: translateY(4%) scale(1.08, 0.92); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+
+.boss-marker-idle {
+  transform-origin: 50% 90%;
+  animation: boss-marker-idle 1.6s ease-in-out infinite;
+}
+@keyframes boss-marker-idle {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.04, 0.96); }
+}
+
+.boss-dice-tumble {
+  animation: boss-dice-tumble 0.62s cubic-bezier(0.22, 1.35, 0.36, 1) both;
+}
+@keyframes boss-dice-tumble {
+  0% { transform: translateY(-22px) rotate(-210deg) scale(0.45); opacity: 0; }
+  55% { transform: translateY(4px) rotate(18deg) scale(1.18, 0.88); opacity: 1; }
+  80% { transform: translateY(-6px) rotate(-6deg) scale(0.96, 1.05); }
+  100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+}
+
+.boss-slam {
+  transform-origin: 50% 50%;
+  animation: boss-slam 0.48s cubic-bezier(0.22, 1.45, 0.36, 1) both;
+}
+@keyframes boss-slam {
+  0% { transform: scale(1.65) translateY(-18px); opacity: 0; }
+  55% { transform: scale(0.94, 1.06) translateY(3px); opacity: 1; }
+  80% { transform: scale(1.04, 0.96); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.boss-stop-slam {
+  animation: boss-stop-slam 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+@keyframes boss-stop-slam {
+  0% { transform: scale(1.7) rotate(-10deg); opacity: 0; }
+  45% { transform: scale(0.95) rotate(4deg); opacity: 1; }
+  65% { transform: translateX(-6px) rotate(-3deg); }
+  82% { transform: translateX(5px) rotate(2deg); }
+  100% { transform: translateX(0) rotate(0deg) scale(1); opacity: 1; }
+}
+
+.boss-fly {
+  animation: boss-fly 0.55s cubic-bezier(0.22, 1.2, 0.36, 1) both;
+}
+@keyframes boss-fly {
+  0% { transform: translate(-65%, 24%) rotate(-24deg) scale(0.6); opacity: 0; }
+  60% { transform: translate(8%, -6%) rotate(8deg) scale(1.12); opacity: 1; }
+  100% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+}
+
+.boss-cash-float {
+  animation: boss-cash-float 1.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes boss-cash-float {
+  0% { transform: translateY(10px) scale(0.6); opacity: 0; }
+  20% { transform: translateY(-6px) scale(1.15); opacity: 1; }
+  80% { transform: translateY(-22px) scale(1); opacity: 1; }
+  100% { transform: translateY(-32px) scale(0.9); opacity: 0; }
+}
+
+.boss-crown-bob {
+  animation: boss-crown-bob 1.2s ease-in-out infinite alternate;
+}
+@keyframes boss-crown-bob {
+  from { transform: translateY(0) rotate(-6deg); }
+  to { transform: translateY(-3px) rotate(6deg); }
+}
+
+.boss-winner-hop {
+  transform-origin: 50% 100%;
+  animation: boss-winner-hop 0.75s cubic-bezier(0.3, 0.7, 0.4, 1) infinite;
+}
+@keyframes boss-winner-hop {
+  0% { transform: translateY(0) scale(1.12, 0.88); }
+  22% { transform: translateY(-20%) scale(0.95, 1.06); }
+  45% { transform: translateY(-26%) scale(1); }
+  78% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(0) scale(1.12, 0.88); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boss-hop,
+  .boss-marker-idle,
+  .boss-dice-tumble,
+  .boss-slam,
+  .boss-stop-slam,
+  .boss-fly,
+  .boss-cash-float,
+  .boss-crown-bob,
+  .boss-winner-hop {
+    animation: none;
+  }
+}

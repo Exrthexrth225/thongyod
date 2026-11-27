@@ -1,8 +1,9 @@
 import type { PersonCard } from './social.js'
+import type { BossRoomSettings, BossView } from './boss.js'
 type PersonRef = Omit<PersonCard, 'handle'>
 
 /** Games that can be played with each friend on their own phone. */
-export type RoomGame = 'spy' | 'mostLikely' | 'neverHave'
+export type RoomGame = 'spy' | 'mostLikely' | 'neverHave' | 'boss'
 export type RoomState = 'lobby' | 'playing' | 'revealed'
 
 /** สายลับ settings chosen by the host. */
@@ -74,5 +75,11 @@ export type PartyRoomData = RoomBase & {
   fingers: Record<string, number> | null
 }
 
-/** GET /rooms/:code — poll every ~1.5 s while open (real-time push can replace polling later). */
-export type Room = SpyRoomData | PartyRoomData
+export type BossRoomData = RoomBase & {
+  game: 'boss'
+  settings: BossRoomSettings
+  boss: BossView | null
+}
+
+/** GET /rooms/:code — poll every ~1.5 s while open (or SSE stream). */
+export type Room = SpyRoomData | PartyRoomData | BossRoomData
