@@ -223,8 +223,10 @@ test('room sockets: private views, ordering, retries, control, boards, deadlines
       assert.equal((await pool.query('SELECT 1 FROM game_rooms WHERE code=$1', [spy.code])).rowCount, 0)
     })
 
-    await t.test("I'm the Boss!: private hands, engine moves, host skip and kick only when offline", async () => {
-      const response = await call('/rooms', host, 'POST', { game: 'boss', settings: { short: true } })
+    await t.test("I'm the Boss!: private hands, engine moves, anyone skips an offline player, host kicks", async () => {
+      assert.equal((await call('/rooms', host, 'POST', { game: 'boss', settings: { investorsEach: 3 } })).status, 400)
+      assert.equal((await call('/rooms', host, 'POST', { game: 'boss', settings: { draft: 'auction' } })).status, 400)
+      const response = await call('/rooms', host, 'POST', { game: 'boss', settings: { short: true, investorsEach: 2, draft: 'random' } })
       assert.equal(response.status, 201)
       const room = await response.json(); codes.push(room.code)
       assert.equal(room.maxPlayers, 6); assert.equal(room.boss, null)
@@ -250,11 +252,12 @@ test('room sockets: private views, ordering, retries, control, boards, deadlines
       const turnId = placed.turnPlayerId
       const victimId = turnId === hostId ? a.id : turnId
       assert.equal((await command(h, room.code, 'bossSkip', { targetId: victimId })).code, 'PLAYER_ONLINE', 'skip only when away')
-      assert.equal((await command(x, room.code, 'bossSkip', { targetId: b.id })).code, 'HOST_ONLY')
+      assert.equal((await command(x, room.code, 'bossSkip', { targetId: b.id })).code, 'PLAYER_ONLINE', 'not host-only any more')
       ids[victimId].socket.disconnect()
       await until(() => !latest(h).online.includes(victimId) && latest(h), 'victim offline')
+      const skipper = victimId === a.id ? y : x
       if (victimId === turnId) {
-        assert.equal((await command(h, room.code, 'bossSkip', { targetId: victimId })).ok, true)
+        assert.equal((await command(skipper, room.code, 'bossSkip', { targetId: victimId })).ok, true, 'any seated player may skip')
         await until(() => latest(h).boss.turnPlayerId !== victimId, 'turn passed')
       } else {
         assert.equal((await command(h, room.code, 'bossSkip', { targetId: victimId })).code, 'NOTHING_TO_SKIP')
@@ -264,6 +267,44 @@ test('room sockets: private views, ordering, retries, control, boards, deadlines
       assert.equal(over.boss.phase, 'game_over')
       assert.equal(over.players.some((p) => p.userId === victimId), false)
       assert.equal(over.boss.seats.every((s) => s.exactCash !== null), true, 'cash revealed at the end')
+    })
+
+    await t.test("I'm the Boss!: a Board Screen shows as online; a restart vote freezes its voters and survives the host leaving", async () => {
+      const room = await (await call('/rooms', host, 'POST', { game: 'boss', settings: {} })).json(); codes.push(room.code)
+      const h = await client(host), x = await client(a.cookie), y = await client(b.cookie)
+      for (const z of [h, x, y]) assert.equal((await watch(z, room.code, true)).ok, true)
+      for (const z of [x, y]) assert.equal((await command(z, room.code, 'join')).ok, true)
+      const lobby = await until(() => latest(h)?.players.length === 3 && latest(h), 'three players')
+      assert.equal(lobby.boardOnline, false)
+      // Board Screen: request, approve, connect -> online; disconnect -> offline
+      const request = await call(`/rooms/${room.code}/boards`, '', 'POST')
+      const boardCookie = request.headers.get('set-cookie').split(';')[0], session = await request.json()
+      assert.equal((await command(h, room.code, 'boardApprove', { boardId: session.board.id })).ok, true)
+      const board = await client(boardCookie, ORIGIN, { as: 'board' })
+      await watch(board, room.code)
+      await until(() => latest(x).boardOnline === true, 'board online for players')
+      assert.equal((await command(h, room.code, 'start', undefined, latest(h).phase)).ok, true)
+      await until(() => latest(board)?.boss, 'board sees the game')
+      assert.equal(latest(board).boss.myHand.length, 0, 'the board has no hand')
+      board.socket.disconnect()
+      await until(() => latest(x).boardOnline === false, 'board offline: phones take over')
+
+      // Restart: three online voters, two needed; the host opens and drops, the others decide
+      await until(() => latest(h)?.boss?.phase, 'game running')
+      assert.equal((await command(x, room.code, 'restartVote', { yes: true })).code, 'NO_VOTE')
+      assert.equal((await command(h, room.code, 'restartOpen')).ok, true)
+      const open = await until(() => latest(x).restart && latest(x), 'vote open')
+      assert.deepEqual(open.restart.voters.sort(), [hostId, a.id, b.id].sort())
+      assert.equal(open.restart.needed, 2)
+      h.socket.disconnect()
+      await until(() => !latest(x).online.includes(hostId) && latest(x), 'host offline')
+      assert.equal(latest(x).restart.needed, 2, 'a voter dropping does not lower the bar')
+      assert.equal((await command(x, room.code, 'restartVote', { yes: false })).ok, true)
+      assert.equal(latest(x).state, 'playing')
+      assert.equal((await command(y, room.code, 'restartVote', { yes: true })).ok, true)
+      const back = await until(() => latest(x).state === 'lobby' && latest(x), 'back to the lobby')
+      assert.equal(back.boss, null); assert.equal(back.restart, null)
+      assert.equal(back.players.length, 3, 'same players')
     })
 
     await t.test('revoked credentials and floods are refused', async () => {

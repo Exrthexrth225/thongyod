@@ -110,8 +110,10 @@ export class RoomSockets implements OnApplicationBootstrap, OnModuleDestroy {
           // Everyone (this socket included) gets the new online list.
           await this.publish(code)
         } else {
+          // A connected Board Screen counts as online, so phones know a shared screen is there.
+          this.presence.connect(code, `board:${socket.data.board!.id}`, socket.id, false)
           reply({ ok: true, revision: snap.revision })
-          this.sendTo(socket, snap)
+          await this.publish(code)
         }
       } catch { reply(refused(503, 'ROOMS_UNAVAILABLE')) }
     })
@@ -144,6 +146,9 @@ export class RoomSockets implements OnApplicationBootstrap, OnModuleDestroy {
     socket.data.code = undefined
     if (socket.data.actor) {
       this.presence.disconnect(code, socket.data.actor.playerId, socket.id)
+      void this.publish(code)
+    } else if (socket.data.board) {
+      this.presence.disconnect(code, `board:${socket.data.board.id}`, socket.id)
       void this.publish(code)
     }
   }

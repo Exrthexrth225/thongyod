@@ -102,8 +102,13 @@ export const useBoardDecision = (code: string, type: 'boardApprove' | 'boardReje
 
 /** I'm the Boss! move. Socket only in practice; REST has no route for it, so it needs a live connection. */
 export const useBossAction = (code: string) => useRoomAction<BossActionPayload>(code, 'boss', (action) => ({ action }), { url: `/rooms/${code}/boss` })
-/** Owner: carry on without / remove an offline player who holds the game up. */
+/** Anyone seated: carry on without an offline player who holds the game up. Owner: remove a player. */
 export const useBossHost = (code: string, type: 'bossSkip' | 'bossKick') => useRoomAction<string>(code, type, (targetId) => ({ targetId }), { url: `/rooms/${code}/${type}` })
+/** Host: finish the snake draft at random. */
+export const useBossDraftRandom = (code: string) => useRoomAction(code, 'bossDraftRandom')
+/** Anyone seated: open a restart vote, or answer it. */
+export const useRestartOpen = (code: string) => useRoomAction(code, 'restartOpen')
+export const useRestartVote = (code: string) => useRoomAction<boolean>(code, 'restartVote', (yes) => ({ yes }), { url: `/rooms/${code}/restartVote` })
 
 /** Invite friends: they get a "ชวนเล่น" notification that opens the room. */
 export function useInviteToRoom(code: string) {

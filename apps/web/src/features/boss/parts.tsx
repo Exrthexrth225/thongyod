@@ -1,9 +1,10 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Crown, Layers, WifiOff } from 'lucide-react'
 import type { BossBoardSpace, BossSeatView, BossView, InvestorTeam, RoomPlayer } from '@/api/types'
 import { cn } from '@/lib/utils'
 import { Word } from './Word'
-import { cardBackArt, faceArt, millions, moneyArt, seatTeam, teamArt, TEAM_COLOR, type Mood, type TileShape } from './meta'
+import { cardBackArt, faceArt, millions, moneyArt, seatTeam, shortName, teamArt, TEAM_COLOR, type Mood, type TileShape } from './meta'
 
 export function TeamBadge({ team, className, dim }: { team: InvestorTeam; className?: string; dim?: boolean }) {
   const { t } = useTranslation()
@@ -24,26 +25,34 @@ export function Money({ amount, className }: { amount: number; className?: strin
 }
 
 /**
- * A player's face(s). With 3 players everyone runs two investor teams, so both characters show, overlapping,
- * each on its team colour: the player is both of them.
+ * A player's face: the same portrait all game (it does not change when they gain or lose investors).
+ * The investors they hold are shown next to it as colour chips (`SeatColors`).
  */
 export function SeatFaces({ view, userId, mood = 'calm', round, className }: { view: BossView; userId: string; mood?: Mood; round?: boolean; className?: string }) {
-  const seat = view.seats.find((s) => s.userId === userId)
-  const teams = seat && seat.investors.length > 0 ? seat.investors : [seatTeam(view, userId)]
-  const ring = (team: InvestorTeam) => ({ background: TEAM_COLOR[team], padding: 2 })
-  if (teams.length === 1) return (
-    <span className={cn('relative block shrink-0', round ? 'rounded-full' : 'rounded-2xl', className)} style={ring(teams[0])}>
-      <Face team={teams[0]} mood={mood} className={cn('size-full', round && 'rounded-full')} />
+  const team = seatTeam(view, userId)
+  return (
+    <span className={cn('relative block shrink-0', round ? 'rounded-full' : 'rounded-2xl', className)} style={{ background: TEAM_COLOR[team], padding: 2 }}>
+      <Face team={team} mood={mood} className={cn('size-full', round && 'rounded-full')} />
     </span>
   )
+}
+
+/** The investor colours a player holds right now. */
+export function SeatColors({ view, userId, className, size = 'size-4' }: { view: BossView; userId: string; className?: string; size?: string }) {
+  const seat = view.seats.find((s) => s.userId === userId)
+  if (!seat?.investors.length) return null
+  return <span className={cn('flex items-center gap-0.5', className)}>{seat.investors.map((team) => <TeamBadge key={team} team={team} className={size} />)}</span>
+}
+
+/** A long name shortened at a readable boundary; tap to see it whole. */
+export function PlayerName({ name, max = 8, className }: { name: string; max?: number; className?: string }) {
+  const [full, setFull] = useState(false)
+  const short = shortName(name, max)
+  if (short === name) return <span className={cn('truncate', className)}>{name}</span>
   return (
-    <span className={cn('relative block shrink-0', className)} aria-label={teams.join(' + ')}>
-      {teams.slice(0, 2).map((team, i) => (
-        <span key={team} className={cn('absolute block size-[74%] rounded-full shadow-md', i === 0 ? 'left-0 top-0' : 'bottom-0 right-0')} style={ring(team)}>
-          <Face team={team} mood={mood} className="size-full rounded-full" />
-        </span>
-      ))}
-    </span>
+    <button type="button" title={name} aria-label={name} className={cn('min-w-0 truncate text-left', className)} onClick={(e) => { e.stopPropagation(); setFull((v) => !v) }}>
+      {full ? name : short}
+    </button>
   )
 }
 
@@ -59,11 +68,13 @@ export function PriceTag({ amount, share, dividends, size = 30, className }: { a
   )
 }
 
-const TIER_COINS: Record<BossSeatView['cashTier'], number> = { empty: 0, low: 1, mid: 2, high: 3, rich: 4 }
+const TIER_COINS: Record<NonNullable<BossSeatView['cashTier']>, number> = { empty: 0, low: 1, mid: 2, high: 3, rich: 4 }
 
 /** Opponents' cash is a coin stack (exact amount only for me, or for all at the end). */
 export function CashTag({ seat, className }: { seat: BossSeatView; className?: string }) {
   if (seat.exactCash !== null) return <Money amount={seat.exactCash} className={cn('text-amber-600 dark:text-amber-300', className)} />
+  // Other wallets are private until the end.
+  if (!seat.cashTier) return null
   const n = TIER_COINS[seat.cashTier]
   return (
     <span className={cn('flex h-5 items-end', className)} aria-label={seat.cashTier}>
@@ -154,6 +165,8 @@ export function SeatCard({ view, seat, players, online, mood, me, compact, dark 
   const name = players.find((p) => p.userId === seat.userId)?.displayName ?? '?'
   const isBoss = view.deal?.bossId === seat.userId
   const isTurn = !view.deal && view.turnPlayerId === seat.userId && view.phase !== 'game_over'
+  const d = view.deal
+  const status = d && d.requiredIds.includes(seat.userId) ? (d.acceptedIds.includes(seat.userId) ? 'ok' : d.declinedIds.includes(seat.userId) ? 'no' : 'wait') : null
   return (
     <div
       className={cn(
@@ -172,12 +185,14 @@ export function SeatCard({ view, seat, players, online, mood, me, compact, dark 
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="flex items-center gap-1 truncate text-sm font-bold">
           {isBoss && <Crown className="size-3.5 shrink-0 text-amber-500" aria-label={t('boss.cards.boss')} />}
-          <span className="truncate">{name}</span>
+          <PlayerName name={name} max={compact ? 6 : 9} />
           {!online && <WifiOff className="size-3 shrink-0 opacity-70" aria-hidden="true" />}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="flex">{seat.investors.map((team) => <TeamBadge key={team} team={team} className="-mr-1 size-5" />)}</span>
           <CashTag seat={seat} />
+          {/* public reaction to the deal */}
+          {status && <span className={cn('rounded-full px-1.5 text-[10px] font-black', status === 'ok' ? 'bg-emerald-500/25 text-emerald-200' : status === 'no' ? 'bg-red-500/25 text-red-200' : 'bg-white/10 text-white/70')}>{t(status === 'ok' ? 'boss.deal.accepted' : status === 'no' ? 'boss.deal.declined' : 'boss.deal.waiting')}</span>}
           <span className="ml-auto flex items-center gap-0.5 text-xs opacity-70 tabular-nums"><Layers className="size-3" aria-hidden="true" />{seat.handCount}</span>
         </span>
       </div>

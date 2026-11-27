@@ -4,6 +4,7 @@ import type { BossEvent, BossHandCard, BossView, InvestorTeam, RoomPlayer } from
 import { useSecondsLeft } from '@/features/rooms/useSecondsLeft'
 import { cn } from '@/lib/utils'
 import { CardFace } from './Hand'
+import { ROLL } from './useBossTimeline'
 import { Word } from './Word'
 import { faceArt, fxArt, millions, moneyArt, nameOf, PLAY_FX, seatTeam, type Mood } from './meta'
 
@@ -142,7 +143,7 @@ export function Die({ value, size = 64, rolling = true, className }: { value: nu
     if (!el || !rolling || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     el.animate(
       [{ transform: 'translateY(-60%) rotateX(720deg) rotateY(540deg) rotateZ(90deg)' }, { transform: `translateY(8%) ${SHOW[value]}`, offset: 0.75 }, { transform: SHOW[value] }],
-      { duration: 1100, easing: 'cubic-bezier(.2,.7,.3,1)' },
+      { duration: ROLL.tumble, easing: 'cubic-bezier(.2,.7,.3,1)' },
     )
   }, [value, rolling])
   return (

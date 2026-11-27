@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ErrorState } from '@/components/common/ErrorState'
 import { LoadingState } from '@/components/common/LoadingState'
+import { BossEntry } from '@/features/boss/BossEntry'
 
 export function LogoutButton() {
   const { t } = useTranslation()
@@ -56,6 +57,10 @@ export function RoomAccess({ children }: { children: ReactNode }) {
   const identity = useRoomIdentity()
   if (identity.isPending) return <LoadingState rows={2} />
   if (identity.isError) return <ErrorState onRetry={() => void identity.refetch()} />
+  if (identity.data.kind === 'anonymous' && new URLSearchParams(location.search).get('g') === 'boss') return (
+    // I'm the Boss! link: the game's own look, and just a nickname to get in
+    <BossEntry returnTo={location.pathname + location.search} />
+  )
   if (identity.data.kind === 'anonymous') return (
     <section className="mx-auto flex max-w-md flex-col gap-5 px-6 py-8">
       <h1 className="font-heading text-2xl font-semibold">{t('guestAuth.title')}</h1>

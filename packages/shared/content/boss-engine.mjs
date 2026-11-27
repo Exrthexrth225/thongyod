@@ -1,19 +1,25 @@
 /**
  * Authoritative I'm the Boss! state machine, shared by apps/api and the apps/web demo mocks.
  * Pure: no I/O, no clock, no Math.random. Pass randomIndex(upperBound) and nowMs.
- * Rules agreed with Earth on 2026-11-27 (docs/IM_THE_BOSS.md):
- * - the boss pays anyone at the table (bribes); only investors/team cards in the deal have to accept;
- * - Travel, Boss and Recruit wait 5 s for a Stop; the first Stop cancels them, a Stop cannot be stopped;
- *   the window always runs the full 5 s so nobody learns who holds a Stop;
- * - closing counts 6 s; any card, offer, ask or "wait" sends the deal back to negotiating;
- * - the host can skip or remove a player who is holding the game up.
+ * Rules agreed with Earth on 2026-11-27 (docs/IM_THE_BOSS.md, DECISIONS #138):
+ * - a deal starts with empty contract slots; the boss fills each one by hand with a source:
+ *   an investor placard (its owner) or one face-up Team card. Nothing is ever auto-filled;
+ * - the boss pays per person (bribes to anyone allowed); every supplier and every paid player confirms
+ *   the exact terms they were shown (terms carry a version; a stale accept is refused);
+ *   when the boss changes something only the people whose own terms changed confirm again;
+ * - Travel, Boss and Recruit wait 5 s for a Stop bound to that interrupt; the first Stop cancels them;
+ *   a source taken away reopens its slot and records whose contribution was lost;
+ * - the boss closes; the table then has 5 s to object or interrupt; any change sends it back to talks;
+ * - a failed deal returns face-up Team cards to their owners; a closed deal discards all of them;
+ * - investors per player and random/snake-draft assignment are lobby settings;
+ * - an offline player holding the game up can be skipped by anyone seated; the host can remove a player.
  */
 
 export const TEAMS = /** @type {const} */ (['red', 'orange', 'yellow', 'green', 'blue', 'purple'])
 export const HAND_LIMIT = 12
 export const START_HAND = 5
 export const STOP_WINDOW_MS = 5_000
-export const CLOSING_MS = 6_000
+export const CLOSING_MS = 5_000
 const SHORT_SKIP = new Set([3, 6, 9])
 
 /** @param {number} cash */
@@ -23,6 +29,15 @@ export function cashTierOf(cash) {
   if (cash < 25_000_000) return 'mid'
   if (cash < 50_000_000) return 'high'
   return 'rich'
+}
+
+/** Valid investors-per-player counts for a table size (six unique investors). */
+export function investorChoices(players) {
+  return Array.from({ length: Math.max(1, Math.floor(TEAMS.length / players)) }, (_, i) => i + 1)
+}
+/** Two each for three players, one each for four to six. */
+export function defaultInvestorsEach(players) {
+  return players === 3 ? 2 : 1
 }
 
 function shuffled(items, randomIndex) {
@@ -106,7 +121,7 @@ function placardOf(board, number) {
   return board.dealPlacards.find((p) => p.number === number) ?? null
 }
 
-/** Team -> seat IDs offering it in the current deal (placard owner unless sent away, plus team cards). */
+/** Team -> seat IDs who could supply it now (placard owner unless sent away, plus face-up Team cards). */
 export function activeTeamProviders(state) {
   const deal = state.deal
   const providers = {}
@@ -125,32 +140,66 @@ export function activeTeamProviders(state) {
   return providers
 }
 
-/** Seats whose agreement counts for the deal: the boss plus everyone offering a team. */
+/** Empty slots for a space: one per investor the space needs, grouped by column. */
+function emptySlots(space) {
+  return space.groups.flatMap((g, group) => Array.from({ length: g.pick }, () => ({ group, source: null, lost: null })))
+}
+
+/** Seats supplying a selected slot. */
+function supplierIds(deal) {
+  return [...new Set(deal.slots.filter((x) => x.source).map((x) => x.source.ownerId))]
+}
+
+/** The boss plus everyone supplying a slot. */
 export function contributorIds(state) {
   if (!state.deal) return []
-  const ids = new Set([state.deal.bossId])
-  for (const list of Object.values(activeTeamProviders(state))) for (const id of list) ids.add(id)
+  return [...new Set([state.deal.bossId, ...supplierIds(state.deal)])]
+}
+
+/** Who must confirm the current offer: every supplier and every paid player, except the boss. */
+export function requiredIds(state) {
+  const deal = state.deal
+  if (!deal?.offered) return []
+  const ids = new Set(supplierIds(deal))
+  for (const [id, amount] of Object.entries(deal.allocation)) if (amount > 0) ids.add(id)
+  ids.delete(deal.bossId)
   return [...ids]
 }
 
-/** Teams that are in: offered by the boss or by someone who accepted the current offer. */
-export function agreedTeams(state) {
-  const deal = state.deal
-  if (!deal) return []
-  const accepted = new Set([deal.bossId, ...deal.acceptedIds])
-  return Object.entries(activeTeamProviders(state)).filter(([, ids]) => ids.some((id) => accepted.has(id))).map(([team]) => team)
+/** What one person is asked to agree to: their payout and the sources they supply. */
+function termsKey(deal, id) {
+  const sources = deal.slots.filter((x) => x.source?.ownerId === id).map((x) => `${x.source.kind}:${x.source.team}:${x.source.cardId ?? ''}`).sort()
+  return JSON.stringify([deal.allocation[id] ?? 0, sources])
 }
+
+/** Re-versions the terms of everyone whose own terms changed; their old confirmation no longer counts. */
+function refreshTerms(state) {
+  const deal = state.deal
+  if (!deal) return
+  const need = new Set(requiredIds(state))
+  for (const id of Object.keys(deal.terms)) if (!need.has(id)) { delete deal.terms[id]; delete deal.accepted[id]; delete deal.declined[id] }
+  for (const id of need) {
+    const key = termsKey(deal, id)
+    if (deal.terms[id]?.key !== key) {
+      deal.version += 1
+      deal.terms[id] = { key, version: deal.version }
+      delete deal.accepted[id]
+      delete deal.declined[id]
+    }
+  }
+}
+
+const acceptedNow = (deal, id) => deal.terms[id] !== undefined && deal.accepted[id] === deal.terms[id].version
+const declinedNow = (deal, id) => deal.terms[id] !== undefined && deal.declined[id] === deal.terms[id].version
 
 export function canCloseDeal(state) {
   const deal = state.deal
   if (!deal) return { ok: false, reason: 'NO_DEAL' }
-  const space = state.spaces[deal.spaceIndex]
   const amounts = Object.values(deal.allocation)
   if (!deal.offered || amounts.reduce((a, b) => a + b, 0) !== deal.totalValue) return { ok: false, reason: 'NO_OFFER' }
   for (const id of Object.keys(deal.allocation)) if (!seatOf(state, id)) return { ok: false, reason: 'BAD_RECIPIENT' }
-  const teams = new Set(agreedTeams(state))
-  // every column needs its own count of investors
-  if (space.groups.some((g) => g.teams.filter((t) => teams.has(t)).length < g.pick)) return { ok: false, reason: 'NOT_ENOUGH_TEAMS' }
+  if (deal.slots.some((x) => !x.source)) return { ok: false, reason: 'EMPTY_SLOTS' }
+  if (requiredIds(state).some((id) => !acceptedNow(deal, id))) return { ok: false, reason: 'NOT_CONFIRMED' }
   return { ok: true }
 }
 
@@ -160,24 +209,19 @@ function backToTalks(state) {
   if (state.phase === 'closing') state.phase = 'negotiating'
 }
 
-function clearAgreement(deal) {
-  deal.acceptedIds = []
-  deal.declinedIds = []
-}
-
-/** Accept automatically when the boss offers at least what the player asked for. */
-function autoAccept(state) {
-  const deal = state.deal
-  if (!deal?.offered) return
-  for (const [id, ask] of Object.entries(deal.asks)) {
-    if (id !== deal.bossId && ask !== null && (deal.allocation[id] ?? 0) >= ask && !deal.acceptedIds.includes(id) && !deal.declinedIds.includes(id)) {
-      deal.acceptedIds.push(id)
+/** Empties the slots a removed source filled, noting whose contribution was lost. */
+function reopenSlots(deal, test) {
+  for (const slot of deal.slots) {
+    if (slot.source && test(slot.source)) {
+      slot.lost = { team: slot.source.team, ownerId: slot.source.ownerId, kind: slot.source.kind }
+      slot.source = null
     }
   }
 }
 
 function returnTableCards(state, onlyOwnerId) {
   const deal = state.deal
+  if (onlyOwnerId) reopenSlots(deal, (src) => src.kind === 'card' && src.ownerId === onlyOwnerId)
   const keep = []
   for (const tc of deal.tableCards) {
     if (onlyOwnerId && tc.ownerId !== onlyOwnerId) { keep.push(tc); continue }
@@ -233,13 +277,14 @@ function settleDeal(state, board, randomIndex, nowMs) {
   const { bossId, dealNumber, totalValue, spaceIndex } = deal
   // Fun facts for the end screen.
   const contributors = new Set(contributorIds(state))
+  const suppliers = supplierIds(deal)
   const st = (id) => (state.stats[id] ??= { deals: 0, biggest: 0, bribesPaid: 0, travels: 0, stops: 0 })
   st(bossId).deals += 1
   st(bossId).biggest = Math.max(st(bossId).biggest, totalValue)
   for (const [id, amount] of Object.entries(payouts)) if (id !== bossId && !contributors.has(id)) st(bossId).bribesPaid += amount
   state.deal = null
-  state.lastSettlement = { dealNumber, spaceIndex, bossId, totalValue, payouts }
-  addEvent(state, 'deal_settled', bossId, nowMs, { dealNumber, amount: totalValue, spaceIndex })
+  state.lastSettlement = { dealNumber, spaceIndex, bossId, totalValue, payouts, suppliers }
+  addEvent(state, 'deal_settled', bossId, nowMs, { dealNumber, amount: totalValue, spaceIndex, ids: suppliers })
 
   state.dealIndex += 1
   const isLast = state.dealIndex >= state.placards.length
@@ -269,15 +314,19 @@ function resolveInterrupt(state, nowMs) {
   deal.closingDeadlineAt = null
   if (!intr.stoppedBy) {
     if (intr.kind === 'boss') {
+      // The new boss makes their own offer; the slots on the table stay as they are.
       deal.bossId = intr.actorId
-      delete deal.asks[intr.actorId]
+      deal.allocation = {}
+      deal.offered = false
     } else if (intr.kind === 'travel') {
       const cardIdx = deal.tableCards.findIndex((c) => c.team === intr.targetTeam && (!intr.targetCardId || c.id === intr.targetCardId))
       if (intr.targetCardId && cardIdx !== -1) {
         const [removed] = deal.tableCards.splice(cardIdx, 1)
         state.discard.push({ id: removed.id, kind: 'team', team: removed.team })
+        reopenSlots(deal, (src) => src.cardId === removed.id)
       } else if (!deal.blockedTeams.includes(intr.targetTeam)) {
         deal.blockedTeams.push(intr.targetTeam)
+        reopenSlots(deal, (src) => src.kind === 'placard' && src.team === intr.targetTeam)
       }
     } else if (intr.kind === 'recruit') {
       const avail = state.availableInvestors.indexOf(intr.targetTeam)
@@ -288,37 +337,49 @@ function resolveInterrupt(state, nowMs) {
       }
       const actor = seatOf(state, intr.actorId)
       if (actor && !actor.investors.includes(intr.targetTeam)) actor.investors.push(intr.targetTeam)
+      // The placard changed hands: whoever offered it no longer can.
+      reopenSlots(deal, (src) => src.kind === 'placard' && src.team === intr.targetTeam && src.ownerId !== intr.actorId)
     }
-    clearAgreement(deal)
-    autoAccept(state)
+    refreshTerms(state)
   }
   addEvent(state, 'interrupt_resolved', intr.actorId, nowMs, { team: intr.targetTeam, cancelled: Boolean(intr.stoppedBy), targetId: intr.stoppedBy ?? undefined })
 }
 
+/** Snake order: first player clockwise, then back, `rounds` times. */
+function snakeOrder(seatIds, firstIndex, rounds) {
+  const clockwise = seatIds.map((_, i) => seatIds[(firstIndex + i) % seatIds.length])
+  const order = []
+  for (let r = 0; r < rounds; r++) order.push(...(r % 2 ? [...clockwise].reverse() : clockwise))
+  return order
+}
+
 /**
  * @param {readonly string[]} seatIds turn order
- * @param {{short?: boolean}} [rawSettings]
+ * @param {{short?: boolean, investorsEach?: number, draft?: 'random' | 'snake'}} [rawSettings]
  */
 export function createBossGame(seatIds, rawSettings, board, randomIndex, nowMs = Date.now()) {
   if (seatIds.length < 3 || seatIds.length > 6 || new Set(seatIds).size !== seatIds.length) {
     throw new RangeError('Expected three to six distinct seats')
   }
   const short = rawSettings?.short === true
+  const each = investorChoices(seatIds.length).includes(rawSettings?.investorsEach) ? rawSettings.investorsEach : defaultInvestorsEach(seatIds.length)
+  const draft = rawSettings?.draft === 'snake' ? 'snake' : 'random'
   const availableInvestors = shuffled([...TEAMS], randomIndex)
   const deck = shuffled(buildDeck(), randomIndex)
-  const seats = seatIds.map((id) => ({
-    id,
-    investors: availableInvestors.splice(0, seatIds.length === 3 ? 2 : 1),
-    cash: 0,
-    hand: deck.splice(0, START_HAND),
-  }))
+  const seats = seatIds.map((id) => {
+    const investors = draft === 'random' ? availableInvestors.splice(0, each) : []
+    return { id, investors, portrait: investors[0] ?? null, cash: 0, hand: deck.splice(0, START_HAND) }
+  })
   const first = randomIndex(seats.length)
   const firstPlayerId = seats[first].id
+  // The player on the starting player's right (the one before them in turn order) picks the start space.
   const markerChooserId = seats[(first + seats.length - 1) % seats.length].id
   return {
     revision: 1,
-    phase: 'pick_start',
-    settings: { short },
+    phase: draft === 'snake' ? 'draft' : 'pick_start',
+    settings: { short, investorsEach: each, draft },
+    draftOrder: draft === 'snake' ? snakeOrder(seatIds, first, each) : [],
+    draftIndex: 0,
     placards: board.dealPlacards.map((p) => p.number).filter((n) => !short || !SHORT_SKIP.has(n)),
     dealIndex: 0,
     firstPlayerId,
@@ -342,6 +403,28 @@ export function createBossGame(seatIds, rawSettings, board, randomIndex, nowMs =
     winnerIds: [],
     events: [{ id: 'e1', revision: 1, kind: 'game_started', actorId: firstPlayerId, targetId: markerChooserId, createdAt: iso(nowMs) }],
   }
+}
+
+/** One draft pick (the drafter's own choice, or a random one for a skipped player or "random the rest"). */
+function draftPick(state, team, nowMs) {
+  const actorId = state.draftOrder[state.draftIndex]
+  const seat = seatOf(state, actorId)
+  state.availableInvestors.splice(state.availableInvestors.indexOf(team), 1)
+  if (seat) {
+    seat.investors.push(team)
+    seat.portrait ??= team
+  }
+  state.draftIndex += 1
+  addEvent(state, 'investor_drafted', actorId, nowMs, { team })
+  if (state.draftIndex >= state.draftOrder.length) state.phase = 'pick_start'
+}
+
+/** Host: finish the draft at random. */
+export function draftRandomRest(inputState, randomIndex, nowMs = Date.now()) {
+  const state = structuredClone(inputState)
+  if (state.phase !== 'draft') return { ok: false, status: 409, code: 'INVALID_PHASE' }
+  while (state.phase === 'draft') draftPick(state, state.availableInvestors[randomIndex(state.availableInvestors.length)], nowMs)
+  return { ok: true, state }
 }
 
 /** Earliest moment the state changes on its own, or null. */
@@ -401,6 +484,13 @@ function act(state, seat, a, board, randomIndex, nowMs) {
   const talking = (state.phase === 'negotiating' || state.phase === 'closing') && deal
 
   switch (a.type) {
+    case 'draft_pick': {
+      if (state.phase !== 'draft') return err(409, 'INVALID_PHASE')
+      if (actorId !== state.draftOrder[state.draftIndex]) return err(403, 'NOT_YOUR_TURN')
+      if (!state.availableInvestors.includes(a.team)) return err(400, 'INVESTOR_TAKEN')
+      draftPick(state, a.team, nowMs)
+      return
+    }
     case 'pick_start': {
       if (state.phase !== 'pick_start') return err(409, 'INVALID_PHASE')
       if (actorId !== state.markerChooserId) return err(403, 'NOT_YOUR_TURN')
@@ -417,9 +507,16 @@ function act(state, seat, a, board, randomIndex, nowMs) {
       const roll = randomIndex(6) + 1
       const from = state.markerSpace ?? 0
       state.lastRoll = roll
-      state.markerSpace = advanceMarker(from, roll, closedSetOf(state))
+      const closed = closedSetOf(state)
+      const path = []
+      for (let pos = from, left = roll; left > 0 && closed.size < 16;) {
+        pos = (pos + 1) % 16
+        path.push(pos)
+        if (!closed.has(pos)) left--
+      }
+      state.markerSpace = advanceMarker(from, roll, closed)
       state.phase = 'rolled_choice'
-      addEvent(state, 'dice_rolled', actorId, nowMs, { roll, spaceIndex: state.markerSpace, fromSpace: from })
+      addEvent(state, 'dice_rolled', actorId, nowMs, { roll, spaceIndex: state.markerSpace, fromSpace: from, path })
       return
     }
     case 'draw_cards': {
@@ -447,18 +544,53 @@ function act(state, seat, a, board, randomIndex, nowMs) {
         bossId: actorId,
         blockedTeams: [],
         tableCards: [],
+        slots: emptySlots(space),
         allocation: {},
         offered: false,
-        asks: {},
-        acceptedIds: [],
-        declinedIds: [],
+        version: 0,
+        terms: {},
+        accepted: {},
+        declined: {},
         closingDeadlineAt: null,
       }
       state.phase = 'negotiating'
       addEvent(state, 'deal_opened', actorId, nowMs, { dealNumber, spaceIndex, amount: state.deal.totalValue })
       return
     }
-    case 'set_allocation': {
+    case 'set_slot': {
+      if (!talking) return err(409, 'INVALID_PHASE')
+      if (actorId !== deal.bossId) return err(403, 'NOT_BOSS')
+      const slot = Number.isInteger(a.slot) ? deal.slots[a.slot] : undefined
+      if (!slot) return err(400, 'INVALID_REQUEST')
+      const src = a.source
+      if (src === null) {
+        slot.source = null
+      } else {
+        if (!src || typeof src !== 'object') return err(400, 'INVALID_REQUEST')
+        const group = state.spaces[deal.spaceIndex].groups[slot.group]
+        let next
+        if (src.kind === 'placard') {
+          if (!group.teams.includes(src.team)) return err(400, 'TEAM_NOT_IN_SLOT')
+          const owner = state.seats.find((x) => x.investors.includes(src.team))
+          if (!owner || deal.blockedTeams.includes(src.team)) return err(400, 'TARGET_NOT_ACTIVE')
+          next = { kind: 'placard', team: src.team, ownerId: owner.id }
+        } else if (src.kind === 'card') {
+          const tc = deal.tableCards.find((c) => c.id === src.cardId)
+          if (!tc) return err(400, 'TARGET_NOT_ACTIVE')
+          if (!group.teams.includes(tc.team)) return err(400, 'TEAM_NOT_IN_SLOT')
+          next = { kind: 'card', team: tc.team, ownerId: tc.ownerId, cardId: tc.id }
+        } else return err(400, 'INVALID_REQUEST')
+        // Each investor colour counts once in a deal.
+        if (deal.slots.some((x) => x !== slot && x.source?.team === next.team)) return err(409, 'TEAM_ALREADY_IN')
+        slot.source = next
+      }
+      slot.lost = null
+      refreshTerms(state)
+      backToTalks(state)
+      addEvent(state, 'slot_set', actorId, nowMs, { team: slot.source?.team, targetId: slot.source?.ownerId, slot: a.slot })
+      return
+    }
+    case 'submit_offer': {
       if (!talking) return err(409, 'INVALID_PHASE')
       if (actorId !== deal.bossId) return err(403, 'NOT_BOSS')
       if (!a.allocation || typeof a.allocation !== 'object' || Array.isArray(a.allocation)) return err(400, 'INVALID_REQUEST')
@@ -472,22 +604,9 @@ function act(state, seat, a, board, randomIndex, nowMs) {
       if (sum !== deal.totalValue) return err(400, 'INVALID_ALLOCATION_TOTAL')
       deal.allocation = next
       deal.offered = true
-      clearAgreement(deal)
-      autoAccept(state)
+      refreshTerms(state)
       backToTalks(state)
       addEvent(state, 'offer_updated', actorId, nowMs, { amount: deal.totalValue })
-      return
-    }
-    case 'set_ask': {
-      if (!talking) return err(409, 'INVALID_PHASE')
-      if (actorId === deal.bossId) return err(400, 'ALREADY_BOSS')
-      if (a.amount !== null && !isMoney(a.amount)) return err(400, 'INVALID_REQUEST')
-      deal.asks[actorId] = a.amount
-      deal.acceptedIds = deal.acceptedIds.filter((id) => id !== actorId)
-      deal.declinedIds = deal.declinedIds.filter((id) => id !== actorId)
-      autoAccept(state)
-      backToTalks(state)
-      addEvent(state, 'ask_set', actorId, nowMs, { amount: a.amount ?? undefined })
       return
     }
     case 'accept_offer':
@@ -495,10 +614,14 @@ function act(state, seat, a, board, randomIndex, nowMs) {
       if (!talking) return err(409, 'INVALID_PHASE')
       if (!deal.offered) return err(409, 'NO_OFFER')
       if (actorId === deal.bossId) return err(400, 'ALREADY_BOSS')
+      const terms = deal.terms[actorId]
+      if (!terms) return err(403, 'NOT_IN_OFFER')
+      // Bound to the exact terms the player saw: a change in between must be read again.
+      if (a.version !== terms.version) return err(409, 'STALE_OFFER')
       const accept = a.type === 'accept_offer'
-      deal.acceptedIds = deal.acceptedIds.filter((id) => id !== actorId)
-      deal.declinedIds = deal.declinedIds.filter((id) => id !== actorId)
-      ;(accept ? deal.acceptedIds : deal.declinedIds).push(actorId)
+      delete deal.accepted[actorId]
+      delete deal.declined[actorId]
+      ;(accept ? deal.accepted : deal.declined)[actorId] = terms.version
       if (!accept) backToTalks(state)
       addEvent(state, accept ? 'offer_accepted' : 'offer_declined', actorId, nowMs)
       return
@@ -592,7 +715,9 @@ function act(state, seat, a, board, randomIndex, nowMs) {
       return
     }
     case 'play_stop': {
-      if (state.phase !== 'interrupt' || !state.interrupt) return err(409, 'INVALID_PHASE')
+      // Bound to one interrupt: too late or aimed at another one, the Stop stays in the hand.
+      if (state.phase !== 'interrupt' || !state.interrupt) return err(409, 'INTERRUPT_OVER')
+      if (a.interruptId !== state.interrupt.id) return err(409, 'INTERRUPT_OVER')
       if (state.interrupt.stoppedBy) return err(409, 'ALREADY_STOPPED')
       if (actorId === state.interrupt.actorId) return err(400, 'CANNOT_STOP_SELF')
       const idx = seat.hand.findIndex((c) => c.id === a.cardId && c.kind === 'stop')
@@ -634,18 +759,27 @@ export function blockingIds(state) {
   if (state.phase === 'pick_start') ids.add(state.markerChooserId)
   if (state.phase === 'turn_choice' || state.phase === 'rolled_choice') ids.add(state.turnPlayerId)
   if (state.phase === 'discard_limit' && state.discardActorId) ids.add(state.discardActorId)
+  if (state.phase === 'draft') ids.add(state.draftOrder[state.draftIndex])
   if (state.deal && state.phase !== 'game_over') {
     ids.add(state.deal.bossId)
-    const space = state.spaces[state.deal.spaceIndex]
-    const providers = activeTeamProviders(state)
-    for (const g of space.groups.filter((x) => x.pick === x.teams.length)) {
-      for (const team of g.teams) {
-        const list = providers[team] ?? []
-        if (list.length === 1) ids.add(list[0])
-      }
-    }
+    for (const id of requiredIds(state)) if (!acceptedNow(state.deal, id)) ids.add(id)
   }
   return [...ids]
+}
+
+/** Takes a seat out of the current deal: their cards go back, their slots reopen, their payout goes to the boss. */
+function takeOutOfDeal(state, targetId) {
+  const deal = state.deal
+  returnTableCards(state, targetId)
+  const seat = seatOf(state, targetId)
+  for (const t of seat?.investors ?? []) if (!deal.blockedTeams.includes(t)) deal.blockedTeams.push(t)
+  reopenSlots(deal, (src) => src.ownerId === targetId)
+  if (deal.allocation[targetId]) {
+    deal.allocation[deal.bossId] = (deal.allocation[deal.bossId] ?? 0) + deal.allocation[targetId]
+    delete deal.allocation[targetId]
+  }
+  refreshTerms(state)
+  backToTalks(state)
 }
 
 /** Host decision "carry on without them": pass their turn, fail their deal or take their teams out of it. */
@@ -655,7 +789,10 @@ export function skipBossPlayer(inputState, targetId, randomIndex, nowMs = Date.n
   if (!seat || state.phase === 'game_over') return { ok: false, status: 409, code: 'NOTHING_TO_SKIP' }
   if (state.phase === 'interrupt') return { ok: false, status: 409, code: 'INVALID_PHASE' }
   let done = false
-  if (state.phase === 'pick_start' && state.markerChooserId === targetId) {
+  if (state.phase === 'draft' && state.draftOrder[state.draftIndex] === targetId) {
+    draftPick(state, state.availableInvestors[randomIndex(state.availableInvestors.length)], nowMs)
+    done = true
+  } else if (state.phase === 'pick_start' && state.markerChooserId === targetId) {
     const space = randomIndex(16)
     state.markerSpace = space
     state.phase = 'turn_choice'
@@ -672,12 +809,9 @@ export function skipBossPlayer(inputState, targetId, randomIndex, nowMs = Date.n
     done = true
   } else if (state.deal) {
     const providers = activeTeamProviders(state)
-    const teams = Object.entries(providers).filter(([, ids]) => ids.includes(targetId)).map(([t]) => t)
-    if (teams.length) {
-      returnTableCards(state, targetId)
-      for (const t of seat.investors) if (!state.deal.blockedTeams.includes(t)) state.deal.blockedTeams.push(t)
-      state.deal.acceptedIds = state.deal.acceptedIds.filter((id) => id !== targetId)
-      backToTalks(state)
+    const involved = Object.values(providers).some((ids) => ids.includes(targetId)) || requiredIds(state).includes(targetId)
+    if (involved) {
+      takeOutOfDeal(state, targetId)
       done = true
     }
   } else if ((state.phase === 'turn_choice' || state.phase === 'rolled_choice') && state.turnPlayerId === targetId) {
@@ -700,14 +834,11 @@ export function removeBossPlayer(inputState, leavingId, randomIndex, nowMs = Dat
   const [removed] = state.seats.splice(idx, 1)
   state.availableInvestors.push(...removed.investors)
   state.discard.push(...removed.hand)
-  if (state.deal) {
-    returnTableCards(state, leavingId)
-    state.deal.acceptedIds = state.deal.acceptedIds.filter((id) => id !== leavingId)
-    state.deal.declinedIds = state.deal.declinedIds.filter((id) => id !== leavingId)
-    delete state.deal.allocation[leavingId]
-    delete state.deal.asks[leavingId]
-    state.deal.offered = false
-    backToTalks(state)
+  if (state.deal) takeOutOfDeal(state, leavingId)
+  if (state.phase === 'draft') {
+    // their remaining picks go back to the pool order without them
+    state.draftOrder = [...state.draftOrder.slice(0, state.draftIndex), ...state.draftOrder.slice(state.draftIndex).filter((id) => id !== leavingId)]
+    if (state.draftIndex >= state.draftOrder.length) state.phase = 'pick_start'
   }
   if (state.interrupt?.actorId === leavingId) state.interrupt.deadlineAt = iso(nowMs)
   if (state.turnPlayerId === leavingId) state.turnPlayerId = nextTurn
@@ -727,6 +858,21 @@ export function removeBossPlayer(inputState, leavingId, randomIndex, nowMs = Dat
   else addEvent(state, 'player_removed', leavingId, nowMs)
   if (state.phase === 'interrupt') state = resolveBossDeadlines(state, { dealPlacards: [] }, randomIndex, nowMs).state
   return state
+}
+
+function dealView(state) {
+  const { terms, accepted, declined, version, ...deal } = state.deal
+  const required = requiredIds(state)
+  return {
+    ...deal,
+    terms: Object.fromEntries(Object.entries(terms).map(([id, t]) => [id, t.version])),
+    providers: activeTeamProviders(state),
+    contributorIds: contributorIds(state),
+    requiredIds: required,
+    acceptedIds: required.filter((id) => acceptedNow(state.deal, id)),
+    declinedIds: required.filter((id) => declinedNow(state.deal, id)),
+    canClose: canCloseDeal(state).ok,
+  }
 }
 
 export function projectBossView(state, viewerId, board) {
@@ -754,11 +900,15 @@ export function projectBossView(state, viewerId, board) {
     seats: state.seats.map((s) => ({
       userId: s.id,
       investors: [...s.investors],
+      portrait: s.portrait ?? s.investors[0] ?? null,
       handCount: s.hand.length,
-      cashTier: cashTierOf(s.cash),
+      // Wallets stay private until the end.
+      cashTier: s.id === viewerId || reveal ? cashTierOf(s.cash) : null,
       exactCash: s.id === viewerId || reveal ? s.cash : null,
     })),
-    deal: state.deal ? { ...state.deal, providers: activeTeamProviders(state), agreedTeams: agreedTeams(state), contributorIds: contributorIds(state), canClose: canCloseDeal(state).ok } : null,
+    investorsEach: state.settings.investorsEach ?? defaultInvestorsEach(state.seats.length),
+    draft: state.phase === 'draft' ? { order: state.draftOrder, index: state.draftIndex, actorId: state.draftOrder[state.draftIndex] } : null,
+    deal: state.deal ? dealView(state) : null,
     interrupt: state.interrupt,
     lastEndRoll: state.lastEndRoll,
     lastSettlement: state.lastSettlement,

@@ -3,6 +3,7 @@ import type { BossEvent, BossView } from '@/api/types'
 import { cn } from '@/lib/utils'
 import { centerArt, fxArt, hopPath, markerSpot, ringCell, ringShape } from './meta'
 import { DeckPile, PlacardStack, SpaceTile } from './parts'
+import { ROLL } from './useBossTimeline'
 
 type Props = {
   view: BossView
@@ -33,7 +34,8 @@ export function BossBoard({ view, roll, onPick, children, piles, settledSpace = 
     if (!root || !pawn || !roll || roll.fromSpace === undefined || roll.spaceIndex === undefined) return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const closed = new Set(view.spaces.filter((s) => s.closedByDeal !== null).map((s) => s.index))
-    const path = [roll.fromSpace, ...hopPath(roll.fromSpace, roll.spaceIndex, closed)]
+    // step by step, over closed spaces too (they just don't count)
+    const path = [roll.fromSpace, ...(roll.path ?? hopPath(roll.fromSpace, roll.spaceIndex, closed))]
     // Offsets from the end space (the marker keeps the same spot on every tile, so tile centre to tile centre works).
     const end = root.querySelector<HTMLElement>(`[data-space="${roll.spaceIndex}"]`)!.getBoundingClientRect()
     const at = (i: number) => {
@@ -50,7 +52,8 @@ export function BossBoard({ view, roll, onPick, children, piles, settledSpace = 
         frames.push({ transform: `translate(${(p.x + q.x) / 2}px, ${(p.y + q.y) / 2 - 28}px) scale(1.15)`, offset: Math.min(1, (i + 0.5) / (path.length - 1)) })
       }
     })
-    pawn.animate(frames, { duration: 900 + path.length * 260, delay: 900, easing: 'linear', fill: 'backwards' })
+    // after the die has tumbled and shown its face
+    pawn.animate(frames, { duration: Math.max(1, path.length - 1) * ROLL.step, delay: ROLL.tumble + ROLL.hold, easing: 'linear', fill: 'backwards' })
     // only when a new roll arrives
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rollKey])
@@ -64,7 +67,7 @@ export function BossBoard({ view, roll, onPick, children, piles, settledSpace = 
           // While someone plays, the other spaces step back so the one with the $ stands out.
           const dim = focus && !here && !celebrate
           return (
-            <div key={space.index} data-space={space.index} style={ringCell(space.index)} className={cn('relative min-h-0 min-w-0 transition-[opacity,filter] duration-500', dim && 'opacity-45 saturate-[0.45]', here && 'z-10', celebrate && 'boss-celebrate z-30')}>
+            <div key={space.index} data-space={space.index} style={ringCell(space.index)} className={cn('relative min-h-0 min-w-0 transition-[opacity,filter] duration-500', dim && 'opacity-75 saturate-[0.6]', here && 'z-10', celebrate && 'boss-celebrate z-30')}>
               <SpaceTile space={space} shape={ringShape(space.index)} active={markerSpace === space.index} onPick={onPick ? () => onPick(space.index) : undefined} className="size-full" />
               {markerSpace === space.index && (
                 <span ref={marker} className="boss-marker pointer-events-none absolute z-20 size-[11cqmin] -translate-x-1/2 -translate-y-1/2" style={markerSpot(space.index)}>

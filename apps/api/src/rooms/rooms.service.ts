@@ -4,14 +4,14 @@ import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import type { IncomingMessage } from 'node:http'
 import type { PoolClient } from 'pg'
-import type { BossActionPayload, BossRoomSettings, PartyRoomSettings, Room, RoomBoard, RoomBoardSession, RoomBoardStatus, RoomCommand, RoomCommandResult, RoomGame, RoomPlayer, RoomState, SpyRoomSettings } from '@thongyod/shared'
+import type { BossActionPayload, BossRestartVote, BossRoomSettings, PartyRoomSettings, Room, RoomBoard, RoomBoardSession, RoomBoardStatus, RoomCommand, RoomCommandResult, RoomGame, RoomPlayer, RoomState, SpyRoomSettings } from '@thongyod/shared'
 import { RoomGuestService, type RoomActor } from '../auth/room-guest.service.js'
 import { BOARD_COOKIE, readBoardCookie, readGuestCookie, readSessionCookie, sessionHash } from '../auth/cookie.js'
 import { secureCookie } from '../auth/policy.js'
 import { DatabaseService } from '../db/database.service.js'
 import { payloadHash, RoomEvents, RoomPresence } from './room-support.js'
 import {
-  applyBossAction, bossDeadline, createBossGame, projectBossView, removeBossPlayer, resolveBossDeadlines, skipBossPlayer,
+  applyBossAction, bossDeadline, createBossGame, draftRandomRest, investorChoices, projectBossView, removeBossPlayer, resolveBossDeadlines, skipBossPlayer,
   type BossBoardDefinition, type BossInternalState,
 } from '@thongyod/shared/content/boss-engine.mjs'
 
@@ -33,6 +33,9 @@ type Internal = {
   boardInvites?: string[]
   /** I'm the Boss! state (engine-owned). */
   boss?: BossInternalState | null
+  /** Restart vote (I'm the Boss!). */
+  restart?: BossRestartVote | null
+  restartCooldownUntil?: string | null
 }
 type Loaded = { room: Internal; revision: number }
 type People = Map<string, { userId: string; displayName: string; avatarUrl: string | null; isGuest?: true }>
@@ -44,6 +47,8 @@ const BOSS_PLAYERS = 6
 const ROOM_MS = 3 * 60 * 60 * 1000
 const HOST_AWAY_MS = 2 * 60 * 1000
 const BOARD_PENDING_MS = 2 * 60 * 1000
+const RESTART_VOTE_MS = 30 * 1000
+const RESTART_COOLDOWN_MS = 60 * 1000
 const MAX_BOARDS = 2
 const LABEL_LETTERS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
 /** Commands that act inside a match must name the phase they were made in. */
@@ -71,8 +76,12 @@ function errorCode(error: HttpException): string {
 function settings(game: RoomGame, raw: unknown, current?: Internal['settings']): Internal['settings'] {
   const b = object(raw ?? {}), spy = game === 'spy'
   if (game === 'boss') {
-    if (Object.keys(b).some((k) => k !== 'short') || (b.short !== undefined && typeof b.short !== 'boolean')) throw invalid()
-    return { short: (b.short as boolean | undefined) ?? (current as BossRoomSettings | undefined)?.short ?? false }
+    const old = current as BossRoomSettings | undefined
+    if (Object.keys(b).some((k) => !['short', 'investorsEach', 'draft'].includes(k)) || (b.short !== undefined && typeof b.short !== 'boolean')) throw invalid()
+    if (b.investorsEach !== undefined && b.investorsEach !== null && (!Number.isInteger(b.investorsEach) || Number(b.investorsEach) < 1 || Number(b.investorsEach) > 2)) throw invalid()
+    if (b.draft !== undefined && !['random', 'snake'].includes(String(b.draft))) throw invalid()
+    const each = b.investorsEach === null ? undefined : (b.investorsEach as number | undefined) ?? old?.investorsEach
+    return { short: (b.short as boolean | undefined) ?? old?.short ?? false, ...(each ? { investorsEach: each } : {}), draft: (b.draft as 'random' | 'snake' | undefined) ?? old?.draft ?? 'random' }
   }
   if (Object.keys(b).some((k) => !(spy ? ['mode', 'minutes', 'spies', 'packs'] : ['packs']).includes(k))) throw invalid()
   const old = current as SpyRoomSettings | undefined
@@ -90,9 +99,10 @@ export const phaseOf = (r: Internal) => `${r.matchId ?? 'm0'}:${r.state}:${r.spy
 /** Earliest moment the server must act on its own: the spy timer, else room expiry. */
 function deadlineOf(r: Internal): string {
   if (r.state === 'playing' && r.spy && !r.spy.timeUp && r.spy.endsAt < r.expiresAt) return r.spy.endsAt
-  const boss = r.state === 'playing' && r.boss ? bossDeadline(r.boss) : null
-  if (boss && boss < r.expiresAt) return boss
-  return r.expiresAt
+  const due = [r.expiresAt]
+  if (r.state === 'playing' && r.boss) { const boss = bossDeadline(r.boss); if (boss) due.push(boss) }
+  if (r.restart) due.push(r.restart.deadlineAt)
+  return due.sort()[0]
 }
 
 /** Engine refusals become the usual { error: { code } } HTTP errors. */
@@ -187,6 +197,9 @@ export class RoomsService {
       return {
         ...base, maxPlayers: BOSS_PLAYERS, game: 'boss', settings: r.settings as BossRoomSettings,
         boss: r.boss && (joined || isBoard) ? projectBossView(r.boss, playerId ?? '', bossBoard) : null,
+        boardOnline: boards.some((b) => b.status === 'approved' && this.presence.isOnline(r.code, `board:${b.id}`)),
+        restart: r.restart ?? null,
+        restartCooldownUntil: r.restartCooldownUntil ?? null,
       }
     }
     if (r.game === 'spy') {
@@ -243,6 +256,20 @@ export class RoomsService {
     if (r.fingers) for (const id of haveIds) r.fingers[id] = Math.max(0, (r.fingers[id] ?? 5) - 1)
   }
 
+  /** Closes the restart vote when it passed, cannot pass any more, or ran out of time. Passing goes back to the lobby. */
+  private settleRestart(r: Internal, timedOut = false) {
+    const v = r.restart
+    if (!v) return
+    const open = v.voters.length - v.yes.length - v.no.length
+    if (v.yes.length >= v.needed) {
+      r.restart = null; r.restartCooldownUntil = null
+      r.state = 'lobby'; r.boss = null; r.matchId = randomUUID()
+    } else if (timedOut || v.yes.length + open < v.needed) {
+      r.restart = null
+      r.restartCooldownUntil = new Date(Date.now() + RESTART_COOLDOWN_MS).toISOString()
+    }
+  }
+
   private leave(r: Internal, viewer: string) {
     r.playerIds = r.playerIds.filter((id) => id !== viewer)
     if (r.hostId === viewer) r.hostId = r.playerIds[0] ?? viewer
@@ -284,6 +311,37 @@ export class RoomsService {
       bossSettle(r)
       return
     }
+    if (type === 'bossSkip') {
+      // Anyone seated may carry on without an offline player who is holding the game up.
+      if (r.game !== 'boss' || !r.boss || r.state !== 'playing') throw conflict('NO_ROUND')
+      const b = object(body), target = b.targetId
+      if (Object.keys(b).length !== 1 || typeof target !== 'string' || !r.playerIds.includes(target) || target === viewer) throw invalid()
+      if (this.presence.isOnline(r.code, target)) throw conflict('PLAYER_ONLINE')
+      r.boss = bossResult(skipBossPlayer(r.boss, target, randomInt, Date.now()))
+      bossSettle(r)
+      return
+    }
+    if (type === 'restartOpen') {
+      if (r.game !== 'boss' || !r.boss || (r.state !== 'playing' && r.state !== 'revealed')) throw conflict('NO_ROUND')
+      if (r.restart) throw conflict('VOTE_OPEN')
+      if (r.restartCooldownUntil && r.restartCooldownUntil > new Date().toISOString()) throw conflict('VOTE_COOLDOWN')
+      // Frozen: the seated players online right now. Leaving or dropping later does not lower the bar.
+      const voters = r.playerIds.filter((id) => id === viewer || this.presence.isOnline(r.code, id))
+      r.restart = { openedBy: viewer, voters, yes: [viewer], no: [], needed: Math.max(2, Math.floor(voters.length / 2) + 1), deadlineAt: new Date(Date.now() + RESTART_VOTE_MS).toISOString() }
+      this.settleRestart(r)
+      return
+    }
+    if (type === 'restartVote') {
+      if (!r.restart) throw conflict('NO_VOTE')
+      if (!r.restart.voters.includes(viewer)) throw new ForbiddenException({ error: { code: 'NOT_A_VOTER' } })
+      const b = object(body)
+      if (Object.keys(b).length !== 1 || typeof b.yes !== 'boolean') throw invalid()
+      r.restart.yes = r.restart.yes.filter((id) => id !== viewer)
+      r.restart.no = r.restart.no.filter((id) => id !== viewer)
+      ;(b.yes ? r.restart.yes : r.restart.no).push(viewer)
+      this.settleRestart(r)
+      return
+    }
     if (type === 'claimHost') {
       if (r.hostId === viewer) return
       if (this.presence.awayFor(r.code, r.hostId) < HOST_AWAY_MS) throw conflict('HOST_ACTIVE')
@@ -301,15 +359,17 @@ export class RoomsService {
       return
     }
     if (type === 'closeRoom') { r.playerIds = []; return }
-    if (type === 'bossSkip' || type === 'bossKick') {
+    if (type === 'bossKick') {
       if (r.game !== 'boss' || !r.boss || r.state !== 'playing') throw conflict('NO_ROUND')
       const b = object(body), target = b.targetId
       if (Object.keys(b).length !== 1 || typeof target !== 'string' || !r.playerIds.includes(target) || target === viewer) throw invalid()
-      // Skipping is only for someone who is away; the owner may remove anyone.
-      if (type === 'bossSkip' && this.presence.isOnline(r.code, target)) throw conflict('PLAYER_ONLINE')
-      if (type === 'bossSkip') r.boss = bossResult(skipBossPlayer(r.boss, target, randomInt, Date.now()))
-      else this.leave(r, target)
+      this.leave(r, target)
       bossSettle(r)
+      return
+    }
+    if (type === 'bossDraftRandom') {
+      if (r.game !== 'boss' || !r.boss || r.state !== 'playing') throw conflict('NO_ROUND')
+      r.boss = bossResult(draftRandomRest(r.boss, randomInt, Date.now()))
       return
     }
     if (type === 'settings') {
@@ -324,6 +384,9 @@ export class RoomsService {
       if (r.playerIds.length < (r.game === 'neverHave' ? 2 : 3)) throw conflict('NOT_ENOUGH_PLAYERS')
       if (r.game === 'boss') {
         if (r.playerIds.length > BOSS_PLAYERS) throw conflict('ROOM_FULL')
+        const s = r.settings as BossRoomSettings
+        if (s.investorsEach && !investorChoices(r.playerIds.length).includes(s.investorsEach)) r.settings = { ...s, investorsEach: undefined }
+        r.restart = null
         r.boss = createBossGame(shuffle(r.playerIds), r.settings as BossRoomSettings, bossBoard, randomInt, Date.now())
       } else if (r.game === 'spy') {
         const s = r.settings as SpyRoomSettings
@@ -492,6 +555,9 @@ export class RoomsService {
         if (expired) { await c.query('DELETE FROM game_rooms WHERE code=$1', [code]); closed.push(code); continue }
         if (r.state === 'playing' && r.spy && !r.spy.timeUp && new Date(r.spy.endsAt).getTime() <= Date.now()) {
           r.spy.timeUp = true
+          await this.save(c, r); changed.push(code)
+        } else if (r.restart && r.restart.deadlineAt <= new Date().toISOString()) {
+          this.settleRestart(r, true)
           await this.save(c, r); changed.push(code)
         } else if (r.state === 'playing' && r.boss && (resolved = resolveBossDeadlines(r.boss, bossBoard, randomInt, Date.now())).changed) {
           r.boss = resolved.state; bossSettle(r)

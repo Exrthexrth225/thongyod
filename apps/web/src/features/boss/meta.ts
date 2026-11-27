@@ -33,15 +33,40 @@ export const PLAY_FX = { travel: 'plane', boss: 'crown', recruit: 'magnet', stop
 export const M = 1_000_000
 export const millions = (amount: number) => Math.round((amount / M) * 10) / 10
 
-/** The investor a seat is shown as: its first placard, else a stable colour by seat order. */
+/** The face a seat is shown as all game (its first investor), else a stable colour by seat order. */
 export function seatTeam(view: BossView, userId: string): InvestorTeam {
   const seat = view.seats.find((s) => s.userId === userId)
+  if (seat?.portrait) return seat.portrait
   if (seat?.investors[0]) return seat.investors[0]
   const i = view.seats.findIndex((s) => s.userId === userId)
   return TEAMS[(i < 0 ? 0 : i) % TEAMS.length]
 }
 
 export const nameOf = (players: RoomPlayer[], userId: string | null | undefined) => players.find((p) => p.userId === userId)?.displayName ?? '?'
+
+const segmenter = (granularity: 'grapheme' | 'word') => (typeof Intl !== 'undefined' && 'Segmenter' in Intl ? new Intl.Segmenter('th', { granularity }) : null)
+const graphemes = segmenter('grapheme'), words = segmenter('word')
+const count = (text: string) => (graphemes ? [...graphemes.segment(text)].length : Array.from(text).length)
+/**
+ * A name cut to about `max` characters with "…": at a word boundary when Thai word breaking allows it,
+ * else between whole characters (a vowel or tone mark never leaves its letter, a leading vowel never ends the cut).
+ */
+export function shortName(name: string, max = 8): string {
+  if (count(name) <= max) return name
+  let out = ''
+  for (const w of words ? [...words.segment(name)].map((x) => x.segment) : []) {
+    if (count(out + w) > max) break
+    out += w
+  }
+  if (count(out.trim()) < Math.ceil(max / 2)) {
+    const parts = graphemes ? [...graphemes.segment(name)].map((x) => x.segment) : Array.from(name)
+    const cut = parts.slice(0, max)
+    // never stop on เ แ โ ใ ไ (they are written before the consonant they belong to) or right before ะ า ำ
+    while (cut.length > 1 && (/^[เแโใไ]$/.test(cut.at(-1)!) || /^[ะาำๅ]/.test(parts[cut.length] ?? ''))) cut.pop()
+    out = cut.join('')
+  }
+  return `${out.trimEnd()}…`
+}
 
 /** Cards grouped for the hand: same kind/team stacked. */
 export function cardKey(card: BossHandCard) {

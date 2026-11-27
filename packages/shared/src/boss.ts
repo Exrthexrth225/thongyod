@@ -34,7 +34,7 @@ export type BossBoardSpace = DealSpace & {
 
 export type BossDealPlacard = { number: number; shareValue: number; endRollFaces: number[] }
 
-export type BossPhase = 'pick_start' | 'turn_choice' | 'rolled_choice' | 'negotiating' | 'interrupt' | 'closing' | 'discard_limit' | 'game_over'
+export type BossPhase = 'draft' | 'pick_start' | 'turn_choice' | 'rolled_choice' | 'negotiating' | 'interrupt' | 'closing' | 'discard_limit' | 'game_over'
 
 export type BossTableCard = { id: string; ownerId: string; team: InvestorTeam }
 
@@ -51,6 +51,19 @@ export type BossInterrupt = {
   deadlineAt: string
 }
 
+/** Where a contract slot's investor comes from: its owner's placard, or one face-up Team card. */
+export type BossSlotSource =
+  | { kind: 'placard'; team: InvestorTeam; ownerId: string }
+  | { kind: 'card'; team: InvestorTeam; ownerId: string; cardId: string }
+
+/** One investor the deal needs, in column `group`. Filled only by the boss, never automatically. */
+export type BossSlot = {
+  group: number
+  source: BossSlotSource | null
+  /** The contribution an interrupt took away (until the boss fills the slot again). */
+  lost: { team: InvestorTeam; ownerId: string; kind: 'placard' | 'card' } | null
+}
+
 export type BossDealState = {
   id: string
   spaceIndex: number
@@ -58,20 +71,24 @@ export type BossDealState = {
   totalValue: number
   bossId: string
   blockedTeams: InvestorTeam[]
+  /** Face-up Team cards: offered by their owners; "selected" when a slot uses them. */
   tableCards: BossTableCard[]
-  /** Boss's offer: seat ID -> amount. Anyone at the table may be paid. */
+  slots: BossSlot[]
+  /** Boss's offer: seat ID -> amount, one payout per person. Anyone at the table may be paid. */
   allocation: Record<string, number>
   offered: boolean
-  /** What each player asked for (null = withdrew the ask). Public, like talk at the table. */
-  asks: Record<string, number | null>
-  acceptedIds: string[]
-  declinedIds: string[]
+  /** Per person: the version of the terms they are asked to confirm (send it back with accept/decline). */
+  terms: Record<string, number>
   closingDeadlineAt: string | null
   /** Derived for display. */
   providers: Partial<Record<InvestorTeam, string[]>>
-  agreedTeams: InvestorTeam[]
-  /** Boss plus everyone offering a team: the people whose "accept" counts. */
+  /** Boss plus everyone supplying a slot. */
   contributorIds: string[]
+  /** Everyone who must confirm: suppliers and paid players, not the boss. */
+  requiredIds: string[]
+  /** Confirmed / declined the terms they hold now. */
+  acceptedIds: string[]
+  declinedIds: string[]
   canClose: boolean
 }
 
@@ -81,8 +98,9 @@ export type BossEventKind =
   | 'dice_rolled'
   | 'drew_cards'
   | 'deal_opened'
+  | 'investor_drafted'
+  | 'slot_set'
   | 'offer_updated'
-  | 'ask_set'
   | 'offer_accepted'
   | 'offer_declined'
   | 'team_played'
@@ -113,6 +131,10 @@ export type BossEvent = {
   dealNumber?: number
   spaceIndex?: number
   fromSpace?: number
+  /** dice_rolled: every space the marker steps on, closed ones included. */
+  path?: number[]
+  slot?: number
+  ids?: string[]
   cancelled?: boolean
   createdAt: string
 }
@@ -120,13 +142,16 @@ export type BossEvent = {
 export type BossSeatView = {
   userId: string
   investors: InvestorTeam[]
+  /** The face this player keeps all game, whatever investors they gain or lose. */
+  portrait: InvestorTeam | null
   handCount: number
-  cashTier: BossCashTier
+  /** Own (or everyone's after game_over); null otherwise. */
+  cashTier: BossCashTier | null
   /** The viewer's own cash, or everyone's after game_over. */
   exactCash: number | null
 }
 
-export type BossRoomSettings = { short: boolean }
+export type BossRoomSettings = { short: boolean; investorsEach?: number; draft?: 'random' | 'snake' }
 
 export type BossView = {
   revision: number
@@ -144,12 +169,15 @@ export type BossView = {
   deckCount: number
   discardCount: number
   availableInvestors: InvestorTeam[]
+  investorsEach: number
+  /** Snake draft in progress: whose pick it is. */
+  draft: { order: string[]; index: number; actorId: string } | null
   spaces: BossBoardSpace[]
   seats: BossSeatView[]
   deal: BossDealState | null
   interrupt: BossInterrupt | null
   lastEndRoll: { roll: number; ended: boolean; dealNumber: number; faces: number[] } | null
-  lastSettlement: { dealNumber: number; spaceIndex: number; bossId: string; totalValue: number; payouts: Record<string, number> } | null
+  lastSettlement: { dealNumber: number; spaceIndex: number; bossId: string; totalValue: number; payouts: Record<string, number>; suppliers?: string[] } | null
   myHand: BossHandCard[]
   discardPendingCount: number
   /** Seats the game is waiting on; the host may skip them when they are offline. */
@@ -161,14 +189,15 @@ export type BossView = {
 }
 
 export type BossActionPayload =
+  | { type: 'draft_pick'; team: InvestorTeam }
   | { type: 'pick_start'; spaceIndex: number }
   | { type: 'roll_die' }
   | { type: 'draw_cards' }
   | { type: 'open_deal' }
-  | { type: 'set_allocation'; allocation: Record<string, number> }
-  | { type: 'set_ask'; amount: number | null }
-  | { type: 'accept_offer' }
-  | { type: 'decline_offer' }
+  | { type: 'set_slot'; slot: number; source: { kind: 'placard'; team: InvestorTeam } | { kind: 'card'; cardId: string } | null }
+  | { type: 'submit_offer'; allocation: Record<string, number> }
+  | { type: 'accept_offer'; version: number }
+  | { type: 'decline_offer'; version: number }
   | { type: 'start_closing' }
   | { type: 'hold' }
   | { type: 'fail_deal' }
@@ -176,7 +205,7 @@ export type BossActionPayload =
   | { type: 'play_boss'; cardId: string }
   | { type: 'play_travel'; cardId: string; targetTeam: InvestorTeam; targetCardId?: string }
   | { type: 'play_recruit'; cardIds: [string, string, string]; targetTeam: InvestorTeam }
-  | { type: 'play_stop'; cardId: string }
+  | { type: 'play_stop'; cardId: string; interruptId: string }
   | { type: 'discard_cards'; cardIds: string[] }
 
 export type BossActionRequest = { actionId?: string; action: BossActionPayload }

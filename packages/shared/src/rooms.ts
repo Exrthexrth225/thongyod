@@ -96,9 +96,25 @@ export type PartyRoomData = RoomBase & {
 }
 
 /** I'm the Boss! (3–6 players). `boss` is projected per viewer: own hand and exact cash only. */
+/** A vote to restart the game: voters are the seated players online when it opened (frozen). */
+export type BossRestartVote = {
+  openedBy: string
+  voters: string[]
+  yes: string[]
+  no: string[]
+  /** Strict majority of the frozen voters, and at least two. */
+  needed: number
+  deadlineAt: string
+}
+
 export type BossRoomData = RoomBase & {
   game: 'boss'
   settings: BossRoomSettings
+  /** An approved Board Screen is connected: phones can show the controller view. */
+  boardOnline: boolean
+  restart: BossRestartVote | null
+  /** A new restart vote may open after this time. */
+  restartCooldownUntil: string | null
   /** null in the lobby or when not a player / board. */
   boss: BossView | null
 }
@@ -110,8 +126,9 @@ export type Room = SpyRoomData | PartyRoomData | BossRoomData
 export type RoomCommandType =
   | 'join' | 'leave' | 'start' | 'reveal' | 'lobby' | 'vote' | 'settings'
   | 'claimHost' | 'boardApprove' | 'boardReject' | 'boardRevoke'
-  /** I'm the Boss! move (payload: BossCommandPayload). Host only: bossSkip / bossKick an offline player who holds the game up. */
-  | 'boss' | 'bossSkip' | 'bossKick'
+  /** I'm the Boss! move (payload: BossCommandPayload). Anyone seated: bossSkip an offline player who holds the game up.
+   *  Host only: bossKick, bossDraftRandom (finish the snake draft at random). Anyone seated: restartOpen / restartVote ({ yes }). */
+  | 'boss' | 'bossSkip' | 'bossKick' | 'bossDraftRandom' | 'restartOpen' | 'restartVote'
   /** Owner: turn a player's device into the Board Screen (lobby only) / close the room for everyone. */
   | 'makeBoard' | 'closeRoom'
 

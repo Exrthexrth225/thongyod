@@ -25,7 +25,7 @@ function BoardLobby({ room }: { room: Room }) {
     <div className="mx-auto flex max-w-4xl flex-col items-center gap-6 px-6 py-6 text-center">
       <h1 className="text-4xl font-extrabold">{t(`games.list.${room.game}.title`)}</h1>
       <div className="flex flex-wrap items-center justify-center gap-8">
-        <QrCodeCard value={roomUrl(room.code)} label={t('rooms.qrTitle')} />
+        <QrCodeCard value={roomUrl(room.code, room.game)} label={t('rooms.qrTitle')} />
         <div className="flex flex-col items-center gap-2">
           <span className="text-sm text-muted-foreground">{t('rooms.codeLabel')}</span>
           <span className="text-6xl font-extrabold tracking-[0.2em] tabular-nums">{room.code}</span>

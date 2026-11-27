@@ -5,12 +5,19 @@ export interface BossBoardDefinition {
   dealPlacards: BossDealPlacard[]
 }
 
-type DealState = Omit<NonNullable<BossView['deal']>, 'providers' | 'agreedTeams' | 'contributorIds' | 'canClose'>
+type DealState = Omit<NonNullable<BossView['deal']>, 'providers' | 'contributorIds' | 'requiredIds' | 'acceptedIds' | 'declinedIds' | 'canClose' | 'terms'> & {
+  version: number
+  terms: Record<string, { key: string; version: number }>
+  accepted: Record<string, number>
+  declined: Record<string, number>
+}
 
 export interface BossInternalState {
   revision: number
   phase: BossView['phase']
   settings: BossRoomSettings
+  draftOrder: string[]
+  draftIndex: number
   placards: number[]
   dealIndex: number
   firstPlayerId: string
@@ -22,7 +29,7 @@ export interface BossInternalState {
   discard: BossHandCard[]
   availableInvestors: InvestorTeam[]
   spaces: BossBoardSpace[]
-  seats: Array<{ id: string; investors: InvestorTeam[]; cash: number; hand: BossHandCard[] }>
+  seats: Array<{ id: string; investors: InvestorTeam[]; portrait: InvestorTeam | null; cash: number; hand: BossHandCard[] }>
   deal: DealState | null
   interrupt: BossView['interrupt']
   lastEndRoll: BossView['lastEndRoll']
@@ -45,10 +52,13 @@ export const STOP_WINDOW_MS: number
 export const CLOSING_MS: number
 export function buildDeck(): BossHandCard[]
 export function spaceTeams(space: { groups: { teams: InvestorTeam[] }[] }): InvestorTeam[]
-export function cashTierOf(cash: number): BossView['seats'][number]['cashTier']
+export function cashTierOf(cash: number): NonNullable<BossView['seats'][number]['cashTier']>
 export function activeTeamProviders(state: BossInternalState): Partial<Record<InvestorTeam, string[]>>
 export function contributorIds(state: BossInternalState): string[]
-export function agreedTeams(state: BossInternalState): InvestorTeam[]
+export function requiredIds(state: BossInternalState): string[]
+export function investorChoices(players: number): number[]
+export function defaultInvestorsEach(players: number): number
+export function draftRandomRest(state: BossInternalState, randomIndex: Random, nowMs?: number): { ok: true; state: BossInternalState } | Failure
 export function canCloseDeal(state: BossInternalState): { ok: true } | { ok: false; reason: string }
 export function createBossGame(seatIds: readonly string[], settings: Partial<BossRoomSettings> | undefined, board: BossBoardDefinition, randomIndex: Random, nowMs?: number): BossInternalState
 export function bossDeadline(state: BossInternalState): string | null

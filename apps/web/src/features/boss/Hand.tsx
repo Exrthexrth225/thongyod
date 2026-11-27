@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { BossActionPayload, BossHandCard, BossView, InvestorTeam, RoomPlayer } from '@/api/types'
 import { Button } from '@/components/ui/button'
@@ -44,7 +44,8 @@ export function CardFace({ card, size = 88, className, count, glow, dim, detail 
       </span>
       <span className="mt-[5%] flex flex-1 flex-col items-center justify-start gap-[3%] text-center leading-[1.15]" style={{ color: style.ink }}>
         <span className="font-black" style={{ fontSize: size * 0.14 }}>{cardName(card, t)}</span>
-        {detail && <span className="font-semibold opacity-90 [word-break:keep-all]" style={{ fontSize: Math.max(8, size * 0.1) }}>{desc}</span>}
+        {/* Thai has no spaces between words: each space-separated chunk stays whole, lines break only between chunks */}
+        {detail && <span className="font-semibold opacity-90" style={{ fontSize: Math.max(8, size * 0.1) }}>{desc.split(' ').map((w, i) => <Fragment key={i}>{i > 0 && ' '}<span className="inline-block whitespace-nowrap">{w}</span></Fragment>)}</span>}
       </span>
       {count !== undefined && count > 1 && <span className="absolute -right-1.5 -top-1.5 flex size-6 items-center justify-center rounded-full bg-[#241b4b] text-xs font-black text-white ring-2 ring-white">×{count}</span>}
     </span>
@@ -118,7 +119,12 @@ function CardSheet({ card, onClose, view, players, meId, busy, act }: { card: Bo
     else if (!talking) body = reason(t('boss.cards.notNow'))
     else if (card.kind === 'team') {
       body = inDeal(card.team)
-        ? <Button size="lg" className="h-14 text-lg" disabled={busy} onClick={() => act({ type: 'play_team', cardId: card.id })}>{t('boss.cards.playTeam', { team: t(`boss.teamShort.${card.team}`) })}</Button>
+        ? (
+          <>
+            <p className="rounded-2xl bg-amber-100 p-2.5 text-center text-sm font-bold text-amber-900">⚠️ {t('boss.table.teamWarn')}</p>
+            <Button size="lg" className="h-14 text-lg" disabled={busy} onClick={() => act({ type: 'play_team', cardId: card.id })}>{t('boss.cards.playTeam', { team: t(`boss.teamShort.${card.team}`) })}</Button>
+          </>
+        )
         : reason(t('boss.cards.notInDeal'))
     } else if (card.kind === 'boss') {
       body = deal!.bossId === meId ? reason(t('boss.cards.notNow')) : <Button size="lg" className="h-14 text-lg" disabled={busy} onClick={() => act({ type: 'play_boss', cardId: card.id })}>{t('boss.cards.playBoss')}</Button>
