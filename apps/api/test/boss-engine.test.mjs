@@ -118,6 +118,15 @@ test('asks are public and auto-accept when the offer meets them; any change stop
   assert.equal(projectBossView(s, 'p4', board).deal.canClose, true)
 })
 
+test('travel cannot send your own investor away', () => {
+  let s = table({ p2: [{ kind: 'travel', team: 'any' }] })
+  s = ok(s, 'p1', { type: 'open_deal' })
+  fails(s, 'p2', { type: 'play_travel', cardId: 'p2-0', targetTeam: 'blue' }, 'OWN_TEAM')
+  assert.equal(s.seats.find((x) => x.id === 'p2').hand.length, 1)
+  s = ok(s, 'p2', { type: 'play_travel', cardId: 'p2-0', targetTeam: 'red' })
+  assert.equal(s.interrupt.targetId, 'p1')
+})
+
 test('stop window: first Stop cancels at once, a late Stop keeps its card, no Stop lets the card work after 5 s', () => {
   const hands = { p3: [{ kind: 'travel', team: 'blue' }, { kind: 'travel', team: 'any' }], p2: [{ kind: 'stop' }], p4: [{ kind: 'stop' }] }
   let s = table(hands)

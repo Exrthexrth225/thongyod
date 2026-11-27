@@ -16,7 +16,7 @@ export function FxBanner({ event, view, players }: { event: BossEvent | null; vi
   switch (event.kind) {
     case 'deal_opened': art = fxArt('ribbon'); title = t('boss.fx.deal'); sub = t('boss.fx.dealSub', { boss: actor, n: event.dealNumber, amount: t('boss.money', { m: millions(event.amount ?? 0) }) }); break
     case 'deal_settled':
-      art = fxArt('stamp'); title = t('boss.fx.settled'); tone = 'red'
+      art = fxArt('stamp'); title = t('boss.fx.settledValue', { amount: t('boss.money', { m: millions(event.amount ?? 0) }) }); tone = 'red'
       if (view.lastSettlement && view.lastSettlement.dealNumber === event.dealNumber) sub = Object.entries(view.lastSettlement.payouts).sort(([, a], [, b]) => b - a).map(([id, amount]) => t('boss.fx.paid', { name: nameOf(players, id), amount: t('boss.money', { m: millions(amount) }) })).join(' · ')
       break
     case 'deal_failed': title = t('boss.fx.failed'); tone = 'gray'; break

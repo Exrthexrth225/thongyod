@@ -18,8 +18,8 @@
 .boss-space-wrap:is(button):hover { transform: translateY(-2px); }
 .boss-space-inner { transition: transform 900ms cubic-bezier(.3,1.3,.5,1); }
 .boss-space-inner.boss-flipped { transform: rotateY(180deg); }
-.boss-space-active { box-shadow: 0 0 0 0.7cqmin #ffd54a, 0 0 3cqmin 1cqmin rgb(255 213 74 / 0.8) !important; animation: boss-active 1.2s ease-in-out infinite alternate; }
-@keyframes boss-active { to { box-shadow: 0 0 0 0.5cqmin #fff3b0, 0 0 4cqmin 1.5cqmin rgb(255 213 74 / 0.95); } }
+.boss-space-active { box-shadow: 0 0 0 1cqmin #ffd54a, 0 0 4cqmin 1.5cqmin rgb(255 213 74 / 0.9) !important; animation: boss-active 1.2s ease-in-out infinite alternate; }
+@keyframes boss-active { to { box-shadow: 0 0 0 1.2cqmin #fff3b0, 0 0 6cqmin 2.5cqmin rgb(255 213 74 / 1); } }
 
 .boss-pawn { animation: boss-bob 1.6s ease-in-out infinite alternate; }
 @keyframes boss-bob { to { transform: translateY(-6%); } }
@@ -167,3 +167,14 @@
 
 /* The square board: big corners, three small spaces per side (tall on top/bottom, wide on left/right). */
 .boss-grid { grid-template-columns: 1.8fr 1fr 1fr 1fr 1.8fr; grid-template-rows: 1.8fr 1fr 1fr 1fr 1.8fr; }
+
+/* The deal's price tag: a rounded plaque that pops whenever the price changes. */
+.boss-plaque.boss-price { border-radius: .9rem; }
+.boss-price-pop { animation: boss-price-pop 600ms cubic-bezier(.2,.9,.3,1.5) both; }
+@keyframes boss-price-pop { from { scale: .6; opacity: 0; } 60% { scale: 1.12; opacity: 1; } }
+/* A deal just closed here: the space lifts, flips over big and lands showing the stamp and the price. */
+.boss-celebrate .boss-space-inner { animation: boss-flip-big 1.5s cubic-bezier(.3,.7,.3,1) both; }
+@keyframes boss-flip-big { 0% { transform: rotateY(0) scale(1); } 20% { transform: rotateY(0) scale(1.45); } 60% { transform: rotateY(180deg) scale(1.45); } 100% { transform: rotateY(180deg) scale(1); } }
+.boss-celebrate::before { content: ''; position: absolute; inset: -20%; border-radius: 50%; background: radial-gradient(circle, rgb(255 213 74 / .75), transparent 65%); animation: boss-celebrate-glow 2.4s ease-out both; pointer-events: none; }
+@keyframes boss-celebrate-glow { 0% { opacity: 0; transform: scale(.4); } 30% { opacity: 1; transform: scale(1.2); } 100% { opacity: 0; transform: scale(1.6); } }
+@media (prefers-reduced-motion: reduce) { .boss-price-pop, .boss-celebrate .boss-space-inner, .boss-celebrate::before { animation: none; } }

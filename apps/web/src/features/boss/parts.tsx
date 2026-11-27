@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Crown, Layers, WifiOff } from 'lucide-react'
 import type { BossBoardSpace, BossSeatView, BossView, InvestorTeam, RoomPlayer } from '@/api/types'
 import { cn } from '@/lib/utils'
+import { Word } from './Word'
 import { cardBackArt, faceArt, millions, moneyArt, seatTeam, teamArt, TEAM_COLOR, type Mood, type TileShape } from './meta'
 
 export function TeamBadge({ team, className, dim }: { team: InvestorTeam; className?: string; dim?: boolean }) {
@@ -20,6 +21,42 @@ export function Face({ team, mood = 'calm', className }: { team: InvestorTeam; m
 export function Money({ amount, className }: { amount: number; className?: string }) {
   const { t } = useTranslation()
   return <span className={cn('font-extrabold tabular-nums', className)}>{amount === 0 ? '$0' : t('boss.money', { m: millions(amount) })}</span>
+}
+
+/**
+ * A player's face(s). With 3 players everyone runs two investor teams, so both characters show, overlapping,
+ * each on its team colour: the player is both of them.
+ */
+export function SeatFaces({ view, userId, mood = 'calm', round, className }: { view: BossView; userId: string; mood?: Mood; round?: boolean; className?: string }) {
+  const seat = view.seats.find((s) => s.userId === userId)
+  const teams = seat && seat.investors.length > 0 ? seat.investors : [seatTeam(view, userId)]
+  const ring = (team: InvestorTeam) => ({ background: TEAM_COLOR[team], padding: 2 })
+  if (teams.length === 1) return (
+    <span className={cn('relative block shrink-0', round ? 'rounded-full' : 'rounded-2xl', className)} style={ring(teams[0])}>
+      <Face team={teams[0]} mood={mood} className={cn('size-full', round && 'rounded-full')} />
+    </span>
+  )
+  return (
+    <span className={cn('relative block shrink-0', className)} aria-label={teams.join(' + ')}>
+      {teams.slice(0, 2).map((team, i) => (
+        <span key={team} className={cn('absolute block size-[74%] rounded-full shadow-md', i === 0 ? 'left-0 top-0' : 'bottom-0 right-0')} style={ring(team)}>
+          <Face team={team} mood={mood} className="size-full rounded-full" />
+        </span>
+      ))}
+    </span>
+  )
+}
+
+/** The deal's price, big and gold on a dark plaque, with how it adds up ($2M × 6). */
+export function PriceTag({ amount, share, dividends, size = 30, className }: { amount: number; share?: number; dividends?: number; size?: number; className?: string }) {
+  const { t } = useTranslation()
+  return (
+    <span className={cn('boss-plaque boss-price inline-flex shrink-0 flex-col items-center leading-none', className)} style={{ padding: `${size * 0.22}px ${size * 0.5}px ${size * 0.28}px` }}>
+      <span className="font-bold text-[#ffd77a]/85" style={{ fontSize: Math.max(9, size * 0.32) }}>{t('boss.deal.thisDeal')}</span>
+      <Word text={amount === 0 ? '$0' : t('boss.money', { m: millions(amount) })} className="tabular-nums" style={{ fontSize: size }} />
+      {share !== undefined && dividends !== undefined && <span className="font-bold text-white/75 tabular-nums" style={{ fontSize: Math.max(9, size * 0.32) }}>{t('boss.money', { m: millions(share) })} × {dividends}</span>}
+    </span>
+  )
 }
 
 const TIER_COINS: Record<BossSeatView['cashTier'], number> = { empty: 0, low: 1, mid: 2, high: 3, rich: 4 }
@@ -96,18 +133,13 @@ export function SpaceTile({ space, big, shape = 'corner', active, onPick, classN
             )}
           </div>
         </div>
-        {/* back: closed — dim navy with a gold stamp */}
+        {/* back: closed — dark card, gold stamp with the deal number and what it was worth */}
         <div
-          className="absolute inset-0 flex flex-col overflow-hidden bg-[#221a4b] text-[#8a82b3] ring-1 ring-white/10 [backface-visibility:hidden] [transform:rotateY(180deg)]"
-          style={{ borderRadius: u(1.4) }}
+          className="boss-space-back absolute inset-0 flex flex-col items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_40%,#3a2d7a,#1a1340_75%)] text-[#8a82b3] ring-2 ring-[#e9b949]/70 [backface-visibility:hidden] [transform:rotateY(180deg)]"
+          style={{ borderRadius: u(1.4), gap: u(0.6), padding: u(0.6) }}
         >
-          <div className="flex shrink-0 items-center justify-between font-black" style={{ height: u(4.4), padding: `${u(0.6)} ${u(0.8)} 0`, fontSize: u(2.3) }}>
-            <span className="flex items-center justify-center rounded-[0.35em] bg-white/10" style={{ width: u(3.4), height: u(3.4) }}>{space.teamCount}</span>
-            <span>$×{space.dividends}</span>
-          </div>
-          <div className="flex flex-1 items-center justify-center">
-            <span className="whitespace-nowrap rounded-[0.5em] border-[0.12em] border-dashed border-[#e9b949]/80 font-black text-[#ffd77a] [transform:rotate(-8deg)]" style={{ fontSize: u(2), padding: `${u(0.4)} ${u(1)}` }}>{t('boss.deal.closedStamp', { n: space.closedByDeal })}</span>
-          </div>
+          <span className="whitespace-nowrap rounded-[0.5em] border-[0.12em] border-dashed border-[#e9b949]/80 font-black text-[#ffd77a] [transform:rotate(-6deg)]" style={{ fontSize: u(big ? 2.2 : 1.7), padding: `${u(0.2)} ${u(0.8)}` }}>{t('boss.deal.closedStamp', { n: space.closedByDeal })}</span>
+          {space.closedValue ? <Word text={t('boss.money', { m: millions(space.closedValue) })} className="tabular-nums" style={{ fontSize: u(big ? 5 : shape === 'corner' ? 5.2 : 3.6) }} /> : null}
         </div>
       </div>
     </Tag>
@@ -136,7 +168,7 @@ export function SeatCard({ view, seat, players, online, mood, me, compact, dark 
       )}
       data-seat={seat.userId}
     >
-      <Face team={seatTeam(view, seat.userId)} mood={mood} className={compact ? 'size-10' : dark ? 'size-14' : 'size-12'} />
+      <SeatFaces view={view} userId={seat.userId} mood={mood} className={compact ? 'size-10' : dark ? 'size-14' : 'size-12'} />
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="flex items-center gap-1 truncate text-sm font-bold">
           {isBoss && <Crown className="size-3.5 shrink-0 text-amber-500" aria-label={t('boss.cards.boss')} />}

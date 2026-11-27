@@ -15,10 +15,10 @@ import { ClosingRing, Die, EndRoll, FxBanner, InterruptOverlay, MoneyFly } from 
 import { ContractCard } from './DealPanel'
 import { DiscardSheet, HandBar } from './Hand'
 import { Word } from './Word'
-import { fxArt, M, nameOf, seatTeam, TEAM_COLOR, tutorialSeen } from './meta'
+import { fxArt, M, nameOf, tutorialSeen } from './meta'
 import { BossTutorial } from './Tutorial'
 import { AskSheet } from './OfferSheet'
-import { Face, Money, SpaceTile, TeamBadge, CashTag } from './parts'
+import { Money, SeatFaces, SpaceTile, TeamBadge, CashTag } from './parts'
 import { GuideBar } from './GuideBar'
 import { useBossTimeline } from './useBossTimeline'
 import './boss.css'
@@ -213,9 +213,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
         data-seat={id}
         className={cn('flex w-full items-center gap-1.5 rounded-xl bg-white/[0.06] p-1 pr-1.5 text-left ring-1 ring-white/10 transition', (turn || isBossRow) && 'ring-2 ring-[#ffc21a]', editing && selected === id && 'bg-[#ffc21a]/20 ring-2 ring-[#ffc21a]', !room.online.includes(id) && 'opacity-50')}
       >
-        <span className="relative shrink-0 rounded-full p-0.5" style={{ background: TEAM_COLOR[seatTeam(view, id)] }}>
-          <Face team={seatTeam(view, id)} mood={moods[id] ?? 'calm'} className="size-8 rounded-full" />
-        </span>
+        <SeatFaces view={view} userId={id} mood={moods[id] ?? 'calm'} round className="size-9" />
         <span className="flex min-w-0 flex-1 flex-col leading-tight">
           <span className="flex items-center gap-1 truncate text-[13px] font-bold text-white">{nameOf(players, id)}{!room.online.includes(id) && <WifiOff className="size-3 shrink-0" />}</span>
           <span className="flex items-center gap-1 text-[10px] text-white/60">
@@ -248,9 +246,10 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
           {others.map(row)}
           {me && (
             <div data-seat={meId} className={cn('mt-auto flex items-center gap-2 rounded-2xl bg-[#ffc21a]/15 p-1.5 ring-2', view.turnPlayerId === meId && !deal ? 'ring-[#ffc21a]' : 'ring-[#ffc21a]/40')}>
-              <span className="shrink-0 rounded-full p-0.5" style={{ background: TEAM_COLOR[seatTeam(view, meId)] }}><Face team={seatTeam(view, meId)} mood={moods[meId] ?? 'calm'} className="size-10 rounded-full" /></span>
+              <SeatFaces view={view} userId={meId} mood={moods[meId] ?? 'calm'} round className="size-12" />
               <span className="min-w-0 leading-tight">
                 <span className="block truncate text-xs font-bold text-white/80">{nameOf(players, meId)} ({t('boss.status.you')})</span>
+                <span className="flex items-center gap-1 text-[10px] font-bold text-white/70">{me.investors.map((team) => <TeamBadge key={team} team={team} className="size-3.5" />)}{me.investors.length > 1 ? t('boss.status.twoTeams', { teams: me.investors.map((x) => t(`boss.teamShort.${x}`)).join(' + ') }) : me.investors[0] ? t('boss.cards.team', { team: t(`boss.teamShort.${me.investors[0]}`) }) : ''}</span>
                 <Money amount={me.exactCash ?? 0} className="text-xl text-[#ffc21a]" />
               </span>
             </div>
@@ -292,7 +291,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
 
       {boardOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center gap-2 bg-black/85 p-2" role="dialog" aria-label={t('boss.act.board')}>
-          <BossBoard view={view} piles className="h-full" />
+          <BossBoard view={view} piles settledSpace={settled?.spaceIndex ?? null} className="h-full" />
           <Button variant="ghost" size="icon" className="absolute right-2 top-2 size-9 rounded-full bg-white/15 text-white" aria-label={t('common.cancel')} onClick={() => setBoardOpen(false)}><XCircle className="size-5" /></Button>
         </div>
       )}
@@ -363,7 +362,7 @@ function Results({ view, players }: { view: BossView; players: RoomPlayer[] }) {
         {ranked.map((s, i) => (
           <li key={s.userId} className={cn('boss-rank flex items-center gap-3 rounded-2xl bg-white/80 p-2', view.winnerIds.includes(s.userId) && 'ring-4 ring-amber-400')} style={{ animationDelay: `${i * 120}ms` }}>
             <span className="w-8 text-center text-lg font-black">{i + 1}</span>
-            <Face team={seatTeam(view, s.userId)} mood={view.winnerIds.includes(s.userId) ? 'happy' : 'calm'} className="size-11" />
+            <SeatFaces view={view} userId={s.userId} mood={view.winnerIds.includes(s.userId) ? 'happy' : 'calm'} className="size-11" />
             <span className="min-w-0 flex-1 truncate font-bold">{nameOf(players, s.userId)}</span>
             <Money amount={s.exactCash ?? 0} className="text-xl text-amber-600" />
           </li>
@@ -373,7 +372,7 @@ function Results({ view, players }: { view: BossView; players: RoomPlayer[] }) {
         <ul className="mt-1 grid grid-cols-2 gap-1.5">
           {awards.map((w, i) => (
             <li key={w.key} className="boss-rank flex items-center gap-2 rounded-xl bg-[#241b4b] p-1.5 text-white" style={{ animationDelay: `${(ranked.length + i) * 120}ms` }}>
-              <span className="relative shrink-0"><Face team={seatTeam(view, w.id)} className="size-9 rounded-full" /><img src={fxArt(AWARD_ART[w.key])} alt="" className="boss-how absolute -bottom-1 -right-2 size-6 drop-shadow" style={{ animationDelay: `${(ranked.length + i) * 120 + 300}ms` }} /></span>
+              <span className="relative shrink-0"><SeatFaces view={view} userId={w.id} round className="size-9" /><img src={fxArt(AWARD_ART[w.key])} alt="" className="boss-how absolute -bottom-1 -right-2 size-6 drop-shadow" style={{ animationDelay: `${(ranked.length + i) * 120 + 300}ms` }} /></span>
               <span className="min-w-0 leading-tight">
                 <span className="block truncate text-[10px] font-bold text-[#ffd77a]">{w.title}</span>
                 <span className="block truncate text-xs font-bold">{nameOf(players, w.id)} · {w.value}</span>

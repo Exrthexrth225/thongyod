@@ -466,6 +466,7 @@ export const th = {
       openRealApp: 'เปิดแอปจริง',
     },
     status: {
+      twoTeams: 'คุณคุม 2 ทีม: {{teams}}',
       endSoon: 'ดีลหน้าเริ่มลุ้นจบเกม',
       dealOf: 'ดีลที่ {{n}}/{{total}}',
       boss: 'บอส',
@@ -516,6 +517,7 @@ export const th = {
       discard: 'ทิ้ง {{count}} ใบ',
     },
     deal: {
+      thisDeal: 'ดีลนี้มีมูลค่า',
       total: 'มูลค่าดีล',
       closedStamp: 'ปิดแล้ว #{{n}}',
       contract: 'สัญญาดีล ช่อง {{n}}',
@@ -596,6 +598,7 @@ export const th = {
       discardTitle: 'เลือกทิ้ง {{count}} ใบ',
     },
     fx: {
+      settledValue: 'ปิดดีล {{amount}}!',
       ifNone: 'ถ้าไม่มีใครหยุด',
       outTravel: 'ทีม{{team}}ต้องออกจากดีลนี้',
       outBoss: '{{actor}} เป็นบอสแทน {{target}}',

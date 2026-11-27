@@ -1,7 +1,7 @@
 import type { BossActionRequest, BossBoardSpace, BossDealPlacard, BossHandCard, BossRoomSettings, BossView, InvestorTeam } from '../src/boss.js'
 
 export interface BossBoardDefinition {
-  spaces: Array<Omit<BossBoardSpace, 'closedByDeal' | 'closedByBossId'>>
+  spaces: Array<Omit<BossBoardSpace, 'closedByDeal' | 'closedByBossId' | 'closedValue'>>
   dealPlacards: BossDealPlacard[]
 }
 

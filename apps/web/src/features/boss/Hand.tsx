@@ -63,13 +63,13 @@ function playable(view: BossView, meId: string, card: BossHandCard) {
   if (card.kind === 'boss') return deal.bossId !== meId
   if (card.kind === 'recruit') return view.myHand.filter((c) => c.kind === 'recruit').length >= 3
   if (card.kind !== 'travel') return false
-  return (card.team === 'any' ? teams : teams.filter((x) => x === card.team)).some((x) => (deal.providers[x]?.length ?? 0) > 0)
+  return (card.team === 'any' ? teams : teams.filter((x) => x === card.team)).some((x) => (deal.providers[x] ?? []).some((id) => id !== meId))
 }
 
-/** My hand: same cards stacked; tap one to see what it can do right now. */
 /** Card width in the hand: tall enough for name + ability, short enough to fit the bottom row of a landscape phone. */
 const HAND_CARD = 70
 
+/** My hand: same cards stacked; tap one to see what it can do right now. */
 export function HandBar({ view, players, meId, busy, act }: { view: BossView; players: RoomPlayer[]; meId: string; busy: boolean; act: Act }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState<BossHandCard | null>(null)
@@ -127,8 +127,8 @@ function CardSheet({ card, onClose, view, players, meId, busy, act }: { card: Bo
       const targets: { key: string; team: InvestorTeam; label: string; cardId?: string }[] = []
       for (const team of teams) {
         const owner = view.seats.find((s) => s.investors.includes(team))
-        if (owner && !deal!.blockedTeams.includes(team)) targets.push({ key: `p:${team}`, team, label: t('boss.deal.investor', { name: nameOf(players, owner.userId) }) })
-        for (const tc of deal!.tableCards.filter((c) => c.team === team)) targets.push({ key: tc.id, team, label: t('boss.deal.byCard', { name: nameOf(players, tc.ownerId) }), cardId: tc.id })
+        if (owner && owner.userId !== meId && !deal!.blockedTeams.includes(team)) targets.push({ key: `p:${team}`, team, label: t('boss.deal.investor', { name: nameOf(players, owner.userId) }) })
+        for (const tc of deal!.tableCards.filter((c) => c.team === team && c.ownerId !== meId)) targets.push({ key: tc.id, team, label: t('boss.deal.byCard', { name: nameOf(players, tc.ownerId) }), cardId: tc.id })
       }
       body = targets.length ? (
         <div className="flex flex-col gap-2">

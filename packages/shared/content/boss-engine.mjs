@@ -229,6 +229,7 @@ function settleDeal(state, board, randomIndex, nowMs) {
   const space = state.spaces[deal.spaceIndex]
   space.closedByDeal = deal.dealNumber
   space.closedByBossId = deal.bossId
+  space.closedValue = deal.totalValue
   const { bossId, dealNumber, totalValue, spaceIndex } = deal
   // Fun facts for the end screen.
   const contributors = new Set(contributorIds(state))
@@ -328,7 +329,7 @@ export function createBossGame(seatIds, rawSettings, board, randomIndex, nowMs =
     deck,
     discard: [],
     availableInvestors,
-    spaces: board.spaces.map((s) => ({ ...s, closedByDeal: null, closedByBossId: null })),
+    spaces: board.spaces.map((s) => ({ ...s, closedByDeal: null, closedByBossId: null, closedValue: null })),
     seats,
     deal: null,
     interrupt: null,
@@ -565,8 +566,10 @@ function act(state, seat, a, board, randomIndex, nowMs) {
         const placardActive = !deal.blockedTeams.includes(a.targetTeam) && state.seats.some((s) => s.investors.includes(a.targetTeam))
         if (!placardActive) return err(400, 'TARGET_NOT_ACTIVE')
       }
-      state.discard.push(...seat.hand.splice(idx, 1))
       const owner = targetCardId ? deal.tableCards.find((c) => c.id === targetCardId).ownerId : state.seats.find((s) => s.investors.includes(a.targetTeam))?.id
+      // You can't send your own investor (or your own team card) away.
+      if (owner === actorId) return err(400, 'OWN_TEAM')
+      state.discard.push(...seat.hand.splice(idx, 1))
       openInterrupt(state, 'travel', actorId, nowMs, { targetTeam: a.targetTeam, targetCardId, targetId: owner ?? null })
       ;(state.stats[actorId] ??= { deals: 0, biggest: 0, bribesPaid: 0, travels: 0, stops: 0 }).travels += 1
       addEvent(state, 'travel_played', actorId, nowMs, { team: a.targetTeam, targetId: owner })

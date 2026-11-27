@@ -12,16 +12,19 @@ type Props = {
   onPick?: (space: number) => void
   /** The middle of the table. */
   children?: ReactNode
+  /** A space whose deal just closed: it flips over big. */
+  settledSpace?: number | null
   /** Show the placard stack and the draw pile in the middle. */
   piles?: boolean
   className?: string
 }
 
 /** The board: 16 deal spaces around a felt table, the $ marker, and whatever goes in the middle. */
-export function BossBoard({ view, roll, onPick, children, piles, className }: Props) {
+export function BossBoard({ view, roll, onPick, children, piles, settledSpace = null, className }: Props) {
   const grid = useRef<HTMLDivElement>(null)
   const marker = useRef<HTMLSpanElement>(null)
   const markerSpace = view.markerSpace
+  const focus = markerSpace !== null && view.phase !== 'pick_start' && view.phase !== 'game_over'
   const rollKey = roll?.id
 
   // Hop the marker along its path. Positions are read from the tiles, so it follows any screen size.
@@ -56,8 +59,12 @@ export function BossBoard({ view, roll, onPick, children, piles, className }: Pr
     <div className={cn('relative aspect-square max-h-full max-w-full overflow-hidden rounded-[3%] bg-[#17142b] shadow-[0_20px_60px_rgba(0,0,0,0.5)] ring-1 ring-[#e9b949]/40', className)}>
       <div ref={grid} className="boss-grid absolute inset-[3.5%] grid gap-[0.8%] [container-type:size]">
         {view.spaces.map((space) => {
+          const here = markerSpace === space.index
+          const celebrate = settledSpace === space.index
+          // While someone plays, the other spaces step back so the one with the $ stands out.
+          const dim = focus && !here && !celebrate
           return (
-            <div key={space.index} data-space={space.index} style={ringCell(space.index)} className="relative min-h-0 min-w-0">
+            <div key={space.index} data-space={space.index} style={ringCell(space.index)} className={cn('relative min-h-0 min-w-0 transition-[opacity,filter] duration-500', dim && 'opacity-45 saturate-[0.45]', here && 'z-10', celebrate && 'boss-celebrate z-30')}>
               <SpaceTile space={space} shape={ringShape(space.index)} active={markerSpace === space.index} onPick={onPick ? () => onPick(space.index) : undefined} className="size-full" />
               {markerSpace === space.index && (
                 <span ref={marker} className="boss-marker pointer-events-none absolute z-20 size-[11cqmin] -translate-x-1/2 -translate-y-1/2" style={markerSpot(space.index)}>

@@ -3,7 +3,7 @@ import { Check, Plane, X } from 'lucide-react'
 import type { BossView, InvestorTeam, RoomPlayer } from '@/api/types'
 import { cn } from '@/lib/utils'
 import { nameOf, seatTeam, TEAM_COLOR } from './meta'
-import { Face, Money, TeamBadge } from './parts'
+import { Face, Money, PriceTag, SeatFaces, TeamBadge } from './parts'
 
 type Props = { view: BossView; players: RoomPlayer[]; meId?: string; big?: boolean }
 
@@ -47,15 +47,12 @@ export function DealPanel({ view, players, meId, big }: Props) {
   return (
     <div className={cn('boss-deal flex w-full min-w-0 flex-col gap-2 rounded-2xl bg-[#fff4dc]/95 p-2.5 text-[#3a2416] shadow-[0_3px_0_#5a3420] ring-2 ring-[#5a3420]/60', big && 'gap-3 p-4')}>
       <header className="flex items-center gap-2">
-        <Face team={seatTeam(view, deal.bossId)} className={big ? 'size-12' : 'size-9'} />
+        <SeatFaces view={view} userId={deal.bossId} className={big ? 'size-12' : 'size-9'} />
         <div className="min-w-0 flex-1 leading-tight">
           <p className={cn('truncate font-black', big ? 'text-xl' : 'text-base')}>{t('boss.status.deal', { n: deal.dealNumber })} · {nameOf(players, deal.bossId)}</p>
           <p className="text-xs opacity-75">{t('boss.deal.people', { count: space.teamCount })} · {t('boss.deal.dividends', { count: space.dividends })} · {t('boss.status.perDividend', { m: view.currentShareValue / 1_000_000 })}</p>
         </div>
-        <div className="text-right leading-none">
-          <span className="text-[10px] font-bold uppercase opacity-60">{t('boss.deal.total')}</span>
-          <Money amount={deal.totalValue} className={cn('block text-amber-600', big ? 'text-3xl' : 'text-2xl')} />
-        </div>
+        <PriceTag key={deal.totalValue} amount={deal.totalValue} share={view.currentShareValue} dividends={space.dividends} size={big ? 34 : 28} className="boss-price-pop" />
       </header>
 
       <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${space.groups.length}, minmax(0, 1fr))` }}>
@@ -129,11 +126,11 @@ export function ContractCard({ view, players, meId }: { view: BossView; players:
   const given = Object.values(deal.allocation).reduce((a, b) => a + b, 0)
   const mine = new Set(Object.entries(deal.providers).filter(([, ids]) => meId && ids?.includes(meId)).map(([team]) => team))
   return (
-    <div key={deal.id} className="boss-contract w-full max-w-[25rem] rounded-2xl bg-[#f6efdc] p-2.5 text-[#241b4b] shadow-[0_10px_30px_rgba(0,0,0,0.45)] ring-1 ring-[#d9cfb2]">
-      <div className="flex items-center gap-2">
+    <div key={deal.id} className="boss-contract relative w-full max-w-[25rem] rounded-2xl bg-[#f6efdc] p-2.5 text-[#241b4b] shadow-[0_10px_30px_rgba(0,0,0,0.45)] ring-1 ring-[#d9cfb2]">
+      <PriceTag key={deal.totalValue} amount={deal.totalValue} share={view.currentShareValue} dividends={space.dividends} size={24} className="boss-price-pop absolute -right-3 -top-4 z-10 rotate-[4deg]" />
+      <div className="flex items-center gap-2 pr-24">
         <span className="flex size-6 items-center justify-center rounded-md bg-[#241b4b] text-sm font-black text-white">{space.teamCount}</span>
         <span className="min-w-0 flex-1 truncate text-sm font-black">{t('boss.deal.contract', { n: space.index + 1 })} · $×{space.dividends}</span>
-        <Money amount={deal.totalValue} className="text-xl text-[#9a6b00]" />
       </div>
       <div className="mt-2 flex items-stretch justify-center gap-2">
         {space.groups.map((g, i) => {

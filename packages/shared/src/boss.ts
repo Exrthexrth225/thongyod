@@ -27,6 +27,8 @@ export type BossCashTier = 'empty' | 'low' | 'mid' | 'high' | 'rich'
 export type BossBoardSpace = DealSpace & {
   index: number
   closedByDeal: number | null
+  /** What the deal here was worth, once closed. */
+  closedValue?: number | null
   closedByBossId: string | null
 }
 

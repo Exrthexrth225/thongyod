@@ -464,6 +464,7 @@ export const en: Messages = {
       openRealApp: 'Open the real app',
     },
     status: {
+      twoTeams: 'You run 2 teams: {{teams}}',
       endSoon: 'From the next deal, a roll may end the game',
       dealOf: 'Deal {{n}}/{{total}}',
       boss: 'Boss',
@@ -514,6 +515,7 @@ export const en: Messages = {
       discard: 'Discard {{count}}',
     },
     deal: {
+      thisDeal: 'This deal is worth',
       total: 'Deal value',
       closedStamp: 'Closed #{{n}}',
       contract: 'Deal contract, space {{n}}',
@@ -594,6 +596,7 @@ export const en: Messages = {
       discardTitle: 'Pick {{count}} to discard',
     },
     fx: {
+      settledValue: 'Deal closed: {{amount}}!',
       ifNone: 'If nobody stops it',
       outTravel: 'the {{team}} team leaves this deal',
       outBoss: '{{actor}} takes over from {{target}}',
