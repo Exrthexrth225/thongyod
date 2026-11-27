@@ -12,6 +12,8 @@ import { useBossTimeline } from './useBossTimeline'
 import { faceArt, nameOf, TEAMS } from './meta'
 import { SeatCard } from './parts'
 import { useRef } from 'react'
+import { useNavigate } from 'react-router'
+import { Maximize, X } from 'lucide-react'
 import './boss.css'
 
 /** I'm the Boss! inside a room: the lobby (host sets "short game"), then the game screen. */
@@ -47,12 +49,10 @@ export function BossTableScreen({ room }: { room: BossRoomData }) {
   const lastRoll = latest?.kind === 'dice_rolled' ? latest : null
   const settled = latest?.kind === 'deal_settled' && view.lastSettlement?.dealNumber === latest.dealNumber ? latest : null
   const { t } = useTranslation()
+  const navigate = useNavigate()
   return (
-    <div ref={stage} className="boss-stage relative flex h-[calc(100dvh-4rem)] min-h-0 w-full gap-3 p-3">
-      <aside className="flex w-52 shrink-0 flex-col gap-2 overflow-y-auto [scrollbar-width:none]">
-        {view.seats.map((s) => <SeatCard key={s.userId} view={view} seat={s} players={room.players} online={room.online.includes(s.userId)} mood={moods[s.userId] ?? 'calm'} />)}
-      </aside>
-      <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center">
+    <div ref={stage} className="boss-table fixed inset-0 z-[41] gap-3 overflow-hidden bg-[radial-gradient(ellipse_at_30%_20%,#2c2360,#17142b_60%,#120d2b)] p-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] text-white">
+      <div className="boss-table-board flex min-h-0 min-w-0 items-center justify-center">
         <BossBoard view={view} roll={lastRoll} piles className="h-full">
           <div className="flex size-full flex-col items-center justify-center gap-2 overflow-hidden">
             {view.phase === 'pick_start' && <p className="rounded-full bg-black/60 px-4 py-2 text-xl font-black text-white">{t('boss.phase.pickStart', { name: nameOf(room.players, view.markerChooserId) })}</p>}
@@ -64,7 +64,17 @@ export function BossTableScreen({ room }: { room: BossRoomData }) {
           </div>
         </BossBoard>
       </div>
-      {view.deal && <aside className="w-[22rem] shrink-0 overflow-y-auto"><DealPanel view={view} players={room.players} /></aside>}
+      <aside className="boss-table-side flex min-h-0 min-w-0 flex-col gap-3 overflow-y-auto [scrollbar-width:none]">
+        <div className="flex items-center gap-2">
+          <button type="button" className="flex size-9 items-center justify-center rounded-full bg-white/10" aria-label={t('rooms.board.exit')} onClick={() => void navigate('/games/rooms')}><X className="size-5" /></button>
+          <span className="flex-1 truncate text-sm font-bold text-white/80">{t('rooms.roomTitle', { code: room.code })}</span>
+          <button type="button" className="flex size-9 items-center justify-center rounded-full bg-white/10" aria-label={t('rooms.board.fullscreen')} onClick={() => void (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.().catch(() => {}))}><Maximize className="size-5" /></button>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {view.seats.map((s) => <SeatCard key={s.userId} view={view} seat={s} players={room.players} online={room.online.includes(s.userId)} mood={moods[s.userId] ?? 'calm'} dark />)}
+        </div>
+        {view.deal && <DealPanel view={view} players={room.players} />}
+      </aside>
       <FxBanner event={latest} view={view} players={room.players} />
       {settled && view.lastSettlement && <MoneyFly event={settled} payouts={view.lastSettlement.payouts} container={stage} />}
       {latest?.kind === 'end_roll' && <EndRoll event={latest} view={view} />}

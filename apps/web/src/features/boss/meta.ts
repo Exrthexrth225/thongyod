@@ -56,13 +56,11 @@ export function hopPath(from: number, to: number, closed: Set<number>): number[]
 }
 
 /**
- * Where each space sits on the square board (8×8 grid, a two-deep ring around a 4×4 middle), like the printed
- * board: big corner spaces, and sides split unevenly (1-2-1, 2-1-1, 1-1-2, 1-2-1). Clockwise from top-left.
+ * Where each space sits on the square board: a 5×5 grid with big corner spaces and three equal spaces per side,
+ * like the printed board. Clockwise from the top-left corner.
  */
-const RING: [string, string][] = [
-  ['1 / 3', '1 / 3'], ['3 / 4', '1 / 3'], ['4 / 6', '1 / 3'], ['6 / 7', '1 / 3'],
-  ['7 / 9', '1 / 3'], ['7 / 9', '3 / 5'], ['7 / 9', '5 / 6'], ['7 / 9', '6 / 7'],
-  ['7 / 9', '7 / 9'], ['6 / 7', '7 / 9'], ['5 / 6', '7 / 9'], ['3 / 5', '7 / 9'],
-  ['1 / 3', '7 / 9'], ['1 / 3', '6 / 7'], ['1 / 3', '4 / 6'], ['1 / 3', '3 / 4'],
+const RING: [number, number][] = [
+  [1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [5, 2], [5, 3], [5, 4],
+  [5, 5], [4, 5], [3, 5], [2, 5], [1, 5], [1, 4], [1, 3], [1, 2],
 ]
 export const ringCell = (index: number) => ({ gridColumn: RING[index][0], gridRow: RING[index][1] })

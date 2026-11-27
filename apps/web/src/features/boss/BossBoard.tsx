@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import type { BossEvent, BossView } from '@/api/types'
 import { cn } from '@/lib/utils'
-import { centerArt, fxArt, hopPath, ringCell, tableArt } from './meta'
+import { centerArt, fxArt, hopPath, ringCell } from './meta'
 import { DeckPile, PlacardStack, SpaceTile } from './parts'
 
 type Props = {
@@ -52,8 +52,8 @@ export function BossBoard({ view, roll, onPick, children, piles, className }: Pr
   }, [rollKey])
 
   return (
-    <div className={cn('relative aspect-square max-h-full max-w-full overflow-hidden rounded-[2.2vmin] bg-[#0f5a46] bg-cover bg-center', className)} style={{ backgroundImage: `url(${tableArt})` }}>
-      <div ref={grid} className="absolute inset-[3.5%] grid grid-cols-8 grid-rows-8 gap-[0.7%]">
+    <div className={cn('relative aspect-square max-h-full max-w-full overflow-hidden rounded-[3%] bg-[#17142b] shadow-[0_20px_60px_rgba(0,0,0,0.5)] ring-1 ring-[#e9b949]/40', className)}>
+      <div ref={grid} className="boss-grid absolute inset-[3.5%] grid gap-[0.8%] [container-type:size]">
         {view.spaces.map((space) => {
           return (
             <div key={space.index} data-space={space.index} style={ringCell(space.index)} className="relative min-h-0 min-w-0">
@@ -64,7 +64,7 @@ export function BossBoard({ view, roll, onPick, children, piles, className }: Pr
             </div>
           )
         })}
-        <div className="relative col-[3/7] row-[3/7] min-h-0 min-w-0 overflow-hidden rounded-[1.6vmin] shadow-[inset_0_0_3vmin_rgba(0,0,0,0.55)] ring-2 ring-[#b9821c]/80">
+        <div className="relative col-[2/5] row-[2/5] min-h-0 min-w-0 overflow-hidden rounded-[6%] bg-[#241b4b] ring-1 ring-[#e9b949]/35">
           {centerArt ? (
             <img src={centerArt} alt="" className="absolute inset-0 size-full object-cover" aria-hidden="true" />
           ) : (

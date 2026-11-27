@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Crown, Layers, WifiOff } from 'lucide-react'
 import type { BossBoardSpace, BossSeatView, BossView, InvestorTeam, RoomPlayer } from '@/api/types'
 import { cn } from '@/lib/utils'
-import { cardArt, cardBackArt, faceArt, millions, moneyArt, seatTeam, teamArt, TEAM_COLOR, type Mood } from './meta'
+import { cardBackArt, faceArt, millions, moneyArt, seatTeam, teamArt, TEAM_COLOR, type Mood } from './meta'
 
 export function TeamBadge({ team, className, dim }: { team: InvestorTeam; className?: string; dim?: boolean }) {
   const { t } = useTranslation()
@@ -30,74 +30,76 @@ export function CashTag({ seat, className }: { seat: BossSeatView; className?: s
   const n = TIER_COINS[seat.cashTier]
   return (
     <span className={cn('flex h-5 items-end', className)} aria-label={seat.cashTier}>
-      {n === 0 ? <span className="text-xs text-muted-foreground">$0</span> : Array.from({ length: n }, (_, i) => <img key={i} src={moneyArt('coin')} alt="" className="-mr-2 size-5" style={{ transform: `translateY(${-i * 2}px)` }} />)}
+      {n === 0 ? <span className="text-xs opacity-70">$0</span> : Array.from({ length: n }, (_, i) => <img key={i} src={moneyArt('coin')} alt="" className="-mr-2 size-5" style={{ transform: `translateY(${-i * 2}px)` }} />)}
     </span>
   )
 }
 
-/** Header colour by multiplier, so rich spaces stand out (×3 teal … ×6 gold). */
-const TIER: Record<number, string> = { 3: 'from-teal-500 to-teal-600', 4: 'from-sky-500 to-blue-600', 5: 'from-violet-500 to-purple-600', 6: 'from-amber-300 to-amber-500' }
-
-/** A deal space as printed on the real board: total investors, $ × multiplier, and columns "pick N of these". */
+/**
+ * A deal space as printed on the real board: total investors, $ × multiplier, and columns "pick N of these".
+ * Small tiles size everything from the board (cqmin of the board grid), so every header is the same size.
+ * When the deal closes, the tile flips over to show the placard that closed it.
+ */
 export function SpaceTile({ space, big, active, onPick, className }: { space: BossBoardSpace; big?: boolean; active?: boolean; onPick?: () => void; className?: string }) {
   const { t } = useTranslation()
   const closed = space.closedByDeal !== null
-  const badge = big ? 'size-8' : 'size-(--b)'
-  const Tag = onPick && !closed ? 'button' : 'div'
   const rich = space.dividends >= 6
+  const Tag = onPick && !closed ? 'button' : 'div'
+  const u = (n: number) => (big ? `${n * 0.32}rem` : `${n}cqmin`) // board units
   return (
     <Tag
       type={Tag === 'button' ? 'button' : undefined}
       onClick={Tag === 'button' ? onPick : undefined}
-      className={cn(
-        'boss-space relative flex flex-col overflow-hidden [container-type:size] [--b:clamp(10px,calc((100cqw+100cqh)/10),30px)] rounded-[1.1vmin] bg-gradient-to-b from-[#fffaf0] to-[#ece3cf] text-[#3a2416] ring-1 ring-[#b9821c]/70',
-        'shadow-[0_0.5vmin_0_#8a5a2b,0_0.9vmin_1.2vmin_rgba(0,0,0,0.35)]',
-        big && 'rounded-2xl shadow-[0_5px_0_#8a5a2b,0_10px_16px_rgba(0,0,0,0.35)]',
-        active && 'boss-space-active',
-        onPick && !closed && 'cursor-pointer hover:-translate-y-0.5 active:translate-y-0',
-        className,
-      )}
+      className={cn('boss-space-wrap block [perspective:900px]', onPick && !closed && 'cursor-pointer', className)}
+      aria-label={closed ? `#${space.closedByDeal}` : undefined}
     >
-      <div className={cn('flex items-center justify-between bg-gradient-to-b font-black text-white', TIER[space.dividends] ?? TIER[3], big ? 'px-3 py-1.5 text-lg' : 'px-[4cqmin] py-[1.5cqmin] text-[clamp(8px,12cqmin,17px)]', rich && 'boss-rich text-[#3a2416]')}>
-        <span className={cn('flex items-center justify-center rounded-[0.5vmin] bg-white text-[#3a2416] shadow-inner', big ? 'size-8 text-xl' : 'size-[clamp(12px,15cqmin,28px)]')}>{space.teamCount}</span>
-        <span className="drop-shadow-[0_1px_0_rgba(0,0,0,0.35)]">$ × {space.dividends}</span>
-      </div>
-      {big ? (
-        <div className="flex min-h-0 flex-1 px-1 py-2">
-          {space.groups.map((g, i) => (
-            <div key={i} className={cn('flex min-w-0 flex-1 flex-col items-center justify-between', i > 0 && 'border-l border-[#5a3420]/25')}>
-              <div className="flex flex-1 flex-wrap content-center items-center justify-center gap-1">
-                {g.teams.map((team) => <TeamBadge key={team} team={team} className={badge} />)}
+      <div className={cn('boss-space-inner relative size-full [transform-style:preserve-3d]', closed && 'boss-flipped')}>
+        {/* front */}
+        <div
+          className={cn(
+            'absolute inset-0 flex flex-col overflow-hidden bg-[#f6efdc] text-[#241b4b] [backface-visibility:hidden]',
+            rich ? 'ring-2 ring-[#ffc21a]' : 'ring-1 ring-[#d9cfb2]',
+            active && 'boss-space-active',
+          )}
+          style={{ borderRadius: u(1.4), boxShadow: `0 ${u(0.5)} 0 #d9cfb2, 0 ${u(0.9)} ${u(1.4)} rgba(0,0,0,0.35)` }}
+        >
+          <div className="flex shrink-0 items-center justify-between font-black" style={{ height: u(4.4), padding: `${u(0.6)} ${u(0.8)} 0`, fontSize: u(2.3) }}>
+            <span className="flex items-center justify-center rounded-[0.35em] bg-[#241b4b] text-white" style={{ width: u(3.4), height: u(3.4) }}>{space.teamCount}</span>
+            <span className={rich ? 'text-[#c98a00]' : 'text-[#9a6b00]'}>$×{space.dividends}</span>
+          </div>
+          <div className="flex min-h-0 flex-1" style={{ padding: `${u(0.6)} ${u(0.3)}` }}>
+            {space.groups.map((g, i) => (
+              <div key={i} className={cn('flex min-w-0 flex-1 flex-col items-center', i > 0 && 'border-l border-[#d9cfb2]')}>
+                <div className="flex min-h-0 flex-1 flex-wrap content-center items-center justify-center" style={{ gap: u(0.4) }}>
+                  {g.teams.map((team) => <img key={team} src={teamArt(team)} alt={t(`boss.teams.${team}`)} draggable={false} style={{ width: u(4.2), height: u(4.2) }} />)}
+                </div>
+                <span className="flex shrink-0 items-center justify-center rounded-full bg-[#241b4b] font-black text-white" style={{ width: u(2.8), height: u(2.8), fontSize: u(1.8) }} aria-label={t('boss.deal.pick', { count: g.pick })}>{g.pick}</span>
               </div>
-              <span className="mt-1 flex size-6 items-center justify-center rounded-full bg-[#5a3420] text-sm font-black text-[#fff4dc]" aria-label={t('boss.deal.pick', { count: g.pick })}>{g.pick}</span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      ) : (
-        // Small tiles come in many shapes: each column becomes a little cluster that wraps to fit.
-        <div className="flex min-h-0 flex-1 flex-wrap content-center items-center justify-center gap-[3cqmin] p-[2.5cqmin]">
-          {space.groups.map((g, i) => (
-            <div key={i} className="flex flex-wrap items-center justify-center gap-[1.5cqmin] rounded-[4cqmin] bg-[#5a3420]/10 p-[1.5cqmin]">
-              {g.teams.map((team) => <TeamBadge key={team} team={team} className={badge} />)}
-              <span className="flex size-[calc(var(--b)*0.62)] items-center justify-center rounded-full bg-[#5a3420] text-[calc(var(--b)*0.42)] font-black text-[#fff4dc]" aria-label={t('boss.deal.pick', { count: g.pick })}>{g.pick}</span>
-            </div>
-          ))}
+        {/* back: closed — dim navy with a gold stamp */}
+        <div
+          className="absolute inset-0 flex flex-col overflow-hidden bg-[#221a4b] text-[#8a82b3] ring-1 ring-white/10 [backface-visibility:hidden] [transform:rotateY(180deg)]"
+          style={{ borderRadius: u(1.4) }}
+        >
+          <div className="flex shrink-0 items-center justify-between font-black" style={{ height: u(4.4), padding: `${u(0.6)} ${u(0.8)} 0`, fontSize: u(2.3) }}>
+            <span className="flex items-center justify-center rounded-[0.35em] bg-white/10" style={{ width: u(3.4), height: u(3.4) }}>{space.teamCount}</span>
+            <span>$×{space.dividends}</span>
+          </div>
+          <div className="flex flex-1 items-center justify-center">
+            <span className="whitespace-nowrap rounded-[0.5em] border-[0.12em] border-dashed border-[#e9b949]/80 font-black text-[#ffd77a] [transform:rotate(-8deg)]" style={{ fontSize: u(2), padding: `${u(0.4)} ${u(1)}` }}>{t('boss.deal.closedStamp', { n: space.closedByDeal })}</span>
+          </div>
         </div>
-      )}
-      {closed && (
-        <div className="boss-closed absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#3f9a4e] to-[#2b6e38] text-white">
-          <img src={cardArt('recruit')} alt="" className="w-[55%] max-w-24 opacity-90 drop-shadow" />
-          <span className={cn('font-black leading-none drop-shadow', big ? 'text-2xl' : 'text-[clamp(10px,18cqmin,26px)]')}>#{space.closedByDeal}</span>
-        </div>
-      )}
+      </div>
     </Tag>
   )
 }
 
-type SeatProps = { view: BossView; seat: BossSeatView; players: RoomPlayer[]; online: boolean; mood: Mood; me?: boolean; compact?: boolean }
+type SeatProps = { view: BossView; seat: BossSeatView; players: RoomPlayer[]; online: boolean; mood: Mood; me?: boolean; compact?: boolean; dark?: boolean }
 
 /** One player at the table: face, name, investors, cash, cards in hand, turn/boss marks. */
-export function SeatCard({ view, seat, players, online, mood, me, compact }: SeatProps) {
+export function SeatCard({ view, seat, players, online, mood, me, compact, dark }: SeatProps) {
   const { t } = useTranslation()
   const name = players.find((p) => p.userId === seat.userId)?.displayName ?? '?'
   const isBoss = view.deal?.bossId === seat.userId
@@ -108,22 +110,25 @@ export function SeatCard({ view, seat, players, online, mood, me, compact }: Sea
         'boss-seat relative flex items-center gap-2 rounded-2xl bg-card/95 p-1.5 pr-2.5 shadow-sm ring-2 ring-transparent transition-[box-shadow,transform] duration-300',
         (isBoss || isTurn) && 'ring-amber-400',
         isTurn && 'boss-turn',
-        me && 'bg-amber-50 dark:bg-amber-950/40',
+        me && !dark && 'bg-amber-50 dark:bg-amber-950/40',
+        dark && me && 'bg-[#ffc21a]/15',
+        dark && 'bg-white/[0.08] text-white shadow-none ring-white/10',
+        dark && (isBoss || isTurn) && 'ring-[#ffc21a]',
         !online && 'opacity-60',
       )}
       data-seat={seat.userId}
     >
-      <Face team={seatTeam(view, seat.userId)} mood={mood} className={compact ? 'size-10' : 'size-12'} />
+      <Face team={seatTeam(view, seat.userId)} mood={mood} className={compact ? 'size-10' : dark ? 'size-14' : 'size-12'} />
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="flex items-center gap-1 truncate text-sm font-bold">
           {isBoss && <Crown className="size-3.5 shrink-0 text-amber-500" aria-label={t('boss.cards.boss')} />}
           <span className="truncate">{name}</span>
-          {!online && <WifiOff className="size-3 shrink-0 text-muted-foreground" aria-hidden="true" />}
+          {!online && <WifiOff className="size-3 shrink-0 opacity-70" aria-hidden="true" />}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="flex">{seat.investors.map((team) => <TeamBadge key={team} team={team} className="-mr-1 size-5" />)}</span>
           <CashTag seat={seat} />
-          <span className="ml-auto flex items-center gap-0.5 text-xs text-muted-foreground tabular-nums"><Layers className="size-3" aria-hidden="true" />{seat.handCount}</span>
+          <span className="ml-auto flex items-center gap-0.5 text-xs opacity-70 tabular-nums"><Layers className="size-3" aria-hidden="true" />{seat.handCount}</span>
         </span>
       </div>
     </div>

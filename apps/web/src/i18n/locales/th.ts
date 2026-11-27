@@ -463,6 +463,7 @@ export const th = {
     },
     deal: {
       total: 'มูลค่าดีล',
+      closedStamp: 'ปิดแล้ว #{{n}}',
       pick: 'เลือก {{count}}',
       needs: 'ต้องมี',
       choose: 'เลือกอีก {{count}} จาก',

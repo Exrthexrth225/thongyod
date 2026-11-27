@@ -15,7 +15,7 @@ import { ClosingRing, Die, EndRoll, FxBanner, InterruptOverlay, MoneyFly } from 
 import { DealPanel } from './DealPanel'
 import { useBossTimeline } from './useBossTimeline'
 import { DiscardSheet, HandBar } from './Hand'
-import { nameOf, seatTeam, tableArt } from './meta'
+import { nameOf, seatTeam } from './meta'
 import { AskSheet, OfferSheet } from './OfferSheet'
 import { Face, Money, SeatCard, SpaceTile } from './parts'
 import './boss.css'
@@ -83,7 +83,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
       <div className="flex w-full flex-col items-center gap-3">
         <StatusLine text={view.phase === 'discard_limit' ? t('boss.phase.discard', { name: nameOf(players, view.turnPlayerId) }) : myTurn ? t('boss.phase.myTurn') : t('boss.phase.turn', { name: nameOf(players, view.turnPlayerId) })} />
         <div className="flex items-center gap-4">
-          {space && <SpaceTile space={space} big active className="w-56 max-w-[60vw]" />}
+          {space && <SpaceTile space={space} big active className="h-40 w-56 max-w-[60vw]" />}
           {view.phase === 'rolled_choice' && lastRoll && <Die key={lastRoll.id} value={lastRoll.roll ?? 1} size={60} />}
         </div>
       </div>
@@ -95,29 +95,28 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   const big = 'h-14 w-full text-base font-black shadow-[0_4px_0_rgba(0,0,0,0.25)] active:translate-y-0.5'
   if (myTurn && view.phase === 'turn_choice') {
     side.push(<Button key="deal" className={big} disabled={move.isPending || space?.closedByDeal !== null} onClick={() => act({ type: 'open_deal' })}>{t('boss.act.dealHere')}</Button>)
-    side.push(<Button key="roll" variant="secondary" className={big} disabled={move.isPending} onClick={() => act({ type: 'roll_die' })}>{t('boss.act.roll')}</Button>)
+    side.push(<Button key="roll" variant="secondary" className={cn(big, "bg-white/10 text-white hover:bg-white/20")} disabled={move.isPending} onClick={() => act({ type: 'roll_die' })}>{t('boss.act.roll')}</Button>)
   }
   if (myTurn && view.phase === 'rolled_choice') {
     side.push(<Button key="deal" className={big} disabled={move.isPending} onClick={() => act({ type: 'open_deal' })}>{t('boss.act.dealHere')}</Button>)
-    side.push(<Button key="draw" variant="secondary" className={big} disabled={move.isPending} onClick={() => act({ type: 'draw_cards' })}>{t('boss.act.draw')}</Button>)
+    side.push(<Button key="draw" variant="secondary" className={cn(big, "bg-white/10 text-white hover:bg-white/20")} disabled={move.isPending} onClick={() => act({ type: 'draw_cards' })}>{t('boss.act.draw')}</Button>)
   }
   if (deal && view.phase !== 'interrupt') {
     if (view.phase === 'closing') side.push(<Button key="wait" variant="destructive" className={big} disabled={move.isPending} onClick={() => act({ type: 'hold' })}><Hand data-icon="inline-start" />{t('boss.act.wait')}</Button>)
     if (isBoss) {
       if (view.phase === 'negotiating') side.push(<Button key="close" className={cn(big, deal.canClose && 'boss-glow')} disabled={move.isPending || !deal.canClose} onClick={() => act({ type: 'start_closing' })}>{t('boss.act.close')}</Button>)
-      side.push(<Button key="offer" variant="secondary" className={big} disabled={move.isPending} onClick={() => setOfferOpen(true)}>{deal.offered ? t('boss.act.editOffer') : t('boss.act.offer')}</Button>)
-      side.push(<Button key="fail" variant="ghost" className="w-full" disabled={move.isPending} onClick={() => setFailOpen(true)}>{t('boss.act.fail')}</Button>)
+      side.push(<Button key="offer" variant="secondary" className={cn(big, "bg-white/10 text-white hover:bg-white/20")} disabled={move.isPending} onClick={() => setOfferOpen(true)}>{deal.offered ? t('boss.act.editOffer') : t('boss.act.offer')}</Button>)
+      side.push(<Button key="fail" variant="ghost" className="w-full text-white/70 hover:bg-white/10 hover:text-white" disabled={move.isPending} onClick={() => setFailOpen(true)}>{t('boss.act.fail')}</Button>)
     } else {
       if (inOffer && isContributor && view.phase === 'negotiating' && !deal.acceptedIds.includes(meId)) side.push(<Button key="acc" className={big} disabled={move.isPending} onClick={() => act({ type: 'accept_offer' })}>{t('boss.act.accept')} · <Money amount={deal.allocation[meId] ?? 0} /></Button>)
-      if (inOffer && isContributor && !deal.declinedIds.includes(meId)) side.push(<Button key="dec" variant="secondary" className="w-full" disabled={move.isPending} onClick={() => act({ type: 'decline_offer' })}>{t('boss.act.decline')}</Button>)
-      side.push(<Button key="ask" variant="secondary" className="w-full" disabled={move.isPending} onClick={() => setAskOpen(true)}>{myAsk !== null ? `${t('boss.act.ask')} · ${t('boss.money', { m: myAsk / 1_000_000 })}` : t('boss.act.ask')}</Button>)
+      if (inOffer && isContributor && !deal.declinedIds.includes(meId)) side.push(<Button key="dec" variant="secondary" className="w-full bg-white/10 text-white hover:bg-white/20" disabled={move.isPending} onClick={() => act({ type: 'decline_offer' })}>{t('boss.act.decline')}</Button>)
+      side.push(<Button key="ask" variant="secondary" className="w-full bg-white/10 text-white hover:bg-white/20" disabled={move.isPending} onClick={() => setAskOpen(true)}>{myAsk !== null ? `${t('boss.act.ask')} · ${t('boss.money', { m: myAsk / 1_000_000 })}` : t('boss.act.ask')}</Button>)
     }
   }
   if (view.phase === 'game_over' && room.hostId === meId) side.push(<Button key="lobby" className={big} disabled={lobby.isPending} onClick={() => lobby.mutate()}>{t('boss.act.backToRoom')}</Button>)
 
   return (
-    <div ref={stage} className="boss-stage fixed inset-0 z-40 overflow-hidden bg-[#0f5a46] text-foreground">
-      <img src={tableArt} alt="" className="pointer-events-none absolute inset-0 size-full object-cover opacity-90" aria-hidden="true" />
+    <div ref={stage} className="boss-stage fixed inset-0 z-40 overflow-hidden bg-[radial-gradient(ellipse_at_50%_30%,#2c2360,#17142b_65%,#120d2b)] text-white">
       <div className="boss-game relative size-full pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]">
         <header className="boss-top flex items-center gap-2 px-2 pt-1.5">
           <Button variant="ghost" size="icon" className="size-9 rounded-full bg-black/35 text-white hover:bg-black/50" aria-label={t('rooms.leave')} onClick={() => void navigate('/games/rooms')}><X className="size-5" /></Button>
@@ -127,10 +126,12 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
         <div className="boss-live px-2"><RoomLiveBar room={room} meId={meId} /></div>
 
         <aside className="boss-seats flex gap-1.5 overflow-auto p-2 [scrollbar-width:none]">
-          {view.seats.map((s) => <SeatCard key={s.userId} view={view} seat={s} players={players} online={room.online.includes(s.userId)} mood={moods[s.userId] ?? 'calm'} me={s.userId === meId} compact />)}
+          {view.seats.map((s) => <SeatCard key={s.userId} view={view} seat={s} players={players} online={room.online.includes(s.userId)} mood={moods[s.userId] ?? 'calm'} me={s.userId === meId} compact dark />)}
         </aside>
 
-        <main className="boss-field flex min-h-0 min-w-0 items-start justify-center overflow-y-auto p-2">{field}</main>
+        <main className="boss-field min-h-0 min-w-0 p-1.5">
+          <div className="boss-oval flex size-full items-start justify-center overflow-y-auto rounded-[2.5rem] bg-[radial-gradient(ellipse_at_center,#2c2360,#221a4b_70%)] p-2 shadow-[inset_0_0_0_2px_rgba(233,185,73,0.45),inset_0_0_40px_rgba(0,0,0,0.45)] [scrollbar-width:none]">{field}</div>
+        </main>
 
         <nav className="boss-side flex flex-col justify-end gap-2 p-2">{side}</nav>
 
