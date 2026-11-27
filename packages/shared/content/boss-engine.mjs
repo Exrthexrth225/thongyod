@@ -230,6 +230,12 @@ function settleDeal(state, board, randomIndex, nowMs) {
   space.closedByDeal = deal.dealNumber
   space.closedByBossId = deal.bossId
   const { bossId, dealNumber, totalValue, spaceIndex } = deal
+  // Fun facts for the end screen.
+  const contributors = new Set(contributorIds(state))
+  const st = (id) => (state.stats[id] ??= { deals: 0, biggest: 0, bribesPaid: 0, travels: 0, stops: 0 })
+  st(bossId).deals += 1
+  st(bossId).biggest = Math.max(st(bossId).biggest, totalValue)
+  for (const [id, amount] of Object.entries(payouts)) if (id !== bossId && !contributors.has(id)) st(bossId).bribesPaid += amount
   state.deal = null
   state.lastSettlement = { dealNumber, spaceIndex, bossId, totalValue, payouts }
   addEvent(state, 'deal_settled', bossId, nowMs, { dealNumber, amount: totalValue, spaceIndex })
@@ -328,6 +334,7 @@ export function createBossGame(seatIds, rawSettings, board, randomIndex, nowMs =
     interrupt: null,
     lastEndRoll: null,
     lastSettlement: null,
+    stats: {},
     discardActorId: null,
     discardNextTurnId: null,
     processedActionIds: [],
@@ -345,6 +352,7 @@ export function bossDeadline(state) {
 
 export function resolveBossDeadlines(inputState, board, randomIndex, nowMs = Date.now()) {
   const state = structuredClone(inputState)
+  state.stats ??= {} // games started before stats existed
   let changed = false
   if (state.phase === 'interrupt' && state.interrupt && nowMs >= Date.parse(state.interrupt.deadlineAt)) {
     resolveInterrupt(state, nowMs)
@@ -560,6 +568,7 @@ function act(state, seat, a, board, randomIndex, nowMs) {
       state.discard.push(...seat.hand.splice(idx, 1))
       const owner = targetCardId ? deal.tableCards.find((c) => c.id === targetCardId).ownerId : state.seats.find((s) => s.investors.includes(a.targetTeam))?.id
       openInterrupt(state, 'travel', actorId, nowMs, { targetTeam: a.targetTeam, targetCardId, targetId: owner ?? null })
+      ;(state.stats[actorId] ??= { deals: 0, biggest: 0, bribesPaid: 0, travels: 0, stops: 0 }).travels += 1
       addEvent(state, 'travel_played', actorId, nowMs, { team: a.targetTeam, targetId: owner })
       return
     }
@@ -587,6 +596,7 @@ function act(state, seat, a, board, randomIndex, nowMs) {
       if (idx === -1) return err(400, 'CARD_NOT_FOUND')
       state.discard.push(...seat.hand.splice(idx, 1))
       state.interrupt.stoppedBy = actorId
+      ;(state.stats[actorId] ??= { deals: 0, biggest: 0, bribesPaid: 0, travels: 0, stops: 0 }).stops += 1
       addEvent(state, 'stop_played', actorId, nowMs, { targetId: state.interrupt.actorId })
       resolveInterrupt(state, nowMs)
       return
@@ -752,6 +762,7 @@ export function projectBossView(state, viewerId, board) {
     myHand: me ? [...me.hand] : [],
     discardPendingCount: state.phase === 'discard_limit' && state.discardActorId === viewerId && me ? Math.max(0, me.hand.length - HAND_LIMIT) : 0,
     blockingIds: blockingIds(state),
+    stats: state.stats ?? {},
     events: state.events.slice(-12),
     winnerIds: state.winnerIds,
   }

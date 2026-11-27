@@ -120,15 +120,16 @@ export function DealPanel({ view, players, meId, big }: Props) {
 }
 
 /** The deal as a small contract on the phone's table: who is in, empty seats, the split bar and the value. */
-export function ContractCard({ view, players }: { view: BossView; players: RoomPlayer[] }) {
+export function ContractCard({ view, players, meId }: { view: BossView; players: RoomPlayer[]; meId?: string }) {
   const { t } = useTranslation()
   const deal = view.deal
   if (!deal) return null
   const space = view.spaces[deal.spaceIndex]
   const accepted = new Set([deal.bossId, ...deal.acceptedIds])
   const given = Object.values(deal.allocation).reduce((a, b) => a + b, 0)
+  const mine = new Set(Object.entries(deal.providers).filter(([, ids]) => meId && ids?.includes(meId)).map(([team]) => team))
   return (
-    <div className="boss-contract w-full max-w-[25rem] rounded-2xl bg-[#f6efdc] p-2.5 text-[#241b4b] shadow-[0_10px_30px_rgba(0,0,0,0.45)] ring-1 ring-[#d9cfb2]">
+    <div key={deal.id} className="boss-contract w-full max-w-[25rem] rounded-2xl bg-[#f6efdc] p-2.5 text-[#241b4b] shadow-[0_10px_30px_rgba(0,0,0,0.45)] ring-1 ring-[#d9cfb2]">
       <div className="flex items-center gap-2">
         <span className="flex size-6 items-center justify-center rounded-md bg-[#241b4b] text-sm font-black text-white">{space.teamCount}</span>
         <span className="min-w-0 flex-1 truncate text-sm font-black">{t('boss.deal.contract', { n: space.index + 1 })} · $×{space.dividends}</span>
@@ -141,7 +142,7 @@ export function ContractCard({ view, players }: { view: BossView; players: RoomP
           const empty = Math.max(0, g.pick - inTeams.length)
           return (
             <div key={i} className={cn('flex min-w-0 flex-col items-center gap-1', i > 0 && 'border-l border-[#d9cfb2] pl-2')}>
-              <div className="flex flex-wrap items-center justify-center gap-1">
+              <div className={cn('flex flex-wrap items-center justify-center gap-1 rounded-xl p-0.5', g.teams.some((team) => mine.has(team)) && 'boss-mine')}>
                 {inTeams.map((team) => {
                   const who = (deal.providers[team] ?? []).find((id) => accepted.has(id))
                   return (

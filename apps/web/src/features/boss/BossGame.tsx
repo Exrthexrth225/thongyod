@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { DoorOpen, Hand, LayoutGrid, LogOut, Menu, Minus, Plus, RotateCw, Trophy, WifiOff, XCircle } from 'lucide-react'
+import { BookOpen, DoorOpen, LayoutGrid, LogOut, Menu, Minus, Plus, RotateCw, Trophy, WifiOff, XCircle } from 'lucide-react'
 import { ApiError } from '@/api/client'
 import { useBackToLobby, useBossAction, useBossHost, useCloseRoom, useLeaveRoom } from '@/api/rooms'
 import type { BossActionPayload, BossRoomData, BossView, RoomPlayer } from '@/api/types'
@@ -14,7 +14,8 @@ import { BossBoard } from './BossBoard'
 import { ClosingRing, Die, EndRoll, FxBanner, InterruptOverlay, MoneyFly } from './BossFx'
 import { ContractCard } from './DealPanel'
 import { DiscardSheet, HandBar } from './Hand'
-import { M, nameOf, seatTeam, TEAM_COLOR } from './meta'
+import { M, nameOf, seatTeam, TEAM_COLOR, tutorialSeen } from './meta'
+import { BossTutorial } from './Tutorial'
 import { AskSheet } from './OfferSheet'
 import { Face, Money, SpaceTile, TeamBadge, CashTag } from './parts'
 import { useBossTimeline } from './useBossTimeline'
@@ -59,6 +60,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   // Boss's split being typed (millions), and whose amount the −/+ buttons change.
   const [draft, setDraft] = useState<{ deal: string; amounts: Record<string, number> } | null>(null)
   const [pickId, setPickId] = useState<string | null>(null)
+  const [tutorial, setTutorial] = useState(() => !tutorialSeen())
   const { latest, moods } = useBossTimeline(view)
 
   const act = (action: BossActionPayload, after?: () => void) =>
@@ -84,6 +86,8 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   const myAsk = deal?.asks[meId] ?? null
   const isContributor = deal?.contributorIds.includes(meId) ?? false
   const others = view.seats.filter((s) => s.userId !== meId)
+  /** What this player should do in the open deal. */
+  const role: 'boss' | 'needed' | 'accept' | 'outside' = isBoss ? 'boss' : deal?.offered && isContributor && !deal.acceptedIds.includes(meId) ? 'accept' : isContributor ? 'needed' : 'outside'
 
   // ── boss split (inline, like haggling at the table) ──
   const amounts = deal && isBoss
@@ -109,8 +113,8 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   else if (deal) {
     field = (
       <div className="flex w-full flex-col items-center gap-1.5">
-        {view.phase === 'closing' && <ClosingRing deadline={deal.closingDeadlineAt} />}
-        <ContractCard view={view} players={players} />
+        {view.phase === 'closing' ? <ClosingRing deadline={deal.closingDeadlineAt} /> : <span key={role} className="boss-role rounded-full bg-black/40 px-3 py-1 text-center text-xs font-bold text-white/90">{t(`boss.role.${role}`)}</span>}
+        <ContractCard view={view} players={players} meId={meId} />
       </div>
     )
   } else if (space) {
@@ -127,20 +131,24 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
 
   // ── big buttons on the right ──
   const big = 'h-12 w-full rounded-2xl text-base font-black shadow-[0_4px_0_rgba(0,0,0,0.3)] active:translate-y-0.5'
+  /** A big button with one short line saying what it does. */
+  const label = (text: string, hint: string) => (
+    <span className="flex flex-col items-center leading-tight"><span>{text}</span><span className="text-[10px] font-semibold opacity-75">{hint}</span></span>
+  )
   const ghost = 'bg-white/10 text-white hover:bg-white/20'
   let side: React.ReactNode = null
   if (myTurn && view.phase === 'turn_choice') {
     side = (
       <>
-        <Button className={big} disabled={move.isPending || space?.closedByDeal !== null} onClick={() => act({ type: 'open_deal' })}>{t('boss.act.dealHere')}</Button>
-        <Button variant="secondary" className={cn(big, ghost)} disabled={move.isPending} onClick={() => act({ type: 'roll_die' })}>{t('boss.act.roll')}</Button>
+        <Button className={cn(big, 'h-14')} disabled={move.isPending || space?.closedByDeal !== null} onClick={() => act({ type: 'open_deal' })}>{label(t('boss.act.dealHere'), t('boss.act.dealHereHint', { amount: t('boss.money', { m: ((space?.dividends ?? 0) * view.currentShareValue) / M }) }))}</Button>
+        <Button variant="secondary" className={cn(big, 'h-14', ghost)} disabled={move.isPending} onClick={() => act({ type: 'roll_die' })}>{label(t('boss.act.roll'), t('boss.act.rollHint'))}</Button>
       </>
     )
   } else if (myTurn && view.phase === 'rolled_choice') {
     side = (
       <>
-        <Button className={big} disabled={move.isPending} onClick={() => act({ type: 'open_deal' })}>{t('boss.act.dealHere')}</Button>
-        <Button variant="secondary" className={cn(big, ghost)} disabled={move.isPending} onClick={() => act({ type: 'draw_cards' })}>{t('boss.act.draw')}</Button>
+        <Button className={cn(big, 'h-14')} disabled={move.isPending} onClick={() => act({ type: 'open_deal' })}>{label(t('boss.act.dealHere'), t('boss.act.dealHereHint', { amount: t('boss.money', { m: ((space?.dividends ?? 0) * view.currentShareValue) / M }) }))}</Button>
+        <Button variant="secondary" className={cn(big, 'h-14', ghost)} disabled={move.isPending} onClick={() => act({ type: 'draw_cards' })}>{label(t('boss.act.draw'), t('boss.act.drawHint'))}</Button>
       </>
     )
   } else if (deal && isBoss && view.phase !== 'interrupt') {
@@ -160,7 +168,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
         )}
         <Button variant="secondary" className={cn(big, 'h-10', ghost)} disabled={move.isPending || left < 0} onClick={sendOffer}>{deal.offered ? t('boss.act.editOffer') : t('boss.act.offer')}</Button>
         {view.phase === 'closing'
-          ? <Button variant="destructive" className={big} disabled={move.isPending} onClick={() => act({ type: 'hold' })}><Hand data-icon="inline-start" />{t('boss.act.wait')}</Button>
+          ? <Button variant="destructive" className={cn(big, 'h-14')} disabled={move.isPending} onClick={() => act({ type: 'hold' })}>{label(t('boss.act.wait'), t('boss.act.waitHint'))}</Button>
           : <Button className={cn(big, deal.canClose && 'boss-glow')} disabled={move.isPending || !deal.canClose} onClick={() => act({ type: 'start_closing' })}>{t('boss.act.close')}</Button>}
         <button type="button" className="text-xs font-bold text-white/60 underline-offset-2 hover:underline" onClick={() => setConfirm('fail')}>{t('boss.act.fail')}</button>
       </>
@@ -176,7 +184,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
             {!isContributor && mine > 0 && <span className="text-[10px] text-white/60">{t('boss.deal.bribe')}</span>}
           </div>
         )}
-        {view.phase === 'closing' && <Button variant="destructive" className={big} disabled={move.isPending} onClick={() => act({ type: 'hold' })}><Hand data-icon="inline-start" />{t('boss.act.wait')}</Button>}
+        {view.phase === 'closing' && <Button variant="destructive" className={cn(big, 'h-14')} disabled={move.isPending} onClick={() => act({ type: 'hold' })}>{label(t('boss.act.wait'), t('boss.act.waitHint'))}</Button>}
         {deal.offered && isContributor && view.phase === 'negotiating' && !deal.acceptedIds.includes(meId) && <Button className={big} disabled={move.isPending} onClick={() => act({ type: 'accept_offer' })}>{t('boss.act.accept')}</Button>}
         {deal.offered && isContributor && !deal.declinedIds.includes(meId) && <Button variant="secondary" className={cn(big, 'h-10', ghost)} disabled={move.isPending} onClick={() => act({ type: 'decline_offer' })}>{t('boss.act.decline')}</Button>}
         <Button variant="secondary" className={cn(big, 'h-10', ghost)} disabled={move.isPending} onClick={() => setAskOpen(true)}>{myAsk !== null ? `${t('boss.act.ask')} · ${t('boss.money', { m: myAsk / M })}` : t('boss.act.ask')}</Button>
@@ -226,7 +234,10 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
         <header className="boss-top relative z-40 flex items-center gap-2 px-2 pt-1.5">
           <button type="button" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/10" aria-label={t('boss.menu.title')} onClick={() => setMenuOpen(true)}><Menu className="size-4" /></button>
           <span className="min-w-0 flex-1" />
-          <span className="boss-banner truncate rounded-full bg-[#ffc21a] px-4 py-1 text-sm font-black text-[#241b4b] shadow-[0_3px_0_#b9821c]">{banner} · {t('boss.status.dealOf', { n: Math.min(view.dealsDone + 1, view.dealsTotal), total: view.dealsTotal })}</span>
+          <span key={banner} className="boss-banner truncate rounded-full bg-[#ffc21a] px-4 py-1 text-sm font-black text-[#241b4b] shadow-[0_3px_0_#b9821c]">{banner} · {t('boss.status.dealOf', { n: Math.min(view.dealsDone + 1, view.dealsTotal), total: view.dealsTotal })}</span>
+          {view.phase !== 'game_over' && (view.currentEndRollFaces.length > 0
+            ? <span className="boss-pulse shrink-0 rounded-full bg-red-600 px-2.5 py-1 text-[11px] font-black">{t('boss.status.endFaces', { faces: view.currentEndRollFaces.join(' ') })}</span>
+            : view.dealsTotal - view.dealsDone === 7 && <span className="shrink-0 rounded-full bg-red-600/70 px-2.5 py-1 text-[11px] font-black">{t('boss.status.endSoon')}</span>)}
           <span className="min-w-0 flex-1" />
           <button type="button" className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-white/10 px-2.5 text-xs font-bold" onClick={() => setBoardOpen(true)}><LayoutGrid className="size-4" />{t('boss.act.board')}</button>
         </header>
@@ -269,6 +280,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
         </div>
       )}
       <AwayPanel room={room} view={view} meId={meId} />
+      {tutorial && <BossTutorial onClose={() => setTutorial(false)} />}
       <FxBanner event={latest} view={view} players={players} />
       {settled && view.lastSettlement && <MoneyFly event={settled} payouts={view.lastSettlement.payouts} container={stage} />}
       {lastEndRoll && <EndRoll event={lastEndRoll} view={view} />}
@@ -284,6 +296,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
       <DiscardSheet key={view.discardPendingCount} view={view} busy={move.isPending} act={(a) => act(a)} />
       <BottomSheet open={menuOpen} onOpenChange={setMenuOpen} title={t('boss.menu.title')}>
         <div className="flex flex-col gap-2 px-4 pb-6">
+          <Button variant="secondary" size="lg" className="justify-start" onClick={() => { setMenuOpen(false); setTutorial(true) }}><BookOpen data-icon="inline-start" />{t('boss.act.howTo')}</Button>
           <Button variant="secondary" size="lg" className="justify-start" onClick={toRooms}><DoorOpen data-icon="inline-start" />{t('boss.menu.away')}</Button>
           <Button variant="secondary" size="lg" className="justify-start" onClick={() => { setMenuOpen(false); setConfirm('leave') }}><LogOut data-icon="inline-start" />{t('boss.menu.leave')}</Button>
           {room.hostId === meId && <Button variant="secondary" size="lg" className="justify-start text-destructive" onClick={() => { setMenuOpen(false); setConfirm('close') }}><XCircle data-icon="inline-start" />{t('rooms.closeRoom')}</Button>}
@@ -324,6 +337,19 @@ export function PlacardLine({ view, light }: { view: BossView; light?: boolean }
 function Results({ view, players }: { view: BossView; players: RoomPlayer[] }) {
   const { t } = useTranslation()
   const ranked = [...view.seats].sort((a, b) => (b.exactCash ?? 0) - (a.exactCash ?? 0))
+  // Fun facts to talk about after the game.
+  const best = (key: 'deals' | 'biggest' | 'bribesPaid' | 'travels' | 'stops') => {
+    const top = Object.entries(view.stats ?? {}).filter(([id]) => view.seats.some((x) => x.userId === id)).sort(([, a], [, b]) => b[key] - a[key])[0]
+    return top && top[1][key] > 0 ? { id: top[0], n: top[1][key] } : null
+  }
+  const money = (n: number) => t('boss.money', { m: n / M })
+  const awards = ([
+    ['deals', t('boss.over.deals'), (n: number) => `${n}`],
+    ['biggest', t('boss.over.biggest'), money],
+    ['bribesPaid', t('boss.over.bribes'), money],
+    ['travels', t('boss.over.travels'), (n: number) => `${n}`],
+    ['stops', t('boss.over.stops'), (n: number) => `${n}`],
+  ] as const).flatMap(([key, title, fmt]) => { const b = best(key); return b ? [{ key, title, id: b.id, value: fmt(b.n) }] : [] })
   return (
     <div className="flex w-full max-w-md flex-col gap-2 rounded-3xl bg-[#fff4dc] p-4 text-[#3a2416] shadow-[0_4px_0_#5a3420]">
       <h2 className="flex items-center justify-center gap-2 text-2xl font-black"><Trophy className="size-6 text-amber-500" />{t('boss.over.title')}</h2>
@@ -337,6 +363,19 @@ function Results({ view, players }: { view: BossView; players: RoomPlayer[] }) {
           </li>
         ))}
       </ol>
+      {awards.length > 0 && (
+        <ul className="mt-1 grid grid-cols-2 gap-1.5">
+          {awards.map((w, i) => (
+            <li key={w.key} className="boss-rank flex items-center gap-2 rounded-xl bg-[#241b4b] p-1.5 text-white" style={{ animationDelay: `${(ranked.length + i) * 120}ms` }}>
+              <Face team={seatTeam(view, w.id)} className="size-8 rounded-full" />
+              <span className="min-w-0 leading-tight">
+                <span className="block truncate text-[10px] font-bold text-[#ffd77a]">{w.title}</span>
+                <span className="block truncate text-xs font-bold">{nameOf(players, w.id)} · {w.value}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

@@ -27,6 +27,7 @@ export interface BossInternalState {
   interrupt: BossView['interrupt']
   lastEndRoll: BossView['lastEndRoll']
   lastSettlement: BossView['lastSettlement']
+  stats: BossView['stats']
   discardActorId: string | null
   discardNextTurnId: string | null
   processedActionIds: string[]

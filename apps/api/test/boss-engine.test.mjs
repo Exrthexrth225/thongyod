@@ -94,6 +94,7 @@ test('a deal pays a bribe to someone outside it and only contributors must accep
   assert.equal(s.spaces[0].closedByDeal, 1)
   assert.equal(s.markerSpace, 1)
   assert.equal(s.dealIndex, 1)
+  assert.deepEqual(s.stats.p1, { deals: 1, biggest: 6_000_000, bribesPaid: 1_000_000, travels: 0, stops: 0 })
 })
 
 test('asks are public and auto-accept when the offer meets them; any change stops the count', () => {

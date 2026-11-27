@@ -71,3 +71,12 @@ export function cardName(card: BossHandCard, t: TFunction) {
   if (card.kind === 'team') return t('boss.cards.team', { team: t(`boss.teamShort.${card.team}`) })
   return t(`boss.cards.${card.kind}`)
 }
+
+const TUTORIAL_KEY = 'thongyod-boss-tutorial'
+/** Whether this browser has seen the I'm the Boss! intro. Storage may be missing (private mode): then show it. */
+export function tutorialSeen() {
+  try { return localStorage.getItem(TUTORIAL_KEY) === '1' } catch { return false }
+}
+export function markTutorialSeen() {
+  try { localStorage.setItem(TUTORIAL_KEY, '1') } catch { /* nothing to keep */ }
+}

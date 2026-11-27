@@ -13,7 +13,10 @@ export function FxBanner({ event, view, players }: { event: BossEvent | null; vi
   let art: string | null = null, title: string, sub = '', tone = 'gold'
   switch (event.kind) {
     case 'deal_opened': art = fxArt('ribbon'); title = t('boss.fx.deal'); sub = t('boss.fx.dealSub', { boss: actor, n: event.dealNumber, amount: t('boss.money', { m: millions(event.amount ?? 0) }) }); break
-    case 'deal_settled': art = fxArt('stamp'); title = t('boss.fx.settled'); tone = 'red'; break
+    case 'deal_settled':
+      art = fxArt('stamp'); title = t('boss.fx.settled'); tone = 'red'
+      if (view.lastSettlement && view.lastSettlement.dealNumber === event.dealNumber) sub = Object.entries(view.lastSettlement.payouts).sort(([, a], [, b]) => b - a).map(([id, amount]) => t('boss.fx.paid', { name: nameOf(players, id), amount: t('boss.money', { m: millions(amount) }) })).join(' · ')
+      break
     case 'deal_failed': title = t('boss.fx.failed'); tone = 'gray'; break
     case 'stop_played': art = cardArt('stop'); title = t('boss.fx.stopped', { actor }); tone = 'red'; break
     case 'game_ended': art = fxArt('trophy'); title = t('boss.fx.winner', { name: view.winnerIds.map((id) => nameOf(players, id)).join(', ') }); break
@@ -24,7 +27,7 @@ export function FxBanner({ event, view, players }: { event: BossEvent | null; vi
       <div className={cn('boss-slam flex flex-col items-center gap-1 text-center', event.kind === 'deal_settled' && 'boss-stamp')}>
         {art && <img src={art} alt="" className={cn('drop-shadow-xl', event.kind === 'deal_settled' ? 'size-40' : 'size-28')} />}
         <span className={cn('boss-title rounded-2xl px-4 py-1 text-3xl font-black', tone === 'red' && 'text-red-600', tone === 'gray' && 'text-slate-600', tone === 'gold' && 'text-amber-500', event.kind === 'deal_settled' && '-mt-28 mb-16 rotate-[-12deg] text-4xl')}>{title}</span>
-        {sub && <span className="rounded-full bg-black/55 px-3 py-1 text-sm font-semibold text-white">{sub}</span>}
+        {sub && <span className={cn('rounded-full bg-black/65 px-3 py-1 text-sm font-bold text-white', event.kind === 'deal_settled' && 'boss-pop-late text-[#ffd77a]')}>{sub}</span>}
       </div>
       {(event.kind === 'deal_settled' || event.kind === 'game_ended') && <img src={fxArt('confetti')} alt="" className="boss-confetti absolute -z-10 size-56 opacity-80" />}
     </div>
@@ -53,7 +56,7 @@ export function InterruptOverlay({ view, players, canStop, onStop, stopping }: {
           </div>
         </div>
         <span className="rounded-2xl bg-black/70 px-4 py-2 text-center text-lg font-bold text-white">{text}</span>
-        <span className="text-sm font-semibold text-white/90 tabular-nums">{t('boss.fx.stopWindow', { s: left })}</span>
+        <span className="text-sm font-semibold text-white/90 tabular-nums">{canStop ? t('boss.fx.stopWindow', { s: left }) : `${t('boss.fx.waitStop')} · ${left}`}</span>
         {canStop && (
           <button type="button" disabled={stopping} onClick={onStop} className="boss-stop-btn mt-1 rounded-full bg-red-600 px-10 py-4 text-3xl font-black tracking-wide text-white shadow-[0_6px_0_#7f1d1d] active:translate-y-1 active:shadow-[0_2px_0_#7f1d1d] disabled:opacity-60">
             {t('boss.act.stop')}
@@ -123,6 +126,20 @@ export function MoneyFly({ event, payouts, container }: { event: BossEvent; payo
       if (!target) return
       const r = target.getBoundingClientRect()
       const end = { x: r.left - box.left + 24, y: r.top - box.top + 20 }
+      // "+$2M" pops up over the seat when the money lands.
+      const tag = document.createElement('span')
+      tag.textContent = `+$${millions(payouts[id])}M`
+      tag.className = 'pointer-events-none absolute left-0 top-0 rounded-full bg-[#ffc21a] px-2 py-0.5 text-sm font-black text-[#241b4b] shadow-lg'
+      host.appendChild(tag); made.push(tag)
+      tag.animate(
+        [
+          { transform: `translate(${end.x}px, ${end.y}px) scale(0.3)`, opacity: 0 },
+          { transform: `translate(${end.x}px, ${end.y - 18}px) scale(1.15)`, opacity: 1, offset: 0.25 },
+          { transform: `translate(${end.x}px, ${end.y - 30}px) scale(1)`, opacity: 1, offset: 0.8 },
+          { transform: `translate(${end.x}px, ${end.y - 44}px) scale(0.9)`, opacity: 0 },
+        ],
+        { duration: 1800, delay: 1400 + seatIndex * 160, easing: 'ease-out', fill: 'both' },
+      )
       for (let i = 0; i < 6; i++) {
         const img = document.createElement('img')
         img.src = moneyArt(i % 3 === 0 ? 'cash' : 'coin')

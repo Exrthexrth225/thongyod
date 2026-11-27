@@ -17,7 +17,7 @@ const KIND_STYLE = {
 
 
 /** One influence card face. `size` = width in px; the card is 5:7. */
-export function CardFace({ card, size = 88, className, count, glow, detail = true }: { card: BossHandCard; size?: number; className?: string; count?: number; glow?: boolean; detail?: boolean }) {
+export function CardFace({ card, size = 88, className, count, glow, dim, detail = true }: { card: BossHandCard; size?: number; className?: string; count?: number; glow?: boolean; dim?: boolean; detail?: boolean }) {
   const { t } = useTranslation()
   const style = card.kind === 'team' ? { frame: TEAM_COLOR[card.team], art: '#ffffffd9', ink: '#fff' } : KIND_STYLE[card.kind]
   const team = 'team' in card && card.team !== 'any' ? t(`boss.teamShort.${card.team}`) : ''
@@ -26,7 +26,7 @@ export function CardFace({ card, size = 88, className, count, glow, detail = tru
     : card.kind === 'boss' ? t('boss.cards.descBoss') : card.kind === 'stop' ? t('boss.cards.descStop') : t('boss.cards.descRecruit')
   return (
     <span
-      className={cn('boss-card relative flex shrink-0 flex-col rounded-[12%/8.6%] p-[6%] shadow-[0_8px_18px_rgba(0,0,0,0.45)]', glow && 'boss-card-glow', className)}
+      className={cn('boss-card relative flex shrink-0 flex-col rounded-[12%/8.6%] p-[6%] shadow-[0_8px_18px_rgba(0,0,0,0.45)] transition-[filter,opacity] duration-300', glow && 'boss-card-glow', dim && 'opacity-60 saturate-[0.35]', className)}
       style={{ width: size, height: size * 1.42, background: style.frame }}
     >
       <span className={cn('relative flex items-center justify-center overflow-hidden rounded-[10%/14%]', detail ? 'h-[50%]' : 'h-[58%]')} style={{ background: style.art }}>
@@ -53,6 +53,19 @@ export function CardFace({ card, size = 88, className, count, glow, detail = tru
 
 type Act = (action: BossActionPayload) => void
 
+/** Whether this card does something right now (bright in the hand) or not (dimmed). */
+function playable(view: BossView, meId: string, card: BossHandCard) {
+  const deal = view.deal
+  if (card.kind === 'stop') return view.phase === 'interrupt' && view.interrupt?.actorId !== meId && !view.interrupt?.stoppedBy
+  if (!deal || (view.phase !== 'negotiating' && view.phase !== 'closing')) return false
+  const teams = view.spaces[deal.spaceIndex].groups.flatMap((g) => g.teams)
+  if (card.kind === 'team') return teams.includes(card.team)
+  if (card.kind === 'boss') return deal.bossId !== meId
+  if (card.kind === 'recruit') return view.myHand.filter((c) => c.kind === 'recruit').length >= 3
+  if (card.kind !== 'travel') return false
+  return (card.team === 'any' ? teams : teams.filter((x) => x === card.team)).some((x) => (deal.providers[x]?.length ?? 0) > 0)
+}
+
 /** My hand: same cards stacked; tap one to see what it can do right now. */
 export function HandBar({ view, players, meId, busy, act }: { view: BossView; players: RoomPlayer[]; meId: string; busy: boolean; act: Act }) {
   const { t } = useTranslation()
@@ -66,7 +79,8 @@ export function HandBar({ view, players, meId, busy, act }: { view: BossView; pl
       <div className="boss-hand relative flex h-full items-end justify-center" role="list" aria-label={t('boss.cards.hand', { count: view.myHand.length })}>
         {sorted.map(([key, cards], i) => {
           const mid = (sorted.length - 1) / 2, off = i - mid
-          const glow = cards[0].kind === 'stop' && view.phase === 'interrupt'
+          const can = playable(view, meId, cards[0])
+          const glow = can && (cards[0].kind === 'stop' || view.phase !== 'interrupt')
           return (
             <button
               key={key}
@@ -77,7 +91,7 @@ export function HandBar({ view, players, meId, busy, act }: { view: BossView; pl
               style={{ transform: `translateY(${6 + Math.abs(off) * 4}%) rotate(${off * 5}deg)`, animationDelay: `${i * 50}ms` }}
               onClick={() => setOpen(cards[0])}
             >
-              <CardFace card={cards[0]} count={cards.length} glow={glow} />
+              <CardFace card={cards[0]} count={cards.length} glow={glow && cards[0].kind === 'stop'} dim={!can} className={cn(can && cards[0].kind !== 'stop' && 'boss-card-ready')} />
             </button>
           )
         })}

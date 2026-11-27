@@ -152,6 +152,8 @@ export type BossView = {
   discardPendingCount: number
   /** Seats the game is waiting on; the host may skip them when they are offline. */
   blockingIds: string[]
+  /** Per seat, for the end screen: deals closed as boss, biggest deal, bribes paid, Travel and Stop played. */
+  stats: Record<string, { deals: number; biggest: number; bribesPaid: number; travels: number; stops: number }>
   events: BossEvent[]
   winnerIds: string[]
 }
