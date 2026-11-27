@@ -512,6 +512,12 @@ export const en: Messages = {
       reduce: 'Take off {{amount}}',
     },
     cards: {
+      descTeam: 'Join a deal as {{team}}',
+      descTravel: 'Send {{team}} out of the deal',
+      descTravelAny: 'Send any team out of the deal',
+      descBoss: 'Take over this deal',
+      descStop: 'Cancel the card just played',
+      descRecruit: 'Play 3 to steal an investor',
       anyTeam: 'Any team',
       team: '{{team}} team',
       travel: 'Travel',

@@ -514,6 +514,12 @@ export const th = {
       reduce: 'ลดลงอีก {{amount}}',
     },
     cards: {
+      descTeam: 'เข้าดีลแทนทีม{{team}}',
+      descTravel: 'ส่งทีม{{team}}ออกจากดีล',
+      descTravelAny: 'ส่งทีมไหนก็ได้ออกจากดีล',
+      descBoss: 'แย่งเป็นบอสดีลนี้',
+      descStop: 'ยกเลิกการ์ดที่เพิ่งลง',
+      descRecruit: 'ลง 3 ใบ ดึงนักลงทุนมา',
       anyTeam: 'ทุกทีม',
       team: 'ทีม{{team}}',
       travel: 'ส่งไปเที่ยว',

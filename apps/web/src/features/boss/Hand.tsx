@@ -17,16 +17,19 @@ const KIND_STYLE = {
 
 
 /** One influence card face. `size` = width in px; the card is 5:7. */
-export function CardFace({ card, size = 84, className, count, glow }: { card: BossHandCard; size?: number; className?: string; count?: number; glow?: boolean }) {
+export function CardFace({ card, size = 88, className, count, glow, detail = true }: { card: BossHandCard; size?: number; className?: string; count?: number; glow?: boolean; detail?: boolean }) {
   const { t } = useTranslation()
   const style = card.kind === 'team' ? { frame: TEAM_COLOR[card.team], art: '#ffffffd9', ink: '#fff' } : KIND_STYLE[card.kind]
-  const sub = card.kind === 'travel' ? (card.team === 'any' ? t('boss.cards.anyTeam') : t('boss.cards.team', { team: t(`boss.teamShort.${card.team}`) })) : null
+  const team = 'team' in card && card.team !== 'any' ? t(`boss.teamShort.${card.team}`) : ''
+  const desc = card.kind === 'team' ? t('boss.cards.descTeam', { team })
+    : card.kind === 'travel' ? (card.team === 'any' ? t('boss.cards.descTravelAny') : t('boss.cards.descTravel', { team }))
+    : card.kind === 'boss' ? t('boss.cards.descBoss') : card.kind === 'stop' ? t('boss.cards.descStop') : t('boss.cards.descRecruit')
   return (
     <span
       className={cn('boss-card relative flex shrink-0 flex-col rounded-[12%/8.6%] p-[6%] shadow-[0_8px_18px_rgba(0,0,0,0.45)]', glow && 'boss-card-glow', className)}
       style={{ width: size, height: size * 1.42, background: style.frame }}
     >
-      <span className="relative flex h-[56%] items-center justify-center overflow-hidden rounded-[10%/14%]" style={{ background: style.art }}>
+      <span className={cn('relative flex items-center justify-center overflow-hidden rounded-[10%/14%]', detail ? 'h-[50%]' : 'h-[58%]')} style={{ background: style.art }}>
         {card.kind === 'team' ? (
           <>
             <img src={faceArt(card.team)} alt="" className="h-[96%] object-contain object-bottom" draggable={false} />
@@ -39,9 +42,9 @@ export function CardFace({ card, size = 84, className, count, glow }: { card: Bo
           </>
         )}
       </span>
-      <span className="mt-[6%] flex flex-1 flex-col items-center justify-center text-center leading-[1.1]" style={{ color: style.ink }}>
-        <span className="font-black" style={{ fontSize: size * 0.15 }}>{cardName(card, t)}</span>
-        {sub && <span className="font-bold opacity-85" style={{ fontSize: size * 0.11 }}>{sub}</span>}
+      <span className="mt-[5%] flex flex-1 flex-col items-center justify-start gap-[3%] text-center leading-[1.15]" style={{ color: style.ink }}>
+        <span className="font-black" style={{ fontSize: size * 0.14 }}>{cardName(card, t)}</span>
+        {detail && <span className="font-semibold opacity-90" style={{ fontSize: Math.max(8, size * 0.1) }}>{desc}</span>}
       </span>
       {count !== undefined && count > 1 && <span className="absolute -right-1.5 -top-1.5 flex size-6 items-center justify-center rounded-full bg-[#241b4b] text-xs font-black text-white ring-2 ring-white">×{count}</span>}
     </span>
@@ -71,7 +74,7 @@ export function HandBar({ view, players, meId, busy, act }: { view: BossView; pl
               role="listitem"
               aria-label={cardName(cards[0], t)}
               className="boss-hand-card -mx-2 shrink-0 origin-bottom transition-transform duration-200 hover:z-10 hover:-translate-y-5 focus-visible:z-10 focus-visible:-translate-y-5 active:scale-95"
-              style={{ transform: `translateY(${16 + Math.abs(off) * 4}%) rotate(${off * 6}deg)`, animationDelay: `${i * 50}ms` }}
+              style={{ transform: `translateY(${6 + Math.abs(off) * 4}%) rotate(${off * 5}deg)`, animationDelay: `${i * 50}ms` }}
               onClick={() => setOpen(cards[0])}
             >
               <CardFace card={cards[0]} count={cards.length} glow={glow} />
@@ -138,7 +141,7 @@ function CardSheet({ card, onClose, view, players, meId, busy, act }: { card: Bo
     }
   }
   return (
-    <BottomSheet full open={card !== null} onOpenChange={(v) => { if (!v) onClose() }} title={card ? <span className="flex items-center gap-3"><CardFace card={card} size={44} />{cardName(card, t)}</span> : ''}>
+    <BottomSheet full open={card !== null} onOpenChange={(v) => { if (!v) onClose() }} title={card ? <span className="flex items-center gap-3"><CardFace card={card} size={44} detail={false} />{cardName(card, t)}</span> : ''}>
       <div className="flex flex-col gap-3 px-4 pb-6">{body}</div>
     </BottomSheet>
   )

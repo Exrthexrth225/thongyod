@@ -5,7 +5,7 @@
   display: grid;
   grid-template-areas: 'top top top' 'live live live' 'seats field side' 'seats hand side';
   grid-template-columns: minmax(8.5rem, 21%) minmax(0, 1fr) minmax(7.5rem, 17%);
-  grid-template-rows: auto auto minmax(0, 1fr) clamp(4.5rem, 24vh, 6.5rem);
+  grid-template-rows: auto auto minmax(0, 1fr) clamp(5.5rem, 31vh, 8.5rem);
 }
 .boss-top { grid-area: top; }
 .boss-live { grid-area: live; }
