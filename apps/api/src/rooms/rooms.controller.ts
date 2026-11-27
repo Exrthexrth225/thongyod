@@ -64,9 +64,9 @@ export class RoomsController {
 
   @Post(':code/:action') @HttpCode(200) @Header('Cache-Control', 'no-store')
   async action(@Req() req: IncomingMessage, @Param('code') code: string, @Param('action') action: string, @Body() body: unknown) {
-    const withBody = ['vote', 'boardApprove', 'boardReject', 'boardRevoke'].includes(action)
+    const withBody = ['vote', 'boardApprove', 'boardReject', 'boardRevoke', 'boss', 'bossSkip', 'bossKick'].includes(action)
     const viewer = await this.actor(req, withBody)
-    if (!['join', 'leave', 'start', 'reveal', 'lobby', 'vote', 'claimHost', 'boardApprove', 'boardReject', 'boardRevoke'].includes(action)) throw new BadRequestException({ error: { code: 'INVALID_REQUEST' } })
+    if (!['join', 'leave', 'start', 'reveal', 'lobby', 'vote', 'claimHost', 'boardApprove', 'boardReject', 'boardRevoke', 'boss', 'bossSkip', 'bossKick'].includes(action)) throw new BadRequestException({ error: { code: 'INVALID_REQUEST' } })
     return this.rooms.action(viewer, code, action, body)
   }
 }

@@ -14,6 +14,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { PartyRoom } from '@/features/rooms/PartyRoom'
 import { SpyRoom } from '@/features/rooms/SpyRoom'
+import { BossRoom } from '@/features/boss/BossRoom'
 import { RoomLiveBar } from '@/features/rooms/RoomLiveBar'
 import { showErrorToast } from '@/lib/toast'
 import { tintClass } from '@/lib/tones'
@@ -85,7 +86,7 @@ function RoomPageContent() {
     body = (
       <>
         <RoomLiveBar room={room.data} meId={me.data.playerId!} />
-        {room.data.game === 'spy' ? <SpyRoom room={room.data} meId={me.data.playerId!} onLeave={onLeave} /> : <PartyRoom room={room.data} meId={me.data.playerId!} onLeave={onLeave} />}
+        {room.data.game === 'spy' ? <SpyRoom room={room.data} meId={me.data.playerId!} onLeave={onLeave} /> : room.data.game === 'boss' ? <BossRoom room={room.data} meId={me.data.playerId!} onLeave={onLeave} /> : <PartyRoom room={room.data} meId={me.data.playerId!} onLeave={onLeave} />}
       </>
     )
   } else body = <LoadingState rows={3} />

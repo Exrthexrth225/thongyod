@@ -25,4 +25,5 @@ export const HOW_TO: Partial<Record<GameId, LucideIcon[]>> = {
   finger: [Fingerprint, Hand, Sparkles, RotateCw],
   race: [Users, Trophy, Timer, Dices],
   fatCat: [Users, Hand, Layers, Crown, Trophy],
+  boss: [Dices, HandCoins, Crown, Ban, Trophy],
 }

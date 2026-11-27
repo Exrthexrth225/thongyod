@@ -1,0 +1,84 @@
+/* I'm the Boss! — layout and motion. Animations use transform/opacity only; all have reduced-motion fallbacks. */
+
+/* Phone game: Hearthstone-style in landscape (players left, table centre, big buttons right, hand at the bottom). */
+.boss-game {
+  display: grid;
+  grid-template-areas: 'top top top' 'live live live' 'seats field side' 'seats hand side';
+  grid-template-columns: minmax(9.5rem, 24%) minmax(0, 1fr) minmax(8.5rem, 19%);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+}
+.boss-top { grid-area: top; }
+.boss-live { grid-area: live; }
+.boss-seats { grid-area: seats; flex-direction: column; }
+.boss-field { grid-area: field; }
+.boss-side { grid-area: side; }
+.boss-hand-row { grid-area: hand; }
+
+/* Portrait phones: players across the top, buttons above the hand. */
+@media (orientation: portrait) {
+  .boss-game {
+    grid-template-areas: 'top' 'live' 'seats' 'field' 'side' 'hand';
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+  }
+  .boss-seats { flex-direction: row; }
+  .boss-seats > * { min-width: 10.5rem; }
+  .boss-side { flex-direction: row; flex-wrap: wrap; }
+  .boss-side > * { flex: 1 1 40%; }
+}
+
+.boss-space { transition: transform 200ms ease, box-shadow 300ms ease; }
+.boss-space-active { box-shadow: 0 0 0 3px #ffd54a, 0 0 18px 4px rgb(255 213 74 / 0.7); }
+.boss-closed { animation: boss-flip 500ms cubic-bezier(.2,.8,.3,1.2) both; }
+@keyframes boss-flip { from { transform: rotateY(90deg); opacity: 0; } }
+
+.boss-pawn { animation: boss-bob 1.6s ease-in-out infinite alternate; }
+@keyframes boss-bob { to { transform: translateY(-6%); } }
+
+.boss-turn { animation: boss-turn 1.4s ease-in-out infinite; }
+@keyframes boss-turn { 50% { transform: scale(1.03); } }
+
+.boss-face-pop { animation: boss-face-pop 520ms cubic-bezier(.2,.9,.3,1.4) both; }
+@keyframes boss-face-pop { from { transform: scale(0.6) translateY(12%); } }
+
+.boss-hand-card { animation: boss-deal-in 420ms cubic-bezier(.2,.8,.3,1.15) both; }
+@keyframes boss-deal-in { from { transform: translateY(70%) rotate(-8deg); opacity: 0; } }
+
+.boss-slam { animation: boss-slam 2.6s cubic-bezier(.2,.9,.3,1.25) both; }
+@keyframes boss-slam {
+  0% { transform: scale(2.4); opacity: 0; }
+  14% { transform: scale(0.95); opacity: 1; }
+  22% { transform: scale(1.04); }
+  30%, 82% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0; }
+}
+.boss-stamp img { animation: boss-stamp 2.6s cubic-bezier(.3,1.6,.4,1) both; }
+@keyframes boss-stamp { 0% { transform: scale(3) rotate(-30deg); opacity: 0; } 18% { transform: scale(1) rotate(-12deg); opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; } }
+.boss-title { text-shadow: 0 3px 0 #3a2416, 0 0 16px rgb(255 255 255 / 0.6); -webkit-text-stroke: 1px #3a2416; }
+.boss-confetti { animation: boss-confetti 2.4s ease-out both; }
+@keyframes boss-confetti { 0% { transform: scale(0.2); opacity: 0; } 25% { transform: scale(1.4); opacity: 1; } 100% { transform: scale(1.8) translateY(-10%); opacity: 0; } }
+
+.boss-card-slam { animation: boss-card-slam 600ms cubic-bezier(.2,.9,.3,1.3) both; }
+@keyframes boss-card-slam { from { transform: translateY(-120%) rotate(-25deg) scale(1.4); opacity: 0; } }
+.boss-ring { animation-name: boss-ring; animation-timing-function: linear; animation-fill-mode: both; }
+@keyframes boss-ring { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 100; } }
+.boss-stop-btn { animation: boss-stop 700ms ease-in-out infinite alternate; }
+@keyframes boss-stop { to { transform: scale(1.08); } }
+
+.boss-glow { animation: boss-glow 1.2s ease-in-out infinite alternate; }
+@keyframes boss-glow { to { box-shadow: 0 0 0 4px rgb(255 213 74 / 0.8), 0 4px 0 rgb(0 0 0 / 0.25); } }
+
+.boss-pop-late { animation: boss-pop 400ms 1100ms cubic-bezier(.2,.9,.3,1.4) both; }
+@keyframes boss-pop { from { transform: scale(0.3); opacity: 0; } }
+
+.boss-rank { animation: boss-rank 500ms cubic-bezier(.2,.9,.3,1.2) both; }
+@keyframes boss-rank { from { transform: translateX(-30%); opacity: 0; } }
+
+.boss-lobby-face { animation: boss-rank 500ms cubic-bezier(.2,.9,.3,1.2) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .boss-pawn, .boss-turn, .boss-stop-btn, .boss-glow { animation: none; }
+  .boss-slam, .boss-stamp img, .boss-confetti, .boss-card-slam, .boss-face-pop, .boss-hand-card, .boss-closed, .boss-pop-late, .boss-rank, .boss-lobby-face { animation-duration: 1ms; }
+  .boss-slam { animation: boss-fade 2.6s linear both; }
+}
+@keyframes boss-fade { 0%, 85% { opacity: 1; } 100% { opacity: 0; } }

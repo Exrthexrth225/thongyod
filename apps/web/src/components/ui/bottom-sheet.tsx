@@ -12,18 +12,21 @@ type BottomSheetProps = {
   footer?: ReactNode
   children: ReactNode
   className?: string
+  /** Open fully (tall forms, landscape game screens). */
+  full?: boolean
 }
 
 /** Opens at ~62% of the screen; drag up for full height, drag down to close (like share / likes sheets on phones). */
 const SNAP_POINTS = [0.62, 1]
+const FULL = [1]
 
 // Sheet that slides up from the bottom (Base UI Drawer): swipe to dismiss, backdrop tap closes, focus trapped.
-export function BottomSheet({ open, onOpenChange, title, action, footer, children, className }: BottomSheetProps) {
+export function BottomSheet({ open, onOpenChange, title, action, footer, children, className, full }: BottomSheetProps) {
   // Focus the sheet itself on open, not its first link/button: focusing a control lower down scrolled the content
   // and cut off the top (the title badge in ฉายา, Earth #123).
   const popup = useRef<HTMLDivElement>(null)
   return (
-    <Drawer.Root open={open} onOpenChange={onOpenChange} snapPoints={SNAP_POINTS}>
+    <Drawer.Root open={open} onOpenChange={onOpenChange} snapPoints={full ? FULL : SNAP_POINTS}>
       <Drawer.Portal>
         <Drawer.Backdrop className="fixed inset-0 z-50 min-h-dvh bg-black/45 transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-ending-style:opacity-0 data-starting-style:opacity-0 data-swiping:duration-0" />
         <Drawer.Viewport className="fixed inset-0 z-50 flex touch-none items-end justify-center">

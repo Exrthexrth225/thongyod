@@ -16,6 +16,7 @@ const TAG_ICON: Record<Tag, LucideIcon> = { onePhone: Smartphone, rooms: Wifi, s
 /** How a game can be played, shown as tags on the card. */
 function gameTags(game: Game): Tag[] {
   if (game.mode === 'solo') return ['solo']
+  if (game.mode === 'rooms') return ['rooms']
   return game.rooms ? ['onePhone', 'rooms'] : ['onePhone']
 }
 
@@ -96,10 +97,13 @@ export function GameTile({ game, className, soft = false }: { game: Game; classN
       <BottomSheet open={choose} onOpenChange={setChoose} title={t('games.chooseHow', { game: t(`games.list.${game.id}.title`) })}>
         <div className="flex flex-col gap-2 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
           {(
-            [
-              { tag: 'onePhone', to: game.to },
-              { tag: 'rooms', to: `/games/rooms/new?game=${game.id}` },
-            ] as const
+            (game.mode === 'rooms'
+              ? ([{ tag: 'rooms', to: `/games/rooms/new?game=${game.id}` }] as const)
+              : ([
+                  { tag: 'onePhone', to: game.to },
+                  { tag: 'rooms', to: `/games/rooms/new?game=${game.id}` },
+                ] as const)
+            )
           ).map(({ tag, to }) => {
             const Icon = TAG_ICON[tag]
             return (

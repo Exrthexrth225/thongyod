@@ -3,7 +3,7 @@ import { useEffect, useSyncExternalStore } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetch, ApiError } from './client'
 import { identityKey } from './auth'
-import type { PartyRoomSettings, Room, RoomCommandType, RoomGame, SpyRoomSettings } from './types'
+import type { BossActionPayload, BossRoomSettings, PartyRoomSettings, Room, RoomCommandType, RoomGame, SpyRoomSettings } from './types'
 import { newActionId, newerRoom, seatLink } from './roomLink'
 
 export const roomKeys = { room: (code: string) => ['rooms', code] as const }
@@ -74,7 +74,7 @@ function useRoomAction<V = void>(code: string, type: RoomCommandType, payload: (
 export function useCreateRoom() {
   const client = useQueryClient()
   return useMutation({
-    mutationFn: (body: { game: RoomGame; settings: Partial<SpyRoomSettings> | Partial<PartyRoomSettings> }) => apiFetch<Room>('/rooms', { method: 'POST', body: JSON.stringify(body) }, false),
+    mutationFn: (body: { game: RoomGame; settings: Partial<SpyRoomSettings> | Partial<PartyRoomSettings> | Partial<BossRoomSettings> }) => apiFetch<Room>('/rooms', { method: 'POST', body: JSON.stringify(body) }, false),
     onError: (error) => { if (error instanceof ApiError && error.status === 401) void client.invalidateQueries({ queryKey: identityKey }) },
   })
 }
@@ -86,15 +86,20 @@ export const useRevealRound = (code: string) => useRoomAction(code, 'reveal')
 export const useBackToLobby = (code: string) => useRoomAction(code, 'lobby')
 export const useClaimHost = (code: string) => useRoomAction(code, 'claimHost')
 export const useRoomSettings = (code: string) =>
-  useRoomAction<Partial<SpyRoomSettings> | Partial<PartyRoomSettings>>(code, 'settings', (settings) => settings, { url: `/rooms/${code}/settings`, method: 'PATCH' })
+  useRoomAction<Partial<SpyRoomSettings> | Partial<PartyRoomSettings> | Partial<BossRoomSettings>>(code, 'settings', (settings) => settings, { url: `/rooms/${code}/settings`, method: 'PATCH' })
 /** Answer the current party card (ใครน่าจะ…: a player id, ไม่เคย…: 'have' | 'never'). */
 export function useRoomVote(code: string) {
   const client = useQueryClient()
-  return useRoomAction<string>(code, 'vote', (choice) => ({ choice, roundNumber: client.getQueryData<Room>(roomKeys.room(code))?.round?.number }))
+  return useRoomAction<string>(code, 'vote', (choice) => ({ choice, roundNumber: (client.getQueryData<Room>(roomKeys.room(code)) as { round?: { number: number } | null } | undefined)?.round?.number }))
 }
 /** Owner: answer a Board Screen's pairing request, or unpair it. */
 export const useBoardDecision = (code: string, type: 'boardApprove' | 'boardReject' | 'boardRevoke') =>
   useRoomAction<string>(code, type, (boardId) => ({ boardId }))
+
+/** I'm the Boss! move. Socket only in practice; REST has no route for it, so it needs a live connection. */
+export const useBossAction = (code: string) => useRoomAction<BossActionPayload>(code, 'boss', (action) => ({ action }), { url: `/rooms/${code}/boss` })
+/** Owner: carry on without / remove an offline player who holds the game up. */
+export const useBossHost = (code: string, type: 'bossSkip' | 'bossKick') => useRoomAction<string>(code, type, (targetId) => ({ targetId }), { url: `/rooms/${code}/${type}` })
 
 /** Invite friends: they get a "ชวนเล่น" notification that opens the room. */
 export function useInviteToRoom(code: string) {

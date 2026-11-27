@@ -6,13 +6,14 @@ import { QrCodeCard } from '@/components/friends/QrCodeCard'
 import { cn } from '@/lib/utils'
 import { roomUrl } from './url'
 import { useSecondsLeft } from './useSecondsLeft'
+import { BossTableScreen } from '@/features/boss/BossRoom'
 import '@/components/games/games.css'
 
 /** What the shared Board Screen shows: only public data (the server sends no secrets to a board). */
 export function BoardView({ room }: { room: Room }) {
   return (
     <div className="flex min-h-full flex-col justify-center pb-10">
-      {room.state === 'lobby' ? <BoardLobby room={room} /> : room.game === 'spy' ? <SpyBoard room={room} /> : <PartyBoard room={room} />}
+      {room.state === 'lobby' ? <BoardLobby room={room} /> : room.game === 'spy' ? <SpyBoard room={room} /> : room.game === 'boss' ? (room.boss ? <BossTableScreen room={room} /> : null) : <PartyBoard room={room} />}
     </div>
   )
 }

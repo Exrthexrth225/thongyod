@@ -15,8 +15,10 @@ export const MAX_PLAYERS = 12
 const ROOM_TTL_MS = 3 * 3_600_000
 /** Mock friends who "join" a room I create, and when (ms). */
 const DEMO_JOINERS: [string, number][] = [['u2', 1500], ['u3', 3200], ['u5', 5000], ['u4', 7500]]
-const ROOM_GAMES: RoomGame[] = ['spy', 'mostLikely', 'neverHave']
-const MIN_PLAYERS: Record<RoomGame, number> = { spy: 3, mostLikely: 3, neverHave: 2 }
+/** I'm the Boss! needs the real server (the demo shows a link to the real app). */
+type MockGame = Exclude<RoomGame, 'boss'>
+const ROOM_GAMES: MockGame[] = ['spy', 'mostLikely', 'neverHave']
+const MIN_PLAYERS: Record<MockGame, number> = { spy: 3, mostLikely: 3, neverHave: 2 }
 
 type SpyState = { settings: SpyRoomSettings; round: { number: number; startedAt: string; endsAt: string; firstPlayerId: string; spies: string[]; secret: string; spyWord: string | null } | null }
 type PartyState = {
@@ -27,7 +29,7 @@ type PartyState = {
   fingers: Record<string, number> | null
 }
 
-type Internal = { code: string; game: RoomGame; hostId: string; playerIds: string[]; state: RoomState; createdAt: number; spy: SpyState; party: PartyState }
+type Internal = { code: string; game: MockGame; hostId: string; playerIds: string[]; state: RoomState; createdAt: number; spy: SpyState; party: PartyState }
 
 const rooms = new Map<string, Internal>()
 
@@ -119,8 +121,8 @@ function emptyParty(): PartyState {
 }
 
 export function createRoom(game: string, settings: Record<string, unknown> | undefined): RoomResult {
-  if (!ROOM_GAMES.includes(game as RoomGame)) return { ok: false, status: 400, code: 'INVALID_REQUEST' }
-  const g = game as RoomGame
+  if (!ROOM_GAMES.includes(game as MockGame)) return { ok: false, status: 400, code: 'INVALID_REQUEST' }
+  const g = game as MockGame
   const room: Internal = {
     code: newCode(),
     game: g,
@@ -280,7 +282,7 @@ export function backToLobby(code: string): RoomResult {
 }
 
 /** Rooms someone else hosts, so the "ชวนเล่น" notification and joining by code can be tried in the demo. */
-function seed(code: string, game: RoomGame) {
+function seed(code: string, game: MockGame) {
   const r: Internal = { code, game, hostId: 'u2', playerIds: ['u2', 'u3', 'u5'], state: 'lobby', createdAt: Date.now(), spy: { settings: cleanSpy({ mode: 'pairs' }), round: null }, party: emptyParty() }
   if (game !== 'spy') r.party.settings = cleanParty(game, undefined)
   rooms.set(code, r)
