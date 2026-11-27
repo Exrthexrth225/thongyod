@@ -4,26 +4,33 @@ import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import type { IncomingMessage } from 'node:http'
 import type { PoolClient } from 'pg'
-import type { PartyRoomSettings, Room, RoomBoard, RoomBoardSession, RoomBoardStatus, RoomCommand, RoomCommandResult, RoomGame, RoomPlayer, RoomState, SpyRoomSettings } from '@thongyod/shared'
+import type { BossActionPayload, BossRoomSettings, PartyRoomSettings, Room, RoomBoard, RoomBoardSession, RoomBoardStatus, RoomCommand, RoomCommandResult, RoomGame, RoomPlayer, RoomState, SpyRoomSettings } from '@thongyod/shared'
 import { RoomGuestService, type RoomActor } from '../auth/room-guest.service.js'
 import { BOARD_COOKIE, readBoardCookie, readGuestCookie, readSessionCookie, sessionHash } from '../auth/cookie.js'
 import { secureCookie } from '../auth/policy.js'
 import { DatabaseService } from '../db/database.service.js'
 import { payloadHash, RoomEvents, RoomPresence } from './room-support.js'
+import {
+  applyBossAction, bossDeadline, createBossGame, projectBossView, removeBossPlayer, resolveBossDeadlines, skipBossPlayer,
+  type BossBoardDefinition, type BossInternalState,
+} from '@thongyod/shared/content/boss-engine.mjs'
 
 const content = JSON.parse(readFileSync(createRequire(import.meta.url).resolve('@thongyod/shared/content/room-games.json'), 'utf8')) as {
   spyPlaces: { id: string; items: string[] }[]; spyPairs: { id: string; items: [string, string][] }[]; mostLikely: { id: string; cards: string[] }[]; neverHave: { id: string; cards: string[] }[]
 }
+const bossBoard = JSON.parse(readFileSync(createRequire(import.meta.url).resolve('@thongyod/shared/content/boss-board.json'), 'utf8')) as BossBoardDefinition
 
 type SpyRound = { number: number; startedAt: string; endsAt: string; firstPlayerId: string; spies: string[]; secret: string; spyWord: string | null; timeUp?: boolean }
 type PartyRound = { number: number; card: string; pack: string; votes: Record<string, string>; result: { tally: Record<string, number>; haveIds: string[] } | null }
 /** Server-only room state, stored as JSON in game_rooms.data. Never sent to a client as is. */
 type Internal = {
   code: string; game: RoomGame; hostId: string; playerIds: string[]; state: RoomState; expiresAt: string
-  settings: SpyRoomSettings | PartyRoomSettings; spy: SpyRound | null; party: PartyRound | null; deck: { pack: string; text: string }[]
+  settings: SpyRoomSettings | PartyRoomSettings | BossRoomSettings; spy: SpyRound | null; party: PartyRound | null; deck: { pack: string; text: string }[]
   fingers: Record<string, number> | null
   /** Changes when the host goes back to the room: commands for an earlier match are rejected. Older rows have none. */
   matchId?: string
+  /** I'm the Boss! state (engine-owned). */
+  boss?: BossInternalState | null
 }
 type Loaded = { room: Internal; revision: number }
 type People = Map<string, { userId: string; displayName: string; avatarUrl: string | null; isGuest?: true }>
@@ -31,6 +38,7 @@ export type RoomViewer = { kind: 'seat'; playerId: string } | { kind: 'board'; b
 type Change = { result: unknown; changed?: string; closed?: string }
 
 const MAX_PLAYERS = 12
+const BOSS_PLAYERS = 6
 const ROOM_MS = 3 * 60 * 60 * 1000
 const HOST_AWAY_MS = 2 * 60 * 1000
 const BOARD_PENDING_MS = 2 * 60 * 1000
@@ -60,12 +68,16 @@ function errorCode(error: HttpException): string {
 }
 function settings(game: RoomGame, raw: unknown, current?: Internal['settings']): Internal['settings'] {
   const b = object(raw ?? {}), spy = game === 'spy'
+  if (game === 'boss') {
+    if (Object.keys(b).some((k) => k !== 'short') || (b.short !== undefined && typeof b.short !== 'boolean')) throw invalid()
+    return { short: (b.short as boolean | undefined) ?? (current as BossRoomSettings | undefined)?.short ?? false }
+  }
   if (Object.keys(b).some((k) => !(spy ? ['mode', 'minutes', 'spies', 'packs'] : ['packs']).includes(k))) throw invalid()
   const old = current as SpyRoomSettings | undefined
   const mode = b.mode ?? old?.mode ?? 'places', minutes = b.minutes ?? old?.minutes ?? 5, spies = b.spies ?? old?.spies ?? 1
   if (spy && (!['places', 'pairs'].includes(String(mode)) || ![3, 5, 8].includes(Number(minutes)) || typeof minutes !== 'number' || !Number.isInteger(spies) || Number(spies) < 1 || Number(spies) > 3)) throw invalid()
   const valid = (spy ? (mode === 'places' ? content.spyPlaces : content.spyPairs) : content[game as 'mostLikely' | 'neverHave']).map((p) => p.id)
-  const rawPacks = b.packs ?? (spy && old?.mode !== mode ? valid : current?.packs ?? valid)
+  const rawPacks = b.packs ?? (spy && old?.mode !== mode ? valid : (current as PartyRoomSettings | undefined)?.packs ?? valid)
   if (!Array.isArray(rawPacks) || rawPacks.length > valid.length || rawPacks.some((p) => typeof p !== 'string' || !valid.includes(p)) || new Set(rawPacks).size !== rawPacks.length) throw invalid()
   const packs = rawPacks.length ? rawPacks : valid
   return spy ? { mode: mode as 'places' | 'pairs', minutes: minutes as 3 | 5 | 8, spies: Number(spies), packs } : { packs }
@@ -76,7 +88,19 @@ export const phaseOf = (r: Internal) => `${r.matchId ?? 'm0'}:${r.state}:${r.spy
 /** Earliest moment the server must act on its own: the spy timer, else room expiry. */
 function deadlineOf(r: Internal): string {
   if (r.state === 'playing' && r.spy && !r.spy.timeUp && r.spy.endsAt < r.expiresAt) return r.spy.endsAt
+  const boss = r.state === 'playing' && r.boss ? bossDeadline(r.boss) : null
+  if (boss && boss < r.expiresAt) return boss
   return r.expiresAt
+}
+
+/** Engine refusals become the usual { error: { code } } HTTP errors. */
+function bossResult<T>(result: { ok: true; state: T } | { ok: false; status: number; code: string }): T {
+  if (result.ok) return result.state
+  throw new HttpException({ error: { code: result.code } }, result.status)
+}
+/** A finished game shows its results like any other round. */
+function bossSettle(r: Internal) {
+  if (r.boss?.phase === 'game_over' && r.state === 'playing') r.state = 'revealed'
 }
 
 export function boardCookie(token = ''): string {
@@ -156,6 +180,12 @@ export class RoomsService {
       boards: playerId === r.hostId ? boards : [],
       canClaimHost: joined && playerId !== r.hostId && this.presence.awayFor(r.code, r.hostId) >= HOST_AWAY_MS,
     }
+    if (r.game === 'boss') {
+      return {
+        ...base, maxPlayers: BOSS_PLAYERS, game: 'boss', settings: r.settings as BossRoomSettings,
+        boss: r.boss && (joined || isBoard) ? projectBossView(r.boss, playerId ?? '', bossBoard) : null,
+      }
+    }
     if (r.game === 'spy') {
       const s = r.settings as SpyRoomSettings, round = r.spy, isSpy = (playerId !== null && round?.spies.includes(playerId)) ?? false
       return {
@@ -213,6 +243,7 @@ export class RoomsService {
   private leave(r: Internal, viewer: string) {
     r.playerIds = r.playerIds.filter((id) => id !== viewer)
     if (r.hostId === viewer) r.hostId = r.playerIds[0] ?? viewer
+    if (r.boss) { r.boss = removeBossPlayer(r.boss, viewer, randomInt, Date.now()); bossSettle(r) }
     if (r.party && !r.party.result) {
       delete r.party.votes[viewer]
       for (const [id, vote] of Object.entries(r.party.votes)) if (r.game === 'mostLikely' && vote === viewer) delete r.party.votes[id]
@@ -227,7 +258,7 @@ export class RoomsService {
     if (type === 'join') {
       if (joined) return
       if (r.state !== 'lobby') throw conflict('ROOM_STARTED')
-      if (r.playerIds.length >= MAX_PLAYERS) throw conflict('ROOM_FULL')
+      if (r.playerIds.length >= (r.game === 'boss' ? BOSS_PLAYERS : MAX_PLAYERS)) throw conflict('ROOM_FULL')
       r.playerIds.push(viewer); if (r.fingers) r.fingers[viewer] = 5
       return
     }
@@ -242,6 +273,14 @@ export class RoomsService {
       if (r.playerIds.every((id) => r.party!.votes[id])) this.show(r)
       return
     }
+    if (type === 'boss') {
+      if (r.game !== 'boss' || !r.boss || r.state !== 'playing') throw conflict('NO_ROUND')
+      const b = object(body)
+      if (Object.keys(b).length !== 1 || !b.action || typeof b.action !== 'object') throw invalid()
+      r.boss = bossResult(applyBossAction(r.boss, viewer, { action: b.action as BossActionPayload }, bossBoard, randomInt, Date.now()))
+      bossSettle(r)
+      return
+    }
     if (type === 'claimHost') {
       if (r.hostId === viewer) return
       if (this.presence.awayFor(r.code, r.hostId) < HOST_AWAY_MS) throw conflict('HOST_ACTIVE')
@@ -250,17 +289,30 @@ export class RoomsService {
     }
     if (r.hostId !== viewer) throw new ForbiddenException({ error: { code: 'HOST_ONLY' } })
     if (type === 'boardApprove' || type === 'boardReject' || type === 'boardRevoke') { await this.decideBoard(c, r, type, body); return }
+    if (type === 'bossSkip' || type === 'bossKick') {
+      if (r.game !== 'boss' || !r.boss || r.state !== 'playing') throw conflict('NO_ROUND')
+      const b = object(body), target = b.targetId
+      if (Object.keys(b).length !== 1 || typeof target !== 'string' || !r.playerIds.includes(target) || target === viewer) throw invalid()
+      if (this.presence.isOnline(r.code, target)) throw conflict('PLAYER_ONLINE')
+      if (type === 'bossSkip') r.boss = bossResult(skipBossPlayer(r.boss, target, randomInt, Date.now()))
+      else this.leave(r, target)
+      bossSettle(r)
+      return
+    }
     if (type === 'settings') {
       if (r.state !== 'lobby') throw conflict('ROOM_STARTED')
       r.settings = settings(r.game, body, r.settings); r.deck = []
     } else if (type === 'lobby') {
-      r.state = 'lobby'; r.spy = null; r.party = null; r.fingers = null; r.matchId = randomUUID()
+      r.state = 'lobby'; r.spy = null; r.party = null; r.fingers = null; r.boss = null; r.matchId = randomUUID()
     } else if (type === 'reveal') {
       this.show(r)
     } else if (type === 'start') {
       if (r.state === 'playing') throw conflict('ROOM_STARTED')
       if (r.playerIds.length < (r.game === 'neverHave' ? 2 : 3)) throw conflict('NOT_ENOUGH_PLAYERS')
-      if (r.game === 'spy') {
+      if (r.game === 'boss') {
+        if (r.playerIds.length > BOSS_PLAYERS) throw conflict('ROOM_FULL')
+        r.boss = createBossGame(shuffle(r.playerIds), r.settings as BossRoomSettings, bossBoard, randomInt, Date.now())
+      } else if (r.game === 'spy') {
         const s = r.settings as SpyRoomSettings
         const pool = (s.mode === 'places' ? content.spyPlaces : content.spyPairs).filter((p) => s.packs.includes(p.id)).flatMap((p) => p.items as (string | [string, string])[])
         const item = pool[randomInt(pool.length)], words = Array.isArray(item) ? (randomInt(2) ? [...item].reverse() : item) : [item, null]
@@ -270,7 +322,7 @@ export class RoomsService {
           firstPlayerId: r.playerIds[randomInt(r.playerIds.length)], spies: shuffle(r.playerIds).slice(0, Math.min(s.spies, cap)), secret: words[0]!, spyWord: words[1] ?? null,
         }
       } else {
-        if (!r.deck.length) r.deck = shuffle(content[r.game].filter((p) => r.settings.packs.includes(p.id)).flatMap((p) => p.cards.map((text) => ({ pack: p.id, text }))))
+        if (!r.deck.length) r.deck = shuffle(content[r.game].filter((p) => (r.settings as PartyRoomSettings).packs.includes(p.id)).flatMap((p) => p.cards.map((text) => ({ pack: p.id, text }))))
         const card = r.deck.shift()!
         if (r.game === 'neverHave' && !r.fingers) r.fingers = Object.fromEntries(r.playerIds.map((id) => [id, 5]))
         r.party = { number: (r.party?.number ?? 0) + 1, card: card.text, pack: card.pack, votes: {}, result: null }
@@ -297,7 +349,7 @@ export class RoomsService {
 
   async create(actor: RoomActor, body: unknown): Promise<Room> {
     const b = object(body)
-    if (Object.keys(b).some((k) => !['game', 'settings'].includes(k)) || !['spy', 'mostLikely', 'neverHave'].includes(String(b.game))) throw invalid()
+    if (Object.keys(b).some((k) => !['game', 'settings'].includes(k)) || !['spy', 'mostLikely', 'neverHave', 'boss'].includes(String(b.game))) throw invalid()
     const game = b.game as RoomGame, s = settings(game, b.settings)
     return this.change(async (c) => {
       await this.guests.assertActive(c, actor)
@@ -422,10 +474,14 @@ export class RoomsService {
          WHERE coalesce(next_deadline,expires_at)<=clock_timestamp() ORDER BY code LIMIT 25 FOR UPDATE SKIP LOCKED`,
       )).rows
       const changed: string[] = [], closed: string[] = []
+      let resolved: { state: BossInternalState; changed: boolean }
       for (const { code, data: r, expired } of rows) {
         if (expired) { await c.query('DELETE FROM game_rooms WHERE code=$1', [code]); closed.push(code); continue }
         if (r.state === 'playing' && r.spy && !r.spy.timeUp && new Date(r.spy.endsAt).getTime() <= Date.now()) {
           r.spy.timeUp = true
+          await this.save(c, r); changed.push(code)
+        } else if (r.state === 'playing' && r.boss && (resolved = resolveBossDeadlines(r.boss, bossBoard, randomInt, Date.now())).changed) {
+          r.boss = resolved.state; bossSettle(r)
           await this.save(c, r); changed.push(code)
         } else {
           await c.query('UPDATE game_rooms SET next_deadline=$2 WHERE code=$1', [code, deadlineOf(r)])

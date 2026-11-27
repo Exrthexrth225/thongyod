@@ -223,6 +223,49 @@ test('room sockets: private views, ordering, retries, control, boards, deadlines
       assert.equal((await pool.query('SELECT 1 FROM game_rooms WHERE code=$1', [spy.code])).rowCount, 0)
     })
 
+    await t.test("I'm the Boss!: private hands, engine moves, host skip and kick only when offline", async () => {
+      const response = await call('/rooms', host, 'POST', { game: 'boss', settings: { short: true } })
+      assert.equal(response.status, 201)
+      const room = await response.json(); codes.push(room.code)
+      assert.equal(room.maxPlayers, 6); assert.equal(room.boss, null)
+      const h = await client(host), x = await client(a.cookie), y = await client(b.cookie)
+      for (const z of [h, x, y]) assert.equal((await watch(z, room.code, true)).ok, true)
+      for (const z of [x, y]) assert.equal((await command(z, room.code, 'join')).ok, true)
+      const lobby = await until(() => latest(h)?.players.length === 3 && latest(h), 'three players')
+      assert.equal((await command(h, room.code, 'start', undefined, lobby.phase)).ok, true)
+      const views = await until(() => [h, x, y].every((z) => latest(z)?.boss) && [h, x, y].map(latest), 'boss views')
+      for (const v of views) {
+        assert.equal(v.boss.myHand.length, 5)
+        assert.equal(v.boss.short, true)
+        assert.equal(v.boss.seats.filter((s) => s.exactCash !== null).length, 1, 'only my own cash')
+        assert.equal(v.boss.seats.every((s) => s.investors.length === 2), true, 'three players hold two investors each')
+      }
+      const ids = { [hostId]: h, [a.id]: x, [b.id]: y }
+      const chooser = ids[views[0].boss.markerChooserId]
+      assert.equal((await command(chooser, room.code, 'boss', { action: { type: 'roll_die' } })).code, 'INVALID_PHASE')
+      assert.equal((await command(chooser, room.code, 'boss', { action: { type: 'pick_start', spaceIndex: 3 } })).ok, true)
+      const placed = await until(() => latest(h).boss.phase === 'turn_choice' && latest(h).boss, 'marker placed')
+      assert.equal(placed.markerSpace, 3)
+
+      const turnId = placed.turnPlayerId
+      const victimId = turnId === hostId ? a.id : turnId
+      assert.equal((await command(h, room.code, 'bossSkip', { targetId: victimId })).code, 'PLAYER_ONLINE')
+      assert.equal((await command(x, room.code, 'bossSkip', { targetId: b.id })).code, 'HOST_ONLY')
+      ids[victimId].socket.disconnect()
+      await until(() => !latest(h).online.includes(victimId) && latest(h), 'victim offline')
+      if (victimId === turnId) {
+        assert.equal((await command(h, room.code, 'bossSkip', { targetId: victimId })).ok, true)
+        await until(() => latest(h).boss.turnPlayerId !== victimId, 'turn passed')
+      } else {
+        assert.equal((await command(h, room.code, 'bossSkip', { targetId: victimId })).code, 'NOTHING_TO_SKIP')
+      }
+      assert.equal((await command(h, room.code, 'bossKick', { targetId: victimId })).ok, true)
+      const over = await until(() => latest(h).state === 'revealed' && latest(h), 'game over with two left')
+      assert.equal(over.boss.phase, 'game_over')
+      assert.equal(over.players.some((p) => p.userId === victimId), false)
+      assert.equal(over.boss.seats.every((s) => s.exactCash !== null), true, 'cash revealed at the end')
+    })
+
     await t.test('revoked credentials and floods are refused', async () => {
       const room = await createRoom('mostLikely')
       const g = await guest('Guest_D'), gc = await client(g.cookie)

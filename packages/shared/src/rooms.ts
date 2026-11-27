@@ -1,8 +1,9 @@
 import type { PersonCard } from './social.js'
+import type { BossActionPayload, BossRoomSettings, BossView } from './boss.js'
 type PersonRef = Omit<PersonCard, 'handle'>
 
 /** Games that can be played with each friend on their own phone. */
-export type RoomGame = 'spy' | 'mostLikely' | 'neverHave'
+export type RoomGame = 'spy' | 'mostLikely' | 'neverHave' | 'boss'
 export type RoomState = 'lobby' | 'playing' | 'revealed'
 
 /** สายลับ settings chosen by the host. */
@@ -92,13 +93,26 @@ export type PartyRoomData = RoomBase & {
   fingers: Record<string, number> | null
 }
 
-/** GET /rooms/:code — poll every ~1.5 s while open (real-time push can replace polling later). */
-export type Room = SpyRoomData | PartyRoomData
+/** I'm the Boss! (3–6 players). `boss` is projected per viewer: own hand and exact cash only. */
+export type BossRoomData = RoomBase & {
+  game: 'boss'
+  settings: BossRoomSettings
+  /** null in the lobby or when not a player / board. */
+  boss: BossView | null
+}
+
+/** GET /rooms/:code (REST fallback); live snapshots come over the room socket. */
+export type Room = SpyRoomData | PartyRoomData | BossRoomData
 
 /** Commands sent over the room socket (or REST as a fallback). */
 export type RoomCommandType =
   | 'join' | 'leave' | 'start' | 'reveal' | 'lobby' | 'vote' | 'settings'
   | 'claimHost' | 'boardApprove' | 'boardReject' | 'boardRevoke'
+  /** I'm the Boss! move (payload: BossCommandPayload). Host only: bossSkip / bossKick an offline player who holds the game up. */
+  | 'boss' | 'bossSkip' | 'bossKick'
+
+export type BossCommandPayload = { action: BossActionPayload }
+export type BossHostPayload = { targetId: string }
 
 export type RoomCommand = {
   code: string
