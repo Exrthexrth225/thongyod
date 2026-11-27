@@ -582,6 +582,11 @@ export const en: Messages = {
   },
   rooms: {
     zoneTitle: 'Many phones',
+    pickGame: 'Pick a game to open a room',
+    newBadge: 'New',
+    scanShort: 'Scan QR',
+    howItWorks: 'Open a room → share the code or QR → everyone plays on their own phone',
+    boardHint: 'Put an iPad in the middle as the board',
     zoneSubtitle: 'Everyone on their own phone',
     zoneIntro: 'Make a room and bring friends in. Everyone sees their own secret on their own phone; no passing around',
     joinTitle: "Join a friend's room",

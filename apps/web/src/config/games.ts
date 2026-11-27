@@ -19,7 +19,7 @@ import fortuneArt from '@/assets/games/fortune.webp'
 import fingerArt from '@/assets/games/finger.webp'
 import raceArt from '@/assets/games/race.webp'
 import fatCatArt from '@/assets/games/fatCat.webp'
-import bossArt from '@/assets/boss/fx/pawn.webp'
+import bossArt from '@/assets/boss/cards/boss.webp'
 
 // Stickers of the coming-soon games (image/51-game-stickers-2.png, #129).
 const SOON_ART = import.meta.glob<string>('@/assets/games/*.webp', { eager: true, import: 'default' })
@@ -52,7 +52,7 @@ export type Game = {
 }
 
 export const GAMES: Game[] = [
-  { id: 'boss', kind: 'board', icon: Crown, art: bossArt, tint: 3, mode: 'rooms', players: [3, 6], status: 'ready', to: '/games/rooms/new?game=boss' },
+  { id: 'boss', kind: 'board', icon: Crown, art: bossArt, tint: 3, mode: 'rooms', rooms: true, players: [3, 6], status: 'ready', to: '/games/rooms/new?game=boss' },
   { id: 'fatCat', kind: 'drink', icon: Cat, art: fatCatArt, tint: 3, mode: 'onePhone', players: [2, 20], status: 'beta', to: '/games/fat-cat' },
   { id: 'headsUp', kind: 'party', icon: Smartphone, art: headsUpArt, tint: 8, mode: 'onePhone', players: [2, 20], status: 'ready', to: '/head-guess' },
   { id: 'spy', kind: 'board', icon: VenetianMask, art: spyArt, tint: 6, mode: 'onePhone', rooms: true, players: [3, 12], status: 'ready', to: '/games/spy' },
