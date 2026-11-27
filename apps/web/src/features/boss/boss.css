@@ -1,28 +1,92 @@
 /* I'm the Boss! — layout and motion. Animations use transform/opacity only; all have reduced-motion fallbacks. */
 
-/* Phone game: Hearthstone-style in landscape (players left, table centre, big buttons right, hand at the bottom). */
+/* Phone: full-height wallet and table panels, a bounded centre for decisions and cards. */
 .boss-game {
   display: grid;
-  grid-template-areas: 'top top top' 'strip strip strip' 'seats field side' 'seats hand side';
-  grid-template-columns: minmax(7.5rem, 17%) minmax(0, 1fr) minmax(7rem, 15%);
-  /* default: a decision (or the table) in the middle, the hand peeking below */
-  grid-template-rows: auto auto minmax(0, 1fr) clamp(4.75rem, 23vh, 6.25rem);
-  transition: grid-template-rows 320ms ease;
+  grid-template-areas: 'top top top' 'seats field side' 'seats hand side';
+  grid-template-columns: clamp(9.5rem, 20%, 12rem) minmax(0, 1fr) clamp(10.5rem, 22%, 13rem);
+  grid-template-rows: 3rem minmax(0, 1fr) 5.5rem;
+  column-gap: .5rem;
+  padding-bottom: max(.5rem, env(safe-area-inset-bottom));
 }
-/* nothing to decide while the shared screen shows the table: the hand is the star */
-.boss-game[data-focus='hand'] { grid-template-rows: auto auto 0 minmax(0, 1fr); }
+.boss-game[data-focus='hand'] { grid-template-rows: 3rem 0 minmax(0, 1fr); }
 .boss-game[data-focus='hand'] .boss-field { visibility: hidden; }
 .boss-top { grid-area: top; }
-.boss-strip { grid-area: strip; }
-.boss-seats { grid-area: seats; }
+.boss-instruction { position: absolute; left: 50%; transform: translateX(-50%); width: min(45%, calc(100% - 23rem)); pointer-events: none; text-align: center; }
+.boss-top .boss-instruction .boss-banner { max-width: 100%; }
+.boss-seats, .boss-side { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: .5rem; padding: .625rem; background: #252044; border: 1px solid #65552f; border-radius: 1.25rem; }
+.boss-seats { grid-area: seats; margin-left: .5rem; }
+.boss-me { display: flex; flex-direction: column; gap: .5rem; min-height: 0; }
+.boss-me-heading { display: flex; flex-direction: column; align-items: center; gap: .25rem; text-align: center; }
+.boss-me-faces { height: 4rem; max-width: 100%; }
+.boss-wallet { display: block; font-size: 2rem; line-height: 1.15; }
+.boss-owned { display: flex; flex-direction: column; gap: .25rem; }
+.boss-owned-color { display: flex; align-items: center; gap: .5rem; min-height: 0; font-size: .75rem; font-weight: 700; }
+.boss-owned-color img { width: 1.75rem; height: 1.75rem; border-radius: 50%; object-fit: contain; }
+.boss-other-seats { display: flex; flex: 1; min-height: 0; flex-direction: column; justify-content: end; gap: .25rem; }
+.boss-wallet-footer { display: flex; flex-direction: column; gap: .125rem; margin-top: auto; padding-top: .375rem; border-top: 1px solid #ffffff20; color: #e3dbbc; font-size: .6875rem; }
+.boss-wallet-footer > span:first-child { display: flex; justify-content: space-between; gap: .25rem; }
+.boss-game[data-own-screen='true'] .boss-me-heading { flex-direction: row; text-align: left; gap: .5rem; }
+.boss-game[data-own-screen='true'] .boss-me-faces { height: 2.5rem; max-width: 44%; }
+.boss-game[data-own-screen='true'] .boss-wallet { font-size: 1.5rem; }
+.boss-game[data-own-screen='true'] .boss-owned { gap: .125rem; }
+.boss-game[data-own-screen='true'] .boss-owned-color img { width: 1.25rem; height: 1.25rem; }
+.boss-game[data-players='6'][data-own-screen='true'] .boss-other,
+.boss-game[data-players='5'][data-own-screen='true'] .boss-other { padding: .125rem .25rem; }
+.boss-game[data-players='6'][data-own-screen='true'] .boss-other > span:first-child,
+.boss-game[data-players='5'][data-own-screen='true'] .boss-other > span:first-child { height: 1.5rem; }
+.boss-game[data-players='6'][data-own-screen='true'] .boss-owned-color img { width: 1rem; height: 1rem; }
+.boss-game[data-players='6'][data-own-screen='true'] .boss-owned-color { font-size: .625rem; }
 .boss-field { grid-area: field; }
-.boss-side { grid-area: side; }
-.boss-hand-row { grid-area: hand; overflow: visible; }
-/* a decision slides in over the table */
+.boss-side { grid-area: side; margin-right: .5rem; gap: .375rem; }
+.boss-table-info { display: flex; flex-direction: column; gap: .375rem; min-height: 0; }
+.boss-space-summary { border-radius: .75rem; background: #f6efdc; color: #241b4b; padding: .5rem .625rem; }
+.boss-waiting { overflow-wrap: anywhere; }
+.boss-actions { display: flex; flex-direction: column; gap: .375rem; margin-top: auto; }
+.boss-turn-owner { display: flex; align-items: center; justify-content: center; gap: .5rem; min-height: 3.5rem; font-weight: 700; font-size: .875rem; }
+.boss-action { white-space: normal; flex-shrink: 0; }
+.boss-hand-row { grid-area: hand; overflow: hidden; }
+.boss-card-playable { box-shadow: 0 0 0 2px #ffc21a, 0 0 12px 2px #ffc21a65; }
+.boss-hand-card:focus-visible { outline: 3px solid white; outline-offset: 4px; }
 .boss-field-in { animation: boss-field-in 320ms cubic-bezier(.2,.8,.3,1.1) both; }
 @keyframes boss-field-in { from { transform: translateY(14%) scale(0.96); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .boss-field-in { animation: none; } }
 
+/* Phone decisions share the centre with the hand; Board Screen keeps its original layout. */
+.boss-game .boss-editor { gap: .25rem; padding: .375rem; height: 100%; max-height: 16rem; }
+.boss-game .boss-editor > header { min-height: 2.75rem; }
+.boss-game .boss-editor > header > button { height: 2.75rem; }
+.boss-game .boss-slot-groups { flex: 1; min-height: 0; }
+.boss-game .boss-slot-groups > section > button { height: 2.75rem; }
+.boss-game .boss-payouts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .25rem; }
+.boss-game .boss-payouts > li { height: 2.75rem; padding: 0 .125rem; gap: .125rem; }
+.boss-game .boss-payouts > li > span:first-child { display: none; }
+.boss-game .boss-payouts button { width: 2.75rem; height: 2.75rem; flex-shrink: 0; }
+.boss-game .boss-payouts .boss-payout-money { width: 2.25rem; font-size: .75rem; }
+.boss-game .boss-payout-footer { display: flex; align-items: center; gap: .5rem; margin-top: auto; }
+.boss-game .boss-payout-footer p { flex: 1; font-size: .6875rem; }
+.boss-game .boss-payout-footer > button { height: 2.75rem; flex: 1; }
+.boss-game .boss-draft { gap: .25rem; padding: .375rem; }
+.boss-game .boss-draft img { width: 2rem; height: 2rem; }
+.boss-game .boss-draft > button { height: 2.75rem; }
+.boss-game .boss-results { max-width: none; display: grid; grid-template-columns: 1.15fr 1fr; gap: .375rem; padding: .5rem; }
+.boss-game .boss-results > h2, .boss-game .boss-results > p { grid-column: 1 / -1; }
+.boss-game .boss-results > h2 { font-size: 1rem; }
+.boss-game .boss-results > h2 .boss-word { font-size: 1.25rem; }
+.boss-game .boss-results > h2 > img { width: 1.75rem; height: 1.75rem; }
+.boss-game .boss-results > ol { gap: .25rem; }
+.boss-game .boss-results > ol > li { min-width: 0; gap: .25rem; padding: .125rem .25rem; min-height: 1.75rem; border-radius: .5rem; font-size: .75rem; }
+.boss-game .boss-results > ol > li > span:first-child { width: 1rem; font-size: .75rem; }
+.boss-game .boss-results > ol > li > span:nth-child(2) { height: 1.5rem; }
+.boss-game .boss-results > ol > li > span:last-child { font-size: .875rem; }
+.boss-game .boss-awards { grid-template-columns: minmax(0, 1fr); margin: 0; gap: .25rem; }
+.boss-game .boss-awards > li { min-width: 0; padding: .125rem .25rem; gap: .25rem; }
+.boss-game .boss-awards > li > span:first-child > span { height: 1.5rem; }
+.boss-game .boss-awards > li > span:first-child > img { width: 1rem; height: 1rem; }
+.boss-game .boss-deal-board { gap: .25rem; padding: .375rem; }
+.boss-game .boss-deal-board .boss-slot-chip { padding: .125rem .25rem; }
+.boss-game .boss-deal-board .boss-slot-chip > span:first-child { height: 1.5rem; width: 1.5rem; }
+.boss-game .boss-deal-board .boss-slot-chip p { font-size: .6875rem; }
 .boss-space-wrap { transition: transform 200ms ease; }
 .boss-space-wrap:is(button):hover { transform: translateY(-2px); }
 .boss-space-inner { transition: transform 900ms cubic-bezier(.3,1.3,.5,1); }
@@ -39,7 +103,8 @@
 .boss-face-pop { animation: boss-face-pop 520ms cubic-bezier(.2,.9,.3,1.4) both; }
 @keyframes boss-face-pop { from { transform: scale(0.6) translateY(12%); } }
 
-.boss-hand-card { animation: boss-deal-in 420ms cubic-bezier(.2,.8,.3,1.15) backwards; }
+.boss-hand-card { animation: boss-hand-enter 420ms cubic-bezier(.2,.8,.3,1.15) backwards; }
+@keyframes boss-hand-enter { from { transform: translateY(30%); opacity: 0; } }
 @keyframes boss-deal-in { from { transform: translateY(70%) rotate(-8deg); opacity: 0; } }
 
 .boss-slam { animation: boss-slam 2.6s cubic-bezier(.2,.9,.3,1.25) both; }
@@ -194,3 +259,9 @@
 
 /* The table screen has its own exit and fullscreen buttons: hide the stage bar so nothing sits on the board. */
 .game-stage-bar:has(~ * .boss-table) { display: none; }
+
+.boss-game .boss-slot-groups .boss-group-color-label { display: none; }
+.boss-game .boss-deal-board .boss-slot-chip { height: 2rem; }
+
+.boss-game .boss-slot-groups > section { gap: .125rem; }
+@media (prefers-reduced-motion: reduce) { .boss-hand-card { animation: none; } }

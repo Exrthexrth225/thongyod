@@ -21,7 +21,7 @@ import { DiscardSheet, HandBar } from './Hand'
 import { Word } from './Word'
 import { faceArt, fxArt, M, nameOf, shortName, TEAM_COLOR, tutorialSeen } from './meta'
 import { BossTutorial } from './Tutorial'
-import { Money, PlayerName, PriceTag, SeatColors, SeatFaces, SpaceTile, TeamBadge } from './parts'
+import { Money, PlayerName, PriceTag, SeatColors, SeatFaces, SpaceTile } from './parts'
 import { useBossTimeline } from './useBossTimeline'
 import './boss.css'
 
@@ -48,10 +48,9 @@ function SheetConfirm({ open, title, text, label, busy, onCancel, onConfirm }: {
 
 /**
  * One phone in a game of I'm the Boss!, played sideways.
- * With a shared screen (iPad) the phone is a controller: the hand is the star (big, fanned), my wallet and colours on
- * the left, one line of table news on top; a decision (boss: build the deal, offered: accept or decline, draft) slides
- * into the middle only when there is one. Without a shared screen (or by choice, or when it drops) the middle shows the
- * table. Nothing in the middle scrolls: every card is laid out to fit.
+ * A full-height wallet panel and table/actions panel frame a straight private hand.
+ * Decisions use the centre above a shorter hand. Own-screen mode also shows the
+ * public table and other seats; Board Screen mode leaves that view on the shared device.
  */
 export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   const { t } = useTranslation()
@@ -141,7 +140,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   const focus = field ? 'field' : 'hand'
 
   // ── big buttons on the right, only when it is up to me ──
-  const big = 'h-12 w-full rounded-2xl text-base font-black shadow-[0_4px_0_rgba(0,0,0,0.3)] active:translate-y-0.5'
+  const big = 'boss-action h-12 w-full rounded-2xl text-base font-black shadow-[0_4px_0_rgba(0,0,0,0.3)] active:translate-y-0.5'
   /** A big button with one short line saying what it does. */
   const label = (text: string, hint: string) => (
     <span className="flex flex-col items-center leading-tight"><span>{text}</span><span className="text-[10px] font-semibold opacity-75">{hint}</span></span>
@@ -170,7 +169,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
         {view.phase === 'closing'
           ? <Button variant="destructive" className={cn(big, 'h-14')} disabled={move.isPending} onClick={() => act({ type: 'hold' })}>{label(t('boss.act.wait'), t('boss.act.waitHint'))}</Button>
           : <Button className={cn(big, 'h-14', deal.canClose && 'boss-glow')} disabled={move.isPending || !deal.canClose} onClick={() => act({ type: 'start_closing' })}>{t('boss.act.close')}</Button>}
-        <button type="button" className="text-xs font-bold text-white/60 underline-offset-2 hover:underline" onClick={() => setConfirm('fail')}>{t('boss.act.fail')}</button>
+        <button type="button" className="boss-fail min-h-11 rounded-xl bg-white/10 text-xs font-bold text-white/85 underline-offset-2 hover:underline" onClick={() => setConfirm('fail')}>{t('boss.act.fail')}</button>
       </>
     )
   } else if (deal && view.phase === 'closing') {
@@ -189,7 +188,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
       ? isBossRow ? t('boss.status.boss') : deal.acceptedIds.includes(id) ? t('boss.deal.accepted') : deal.declinedIds.includes(id) ? t('boss.deal.declined') : deal.requiredIds.includes(id) ? t('boss.deal.waiting') : ''
       : ''
     return (
-      <div key={id} data-seat={id} className={cn('flex w-full shrink-0 items-center gap-1.5 rounded-xl bg-white/[0.06] p-1 pr-1.5 ring-1 ring-white/10 transition', (turn || isBossRow) && 'ring-2 ring-[#ffc21a]', !room.online.includes(id) && 'opacity-50')}>
+      <div key={id} data-seat={id} className={cn('boss-other flex w-full shrink-0 items-center gap-1.5 rounded-xl bg-white/[0.06] p-1 pr-1.5 ring-1 ring-white/10 transition', (turn || isBossRow) && 'ring-2 ring-[#ffc21a]', !room.online.includes(id) && 'opacity-50')}>
         <SeatFaces view={view} userId={id} mood={moods[id] ?? 'calm'} round className="size-8" />
         <span className="flex min-w-0 flex-1 flex-col leading-tight">
           <span className="flex min-w-0 items-center gap-1 text-[12px] font-bold text-white"><PlayerName name={nameOf(players, id)} />{!room.online.includes(id) && <WifiOff className="size-3 shrink-0" />}</span>
@@ -202,57 +201,78 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
     )
   }
 
-  // ── me: portrait, wallet, the colours I hold ──
+  // My wallet and investor colours stay private to this phone.
   const myCard = me && (
-    <div data-seat={meId} className={cn('flex shrink-0 flex-col gap-1 rounded-2xl bg-[#ffc21a]/15 p-1.5 ring-2', view.turnPlayerId === meId && !deal ? 'ring-[#ffc21a]' : 'ring-[#ffc21a]/40')}>
-      <div className="flex items-center gap-1.5">
-        <SeatFaces view={view} userId={meId} mood={moods[meId] ?? 'calm'} round className="size-10" />
-        <span className="min-w-0 leading-tight">
-          <PlayerName name={nameOf(players, meId)} className="block text-xs font-bold text-white/85" />
-          <Money amount={me.exactCash ?? 0} className="text-xl text-[#ffc21a]" />
-        </span>
+    <div data-seat={meId} className="boss-me">
+      <div className="boss-me-heading">
+        <SeatFaces view={view} userId={meId} mood={moods[meId] ?? 'calm'} round className="boss-me-faces" />
+        <div className="min-w-0">
+          <PlayerName name={nameOf(players, meId)} className="block text-sm font-bold text-white/90" />
+          <Money amount={me.exactCash ?? 0} className="boss-wallet text-[#ffc21a]" />
+        </div>
       </div>
-      <span className="flex flex-wrap items-center gap-1">
+      <ul className="boss-owned">
         {me.investors.length
-          ? me.investors.map((team) => <span key={team} className="flex items-center gap-0.5 rounded-full bg-black/25 py-0.5 pl-0.5 pr-1.5 text-[10px] font-bold text-white/80"><TeamBadge team={team} className="size-4" />{t(`boss.teamShort.${team}`)}</span>)
-          : <span className="text-[10px] text-white/60">{t('boss.table.noColors')}</span>}
-      </span>
+          ? me.investors.map((team) => (
+            <li key={team} className="boss-owned-color">
+              <img src={faceArt(team)} alt="" draggable={false} style={{ background: TEAM_COLOR[team] }} />
+              <span>{t(`boss.teamShort.${team}`)}</span>
+            </li>
+          ))
+          : <li className="text-xs text-white/70">{t('boss.table.noColors')}</li>}
+      </ul>
     </div>
   )
 
-  const iconBtn = 'flex size-8 shrink-0 items-center justify-center rounded-full bg-white/10'
+  const iconBtn = 'flex size-11 shrink-0 items-center justify-center rounded-full bg-white/10'
   return (
     <div ref={stage} className="boss-stage fixed inset-0 z-40 overflow-hidden bg-[radial-gradient(ellipse_at_50%_35%,#2c2360,#17142b_65%,#120d2b)] text-white">
-      <div data-focus={focus} className="boss-game relative size-full pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]">
-        <header className="boss-top relative z-40 flex items-center gap-1.5 px-2 pt-1.5">
-          <button type="button" className={iconBtn} aria-label={t('boss.menu.title')} onClick={() => setMenuOpen(true)}><Menu className="size-4" /></button>
-          <span className="min-w-0 flex-1" />
-          {/* one line: what is going on / what to do now */}
-          <span key={say} className="boss-plaque boss-banner flex min-w-0 items-center px-4 py-1"><Word text={say} className="truncate text-[15px]" /></span>
-          <span className="min-w-0 flex-1" />
-          {room.boardOnline && (
-            <button type="button" className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-white/10 px-2.5 text-[11px] font-bold" onClick={() => switchMode(!ownScreen)}>
-              {ownScreen ? <><MonitorUp className="size-4" />{t('boss.mode.toBoard')}</> : <><Smartphone className="size-4" />{t('boss.mode.toOwn')}</>}
-            </button>
-          )}
-          <button type="button" className={iconBtn} aria-label={t('boss.table.fullBoard')} onClick={() => setBoardOpen(true)}><LayoutGrid className="size-4" /></button>
-          <button type="button" className={iconBtn} aria-label={t('rooms.board.fullscreen')} onClick={() => void fullscreen()}><Maximize className="size-4" /></button>
+      <div data-focus={focus} data-own-screen={tableMode} data-players={view.seats.length} data-phase={view.phase} className="boss-game relative size-full pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]">
+        <header className="boss-top relative z-40 flex items-center justify-between px-2">
+          <button type="button" className={iconBtn} aria-label={t('boss.menu.title')} onClick={() => setMenuOpen(true)}><Menu className="size-5" /></button>
+          <div className="boss-instruction">
+            <span key={say} className="boss-plaque boss-banner block px-3 py-1" title={say}>
+              <span className="block truncate text-sm font-black text-[#ffe19a]">{say}</span>
+            </span>
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            {room.boardOnline && (
+              <button type="button" className="flex h-11 items-center gap-1 rounded-full bg-white/10 px-2 text-[11px] font-bold"
+                aria-label={t(ownScreen ? 'boss.mode.toBoard' : 'boss.mode.toOwn')} onClick={() => switchMode(!ownScreen)}>
+                {ownScreen ? <MonitorUp className="size-4" /> : <Smartphone className="size-4" />}
+                {t(ownScreen ? 'boss.phone.toBoard' : 'boss.phone.toOwn')}
+              </button>
+            )}
+            <button type="button" className={iconBtn} aria-label={t('boss.table.fullBoard')} onClick={() => setBoardOpen(true)}><LayoutGrid className="size-5" /></button>
+            <button type="button" className={iconBtn} aria-label={t('rooms.board.fullscreen')} onClick={() => void fullscreen()}><Maximize className="size-5" /></button>
+          </div>
         </header>
-        <div className="boss-strip flex min-w-0 flex-col gap-1 px-2 pt-1">
-          <InfoStrip view={view} players={players} />
-          <RoomLiveBar room={room} meId={meId} />
-        </div>
 
-        <aside className="boss-seats flex min-h-0 flex-col gap-1 overflow-hidden p-1.5">
+        <aside className="boss-seats">
           {myCard}
-          {tableMode && others.map(row)}
+          {tableMode && <div className="boss-other-seats">{others.map(row)}</div>}
+          <div className="boss-wallet-footer">
+            <span>{t('boss.phone.lastPayout')} <strong>{view.lastSettlement ? <Money amount={view.lastSettlement.payouts[meId] ?? 0} /> : '—'}</strong></span>
+            <span>{t('boss.status.deck', { count: view.deckCount })}</span>
+          </div>
         </aside>
 
         <main className="boss-field relative flex min-h-0 min-w-0 items-center justify-center overflow-hidden p-1">
           {field && <div className="boss-field-in flex size-full items-center justify-center">{field}</div>}
         </main>
 
-        <nav className="boss-side flex min-h-0 flex-col justify-end gap-1.5 p-1.5">{side}</nav>
+        <nav className="boss-side">
+          <InfoStrip view={view} players={players} />
+          <RoomLiveBar room={room} meId={meId} />
+          <div className="boss-actions">
+            {side || (
+              <div className="boss-turn-owner">
+                <SeatFaces view={view} userId={view.draft?.actorId ?? deal?.bossId ?? view.turnPlayerId} round className="size-11" />
+                <span>{view.phase === 'game_over' ? t('boss.over.title') : t('boss.phone.turnOf', { name: shortName(nameOf(players, view.draft?.actorId ?? deal?.bossId ?? view.turnPlayerId)) })}</span>
+              </div>
+            )}
+          </div>
+        </nav>
 
         <footer className="boss-hand-row min-h-0 min-w-0">
           <HandBar view={view} players={players} meId={meId} busy={move.isPending} act={(a) => act(a)} big={focus === 'hand'} />
@@ -333,22 +353,31 @@ const modeKey = (code: string) => `thongyod-boss-own:${code}`
 function readMode(code: string) { try { return localStorage.getItem(modeKey(code)) === '1' } catch { return false } }
 function writeMode(code: string, own: boolean) { try { localStorage.setItem(modeKey(code), own ? '1' : '0') } catch { /* private mode */ } }
 
-/** One line of table news on every phone: the deal count, the space and its value, the boss, who it waits on, the end roll. */
+/** Public table news, kept above the actions in the full-height right panel. */
 function InfoStrip({ view, players }: { view: BossView; players: RoomPlayer[] }) {
   const { t } = useTranslation()
   const deal = view.deal
   const space = deal ? view.spaces[deal.spaceIndex] : view.markerSpace !== null ? view.spaces[view.markerSpace] : null
   const waiting = deal ? deal.requiredIds.filter((id) => !deal.acceptedIds.includes(id)) : []
-  const chip = 'flex shrink-0 items-center gap-1 rounded-full bg-black/30 px-2 py-0.5'
   return (
-    <div className="flex min-w-0 items-center justify-center gap-1.5 overflow-hidden whitespace-nowrap text-[11px] font-bold text-white/80">
-      <span className={chip}>{t('boss.status.dealOf', { n: Math.min(view.dealsDone + 1, view.dealsTotal), total: view.dealsTotal })}</span>
+    <div className="boss-table-info">
+      <p className="text-[11px] font-bold text-white/75">{t('boss.status.dealOf', { n: Math.min(view.dealsDone + 1, view.dealsTotal), total: view.dealsTotal })}</p>
       {space && view.phase !== 'game_over' && (
-        <span className={chip}>{t('boss.deal.people', { count: space.teamCount })} · $×{space.dividends} · <span className="text-[#ffc21a]">{t('boss.money', { m: (space.dividends * view.currentShareValue) / M })}</span></span>
+        <div className="boss-space-summary">
+          <div className="flex items-center justify-between gap-1 text-xs font-black">
+            <span>{t('boss.phone.space', { n: space.index + 1 })}</span>
+            <span>$×{space.dividends}</span>
+          </div>
+          <Money amount={space.dividends * view.currentShareValue} className="block text-3xl" />
+          <span className="text-xs font-bold">{t('boss.deal.people', { count: space.teamCount })}</span>
+        </div>
       )}
-      {deal && <span className={chip}>👑 {shortName(nameOf(players, deal.bossId))}</span>}
-      {waiting.length > 0 && <span className={cn(chip, 'min-w-0 truncate')}>{t('boss.table.waitingFor', { names: waiting.map((id) => shortName(nameOf(players, id))).join(', ') })}</span>}
-      {view.currentEndRollFaces.length > 0 && view.phase !== 'game_over' && <span className={cn(chip, 'bg-red-600/80 text-white')}>🎲 {view.currentEndRollFaces.join(' ')}</span>}
+      {deal && <p className="flex min-w-0 items-center gap-1 text-xs font-bold">
+        <img src={fxArt('crown')} alt="" className="size-5" />
+        <span className="truncate">{t('boss.status.boss')} {shortName(nameOf(players, deal.bossId))}</span>
+      </p>}
+      {waiting.length > 0 && <p className="boss-waiting text-[11px] leading-tight text-white/85">{t('boss.table.waitingFor', { names: waiting.map((id) => shortName(nameOf(players, id))).join(', ') })}</p>}
+      {view.currentEndRollFaces.length > 0 && view.phase !== 'game_over' && <p className="text-[11px] font-bold text-[#ffcd9f]">{t('boss.status.endFaces', { faces: view.currentEndRollFaces.join(' ') })}</p>}
     </div>
   )
 }
@@ -382,7 +411,7 @@ function DraftCard({ view, players, meId, busy, act, host, onRandom }: { view: B
   if (!draft) return null
   const mine = draft.actorId === meId
   return (
-    <div className="flex w-full max-w-md flex-col gap-2 rounded-2xl bg-[#f6efdc] p-2.5 text-[#241b4b]">
+    <div className="boss-draft flex w-full max-w-md flex-col gap-2 rounded-2xl bg-[#f6efdc] p-2.5 text-[#241b4b]">
       <p className="flex items-center justify-between text-xs font-black"><span>{t('boss.table.draftTitle')}</span><span className="opacity-60">{draft.index + 1}/{draft.order.length}</span></p>
       <div className="grid grid-cols-3 gap-1.5">
         {view.availableInvestors.map((team) => (
@@ -439,7 +468,7 @@ export function Results({ view, players }: { view: BossView; players: RoomPlayer
   ] as const).flatMap(([key, title, fmt]) => { const b = best(key); return b ? [{ key, title, id: b.id, value: fmt(b.n) }] : [] })
   const top = ranked[0]?.exactCash ?? 0
   return (
-    <div className="flex w-full max-w-md flex-col gap-2 rounded-3xl bg-[#fff4dc] p-4 text-[#3a2416] shadow-[0_4px_0_#5a3420]">
+    <div className="boss-results flex w-full max-w-md flex-col gap-2 rounded-3xl bg-[#fff4dc] p-4 text-[#3a2416] shadow-[0_4px_0_#5a3420]">
       <h2 className="flex items-center justify-center gap-2"><img src={fxArt('trophy')} alt="" className="size-10" /><Word text={t('boss.over.title')} className="text-3xl" /></h2>
       {winners.length > 1 && <p className="text-center text-sm font-black text-amber-700">{t('boss.over.jointWin', { names: winners.join(' & '), amount: money(top) })}</p>}
       <ol className="flex flex-col gap-1.5">
@@ -453,7 +482,7 @@ export function Results({ view, players }: { view: BossView; players: RoomPlayer
         ))}
       </ol>
       {awards.length > 0 && (
-        <ul className="mt-1 grid grid-cols-2 gap-1.5">
+        <ul className="boss-awards mt-1 grid grid-cols-2 gap-1.5">
           {awards.map((w, i) => (
             <li key={w.key} className="boss-rank flex items-center gap-2 rounded-xl bg-[#241b4b] p-1.5 text-white" style={{ animationDelay: `${(ranked.length + i) * 120}ms` }}>
               <span className="relative shrink-0"><SeatFaces view={view} userId={w.id} round className="size-9" /><img src={fxArt(AWARD_ART[w.key])} alt="" className="boss-how absolute -bottom-1 -right-2 size-6 drop-shadow" style={{ animationDelay: `${(ranked.length + i) * 120 + 300}ms` }} /></span>

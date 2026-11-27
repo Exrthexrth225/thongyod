@@ -16,7 +16,7 @@ function SlotChip({ slot, deal, players, big }: { slot: BossSlot; deal: BossDeal
   const src = slot.source
   if (!src) {
     return (
-      <li className={cn('flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl border-2 border-dashed border-[#b9ab84] px-1.5 text-center text-[#7a6a46]', big ? 'h-[4.4rem]' : 'h-14')}>
+      <li className={cn('boss-slot-chip flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl border-2 border-dashed border-[#b9ab84] px-1.5 text-center text-[#7a6a46]', big ? 'h-[4.4rem]' : 'h-14')}>
         <span className="text-xs font-black">{t('boss.table.slotEmpty')}</span>
         {slot.lost && <span className="w-full truncate rounded bg-red-100 px-1 text-[10px] font-bold text-red-700">{t('boss.table.lost', { team: t(`boss.teamShort.${slot.lost.team}`), name: shortName(nameOf(players, slot.lost.ownerId)) })}</span>}
       </li>
@@ -25,7 +25,7 @@ function SlotChip({ slot, deal, players, big }: { slot: BossSlot; deal: BossDeal
   const ok = src.ownerId === deal.bossId || deal.acceptedIds.includes(src.ownerId)
   const no = deal.declinedIds.includes(src.ownerId)
   return (
-    <li className={cn('boss-slot-in flex min-w-0 items-center gap-1.5 rounded-xl bg-white px-1.5 ring-2', big ? 'h-[4.4rem]' : 'h-14', ok ? 'ring-emerald-500' : no ? 'ring-red-500' : 'ring-[#e0d4b3]')}>
+    <li className={cn('boss-slot-chip boss-slot-in flex min-w-0 items-center gap-1.5 rounded-xl bg-white px-1.5 ring-2', big ? 'h-[4.4rem]' : 'h-14', ok ? 'ring-emerald-500' : no ? 'ring-red-500' : 'ring-[#e0d4b3]')}>
       {/* the slot is one colour: that colour's character, with its badge */}
       <span className={cn('relative shrink-0 rounded-full', big ? 'size-11' : 'size-9')} style={{ background: TEAM_COLOR[src.team], padding: 2 }}>
         <Face team={src.team} className="size-full rounded-full" />
@@ -54,7 +54,7 @@ export function DealBoard({ view, players, meId, big, compact }: Props & { big?:
   const people = peopleInDeal(deal)
   const waiting = people.filter((p) => p.status === 'wait' || p.status === 'no').map((p) => shortName(nameOf(players, p.id)))
   return (
-    <div key={deal.id} className={cn('boss-contract flex w-full min-w-0 flex-col rounded-2xl bg-[#f6efdc] text-[#241b4b] shadow-[0_10px_30px_rgba(0,0,0,0.45)] ring-1 ring-[#d9cfb2]', big ? 'gap-2.5 p-3' : 'gap-1.5 p-2', compact && 'max-h-full max-w-[36rem] gap-1 overflow-hidden p-1.5')}>
+    <div key={deal.id} className={cn('boss-deal-board boss-contract flex w-full min-w-0 flex-col rounded-2xl bg-[#f6efdc] text-[#241b4b] shadow-[0_10px_30px_rgba(0,0,0,0.45)] ring-1 ring-[#d9cfb2]', big ? 'gap-2.5 p-3' : 'gap-1.5 p-2', compact && 'max-h-full max-w-[36rem] gap-1 overflow-hidden p-1.5')}>
       <header className="flex items-center gap-2">
         <SeatFaces view={view} userId={deal.bossId} round className={big ? 'size-11' : 'size-8'} />
         <div className="min-w-0 flex-1 leading-tight">
@@ -139,6 +139,7 @@ export function BossEditor({ view, players, meId, busy, act }: Props & { meId: s
   const space = view.spaces[deal.spaceIndex]
   const [tab, setTab] = useState<1 | 2>(1)
   const [openSlot, setOpenSlot] = useState<number | null>(null)
+  const [optionPage, setOptionPage] = useState(0)
   // amounts being typed, in millions, for this deal and this boss
   const key = `${deal.id}:${deal.bossId}`
   const [draft, setDraft] = useState<{ key: string; amounts: Record<string, number> } | null>(null)
@@ -166,9 +167,12 @@ export function BossEditor({ view, players, meId, busy, act }: Props & { meId: s
     })
   }
 
+  const slotOptions = openSlot !== null && deal.slots[openSlot] ? options(openSlot) : []
+  const page = Math.min(optionPage, Math.max(0, Math.ceil(slotOptions.length / 6) - 1))
+
   return (
-    <div className="flex w-full min-w-0 flex-col gap-1.5 rounded-2xl bg-[#f6efdc] p-2 text-[#241b4b] shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
-      <header className="flex items-center gap-1.5">
+    <div className="boss-editor relative flex w-full min-w-0 flex-col gap-1.5 rounded-2xl bg-[#f6efdc] p-2 text-[#241b4b] shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
+      <header inert={openSlot !== null} className="flex items-center gap-1.5">
         {([1, 2] as const).map((n) => (
           <button key={n} type="button" onClick={() => setTab(n)} className={cn('h-8 flex-1 rounded-xl text-xs font-black transition', tab === n ? 'bg-[#241b4b] text-white' : 'bg-white/70 text-[#241b4b]')}>
             {t(n === 1 ? 'boss.table.step1' : 'boss.table.step2')}
@@ -179,19 +183,19 @@ export function BossEditor({ view, players, meId, busy, act }: Props & { meId: s
 
       {tab === 1 ? (
         <>
-          <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${space.groups.length}, minmax(0, 1fr))` }}>
+          <div inert={openSlot !== null} className="boss-slot-groups grid gap-1.5" style={{ gridTemplateColumns: `repeat(${space.groups.length}, minmax(0, 1fr))` }}>
             {space.groups.map((g, gi) => (
               <section key={gi} className={cn('flex min-w-0 flex-col gap-1', gi > 0 && 'border-l-2 border-dashed border-[#d9cfb2] pl-1.5')}>
                 <h4 className="flex flex-wrap items-center gap-1 text-[11px] font-black">
                   <span className="rounded-md bg-[#241b4b] px-1.5 text-white">{g.pick === g.teams.length ? t('boss.deal.needs') : t('boss.deal.pick', { count: g.pick })}</span>
                   {g.teams.map((team) => (
                     <span key={team} className={cn('flex items-center gap-0.5 rounded-full bg-white pr-1.5 ring-2', deal.blockedTeams.includes(team) && 'line-through opacity-45')} style={{ ['--tw-ring-color' as string]: TEAM_COLOR[team] }}>
-                      <TeamBadge team={team} className="size-4" />{t(`boss.teamShort.${team}`)}
+                      <TeamBadge team={team} className="size-4" /><span className="boss-group-color-label">{t(`boss.teamShort.${team}`)}</span>
                     </span>
                   ))}
                 </h4>
                 {deal.slots.map((s, i) => s.group !== gi ? null : (
-                  <button key={i} type="button" onClick={() => setOpenSlot(openSlot === i ? null : i)}
+                  <button key={i} type="button" onClick={() => { setOpenSlot(i); setOptionPage(0) }}
                     className={cn('flex h-10 min-w-0 shrink-0 items-center gap-1.5 rounded-xl px-1.5 text-left transition', s.source ? 'bg-white ring-2 ring-[#e0d4b3]' : 'border-2 border-dashed border-[#b9ab84]', openSlot === i && 'ring-2 ring-[#ffb703]')}>
                     {s.source ? (
                       <>
@@ -213,14 +217,17 @@ export function BossEditor({ view, players, meId, busy, act }: Props & { meId: s
             ))}
           </div>
           {openSlot !== null && deal.slots[openSlot] && (
-            <div className="boss-how flex flex-col gap-1 rounded-xl bg-white p-1.5 ring-2 ring-[#ffb703]">
-              <p className="text-[11px] font-black">{t('boss.table.chooseFor')}</p>
+            <div className="boss-slot-picker absolute inset-0 z-10 flex flex-col gap-1 rounded-2xl bg-[#f6efdc] p-1.5">
+              <header className="flex min-h-11 items-center justify-between gap-1">
+                <p className="text-xs font-black">{t('boss.table.chooseFor')}</p>
+                <button type="button" className="min-h-11 rounded-lg bg-white px-3 text-xs font-bold" onClick={() => setOpenSlot(null)}>{t('common.back')}</button>
+              </header>
               <div className="grid grid-cols-2 gap-1">
-                {options(openSlot).map((o) => {
+                {slotOptions.slice(page * 6, page * 6 + 6).map((o) => {
                   const taken = used.has(o.team) && !o.current
                   return (
                     <button key={o.key} type="button" disabled={busy || taken || o.current} onClick={() => { act({ type: 'set_slot', slot: openSlot, source: o.source }); setOpenSlot(null) }}
-                      className={cn('flex h-11 min-w-0 items-center gap-1.5 rounded-lg px-1.5 text-left ring-1 ring-[#e0d4b3] transition active:scale-95 disabled:opacity-40', o.current && 'bg-emerald-100 ring-emerald-500')}>
+                      className={cn('flex h-11 min-w-0 items-center gap-1.5 rounded-lg bg-white px-1.5 text-left ring-1 ring-[#e0d4b3] transition-transform active:scale-95 motion-reduce:transition-none disabled:opacity-40', o.current && 'bg-emerald-100 ring-emerald-500')}>
                       <TeamBadge team={o.team} className="size-7" />
                       <span className="flex min-w-0 flex-col leading-tight">
                         <span className="truncate text-xs font-black">{shortName(nameOf(players, o.ownerId))}{o.ownerId === meId ? ` (${t('boss.status.you')})` : ''}</span>
@@ -229,19 +236,22 @@ export function BossEditor({ view, players, meId, busy, act }: Props & { meId: s
                     </button>
                   )
                 })}
-                {options(openSlot).length === 0 && <p className="col-span-2 py-2 text-center text-xs font-bold opacity-60">{t('boss.table.noOption')}</p>}
-                {deal.slots[openSlot].source && (
-                  <button type="button" disabled={busy} onClick={() => { act({ type: 'set_slot', slot: openSlot, source: null }); setOpenSlot(null) }} className="col-span-2 h-8 rounded-lg bg-red-50 text-xs font-black text-red-700">{t('boss.table.clear')}</button>
-                )}
+                {slotOptions.length === 0 && <p className="col-span-2 py-2 text-center text-xs font-bold">{t('boss.table.noOption')}</p>}
               </div>
+              <footer className="mt-auto flex min-h-11 gap-1">
+                {deal.slots[openSlot].source && <button type="button" disabled={busy} onClick={() => { act({ type: 'set_slot', slot: openSlot, source: null }); setOpenSlot(null) }} className="min-h-11 flex-1 rounded-lg bg-red-50 px-2 text-xs font-black text-red-700">{t('boss.table.clear')}</button>}
+                {slotOptions.length > 6 && <>
+                  <button type="button" disabled={page === 0} onClick={() => setOptionPage(page - 1)} className="min-h-11 flex-1 rounded-lg bg-white px-2 text-xs font-bold disabled:opacity-40">{t('boss.phone.previous')}</button>
+                  <button type="button" disabled={(page + 1) * 6 >= slotOptions.length} onClick={() => setOptionPage(page + 1)} className="min-h-11 flex-1 rounded-lg bg-white px-2 text-xs font-bold disabled:opacity-40">{t('boss.phone.next')}</button>
+                </>}
+              </footer>
             </div>
           )}
           <p className="text-center text-[11px] font-black text-[#7a5a1a]">{missingText(view, deal, t)}</p>
-          {deal.slots.every((s) => s.source) && <Button size="sm" className="h-9 rounded-xl font-black" onClick={() => setTab(2)}>{t('boss.table.step2')}</Button>}
         </>
       ) : (
         <>
-          <ul className="flex flex-col gap-1">
+          <ul className="boss-payouts flex flex-col gap-1">
             {order.map((id) => {
               const teams = deal.slots.flatMap((s) => (s.source?.ownerId === id ? [s.source.team] : []))
               const st = deal.acceptedIds.includes(id) ? 'ok' : deal.declinedIds.includes(id) ? 'no' : null
@@ -252,19 +262,21 @@ export function BossEditor({ view, players, meId, busy, act }: Props & { meId: s
                     <span className="flex items-center gap-1 truncate text-xs font-black">{shortName(nameOf(players, id))}{st === 'ok' && <Check className="size-3 text-emerald-600" />}{st === 'no' && <X className="size-3 text-red-600" />}</span>
                     <span className="flex items-center gap-0.5">{teams.length ? teams.map((team) => <TeamBadge key={team} team={team} className="size-3.5" />) : <span className="text-[10px] font-bold text-[#7a6a46]">{t('boss.table.bribe')}</span>}</span>
                   </span>
-                  <button type="button" aria-label="-1" className="flex size-8 items-center justify-center rounded-lg bg-[#241b4b]/10" onClick={() => set(id, (amounts[id] ?? 0) - 1)}><Minus className="size-4" /></button>
-                  <Money amount={(amounts[id] ?? 0) * M} className="w-12 text-center text-sm" />
-                  <button type="button" aria-label="+1" className="flex size-8 items-center justify-center rounded-lg bg-[#241b4b]/10" onClick={() => set(id, (amounts[id] ?? 0) + 1)}><Plus className="size-4" /></button>
+                  <button type="button" aria-label={t('boss.phone.giveLess', { name: nameOf(players, id) })} className="flex size-8 items-center justify-center rounded-lg bg-[#241b4b]/10" onClick={() => set(id, (amounts[id] ?? 0) - 1)}><Minus className="size-4" /></button>
+                  <Money amount={(amounts[id] ?? 0) * M} className="boss-payout-money w-12 text-center text-sm" />
+                  <button type="button" aria-label={t('boss.phone.giveMore', { name: nameOf(players, id) })} className="flex size-8 items-center justify-center rounded-lg bg-[#241b4b]/10" onClick={() => set(id, (amounts[id] ?? 0) + 1)}><Plus className="size-4" /></button>
                 </li>
               )
             })}
           </ul>
-          <p className={cn('text-center text-xs font-black', left < 0 ? 'text-red-600' : 'text-[#7a5a1a]')}>
-            {left < 0 ? t('boss.table.over', { amount: t('boss.money', { m: -left }) }) : t('boss.table.left', { amount: t('boss.money', { m: left }) })}
-          </p>
-          <Button className={cn('h-10 rounded-xl font-black', (changed || !deal.offered) && left >= 0 && 'boss-glow')} disabled={busy || left < 0 || (deal.offered && !changed)} onClick={submit}>
-            {deal.offered ? t('boss.table.resubmit') : t('boss.table.submit')}
-          </Button>
+          <div className="boss-payout-footer">
+            <p className={cn('text-center text-xs font-black', left < 0 ? 'text-red-600' : 'text-[#7a5a1a]')}>
+              {left < 0 ? t('boss.table.over', { amount: t('boss.money', { m: -left }) }) : t('boss.table.left', { amount: t('boss.money', { m: left }) })}
+            </p>
+            <Button className={cn('h-10 rounded-xl font-black', (changed || !deal.offered) && left >= 0 && 'boss-glow')} disabled={busy || left < 0 || (deal.offered && !changed)} onClick={submit}>
+              {deal.offered ? t('boss.table.resubmit') : t('boss.table.submit')}
+            </Button>
+          </div>
         </>
       )}
     </div>
@@ -283,7 +295,7 @@ export function OfferCard({ view, players, meId, busy, act }: Props & { meId: st
   const declined = deal.declinedIds.includes(meId)
   const names = teams.map((x) => `${t(`boss.teamShort.${x.team}`)} (${x.kind === 'placard' ? t('boss.table.placard') : t('boss.table.card')})`).join(' + ')
   return (
-    <div key={version} className="boss-contract flex w-full max-w-sm flex-col gap-2 rounded-2xl bg-[#f6efdc] p-3 text-[#241b4b] shadow-[0_10px_30px_rgba(0,0,0,0.45)] ring-2 ring-[#ffb703]">
+    <div key={version} className="boss-offer boss-contract flex w-full max-w-sm flex-col gap-2 rounded-2xl bg-[#f6efdc] p-3 text-[#241b4b] shadow-[0_10px_30px_rgba(0,0,0,0.45)] ring-2 ring-[#ffb703]">
       <p className="flex items-center gap-1.5 text-xs font-bold opacity-75"><SeatFaces view={view} userId={deal.bossId} round className="size-6" />{t('boss.table.fromBoss', { name: shortName(nameOf(players, deal.bossId)) })}</p>
       <div className="flex items-center gap-2">
         <span className="flex shrink-0">{teams.length ? teams.map((x) => <TeamBadge key={x.team} team={x.team} className="size-9" />) : <span className="text-3xl">🤝</span>}</span>

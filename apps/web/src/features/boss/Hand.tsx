@@ -26,7 +26,7 @@ export function CardFace({ card, size = 88, className, count, glow, dim, detail 
     : card.kind === 'boss' ? t('boss.cards.descBoss') : card.kind === 'stop' ? t('boss.cards.descStop') : t('boss.cards.descRecruit')
   return (
     <span
-      className={cn('boss-card relative flex shrink-0 flex-col rounded-[12%/8.6%] p-[6%] shadow-[0_8px_18px_rgba(0,0,0,0.45)] transition-[filter,opacity] duration-300', glow && 'boss-card-glow', dim && 'opacity-60 saturate-[0.35]', className)}
+      className={cn('boss-card relative flex shrink-0 flex-col rounded-[12%/8.6%] p-[6%] shadow-[0_8px_18px_rgba(0,0,0,0.45)] transition-opacity duration-300 motion-reduce:transition-none', glow && 'boss-card-glow', dim && 'opacity-60 saturate-[0.35]', className)}
       style={{ width: size, height: size * 1.42, background: style.frame }}
     >
       <span className={cn('relative flex items-center justify-center overflow-hidden rounded-[10%/14%]', detail ? 'h-[50%]' : 'h-[58%]')} style={{ background: style.art }}>
@@ -54,7 +54,7 @@ export function CardFace({ card, size = 88, className, count, glow, dim, detail 
 
 type Act = (action: BossActionPayload) => void
 
-/** Whether this card does something right now (bright in the hand) or not (dimmed). */
+/** Whether this card can be played now; every card remains readable. */
 function playable(view: BossView, meId: string, card: BossHandCard) {
   const deal = view.deal
   if (card.kind === 'stop') return view.phase === 'interrupt' && view.interrupt?.actorId !== meId && !view.interrupt?.stoppedBy
@@ -82,9 +82,8 @@ function useBox<T extends HTMLElement>() {
 }
 
 /**
- * My hand, fanned like real cards: overlapping, a gentle arc, playable cards raised and shining.
- * `big` when nothing else needs the screen (the hand is the star); small "peek" while a decision is on screen.
- * The fan always fits the width it has, so it never scrolls.
+ * A straight, bounded row of full-colour piles. The foreground copy sits lowest.
+ * ResizeObserver accounts for both axes when a decision takes space above the hand.
  */
 export function HandBar({ view, players, meId, busy, act, big = false }: { view: BossView; players: RoomPlayer[]; meId: string; busy: boolean; act: Act; big?: boolean }) {
   const { t } = useTranslation()
@@ -95,35 +94,47 @@ export function HandBar({ view, players, meId, busy, act, big = false }: { view:
   const order = ['boss', 'stop', 'recruit', ...TEAMS.map((x) => `team:${x}`), 'travel:any', ...TEAMS.map((x) => `travel:${x}`)]
   const sorted = [...stacks.entries()].sort(([a], [b]) => order.indexOf(a) - order.indexOf(b))
   const n = sorted.length
-  // card width from the room: height-bound, a little smaller when peeking
-  const size = Math.max(48, Math.min(big ? 150 : 84, Math.floor((box.h - (big ? 26 : 8)) / 1.42)))
-  const step = n > 1 ? Math.min(size * (big ? 0.62 : 0.8), (box.w - size - 16) / (n - 1)) : 0
-  const tilt = big ? Math.min(6, 30 / Math.max(1, n)) : 1.5
+  const padding = 12
+  const lift = 6
+  const layers = Math.min(4, Math.max(1, ...sorted.map(([, cards]) => cards.length)))
+  const layerStep = big ? 4 : 2
+  const pileHeight = (layers - 1) * layerStep
+  const width = Math.max(0, box.w - padding * 2)
+  const height = Math.max(0, box.h - padding * 2 - lift - pileHeight)
+  // At most 12% overlap. Height always wins, including a short decision-hand row.
+  const size = Math.max(0, Math.min(big ? 160 : 88, height / 1.42, width / (1 + Math.max(0, n - 1) * 0.88)))
+  const step = n > 1 ? Math.min(size + 8, (width - size) / (n - 1)) : 0
+  const rowWidth = size + step * Math.max(0, n - 1)
   return (
     <>
-      <div ref={ref} className="boss-hand relative h-full w-full" role="list" aria-label={t('boss.cards.hand', { count: view.myHand.length })}>
-        <div className="absolute bottom-0 left-1/2 h-full" style={{ width: size + step * Math.max(0, n - 1), transform: 'translateX(-50%)' }}>
-          {box.h > 0 && sorted.map(([key, cards], i) => {
+      <div ref={ref} className="boss-hand relative h-full w-full" aria-label={t('boss.cards.hand', { count: view.myHand.length })}>
+        <div className="boss-hand-track absolute left-1/2 top-1/2" style={{ width: rowWidth, height: size * 1.42, transform: 'translate(-50%, -50%)' }}>
+          {size > 0 && sorted.map(([key, cards], i) => {
             const can = playable(view, meId, cards[0])
-            const glow = can && (cards[0].kind === 'stop' || view.phase !== 'interrupt')
-            const off = n > 1 ? i - (n - 1) / 2 : 0
-            const lifted = open && cardKey(open) === key
+            const selected = open && cardKey(open) === key
+            const copies = Math.min(cards.length, 4)
             return (
               <button
                 key={key}
                 type="button"
-                role="listitem"
-                aria-label={cardName(cards[0], t)}
-                className={cn('boss-hand-card absolute bottom-0 origin-bottom rounded-[12%/8.6%] transition-[transform,filter] duration-200 ease-out hover:z-50 focus-visible:z-50', lifted && 'z-50')}
+                aria-label={t('boss.phone.cardPile', { name: cardName(cards[0], t), count: cards.length })}
+                className={cn('boss-hand-card absolute bottom-0 rounded-[12%/8.6%] transition-transform duration-200 ease-out hover:z-50 focus-visible:z-50 motion-reduce:transition-none', selected && 'z-50')}
                 style={{
+                  width: size,
+                  height: size * 1.42,
                   left: i * step,
-                  zIndex: lifted ? 50 : i + 1,
-                  transform: `translateY(${(lifted ? -18 : can ? -6 : 0) + (big ? Math.abs(off) ** 1.6 * size * 0.035 : 0)}%) rotate(${off * tilt}deg)`,
+                  zIndex: selected ? 50 : i + 1,
+                  transform: `translateY(${can ? -lift : 0}px)`,
                   animationDelay: `${i * 50}ms`,
                 }}
                 onClick={() => setOpen(cards[0])}
               >
-                <CardFace card={cards[0]} size={size} count={cards.length} glow={glow && cards[0].kind === 'stop'} dim={!can} detail={size >= 64} className={cn(can && cards[0].kind !== 'stop' && 'boss-card-ready', 'shadow-[0_6px_16px_rgba(0,0,0,0.45)]')} />
+                {Array.from({ length: copies - 1 }, (_, layer) => (
+                  <span key={layer} aria-hidden="true" className="boss-pile-copy absolute inset-0 rounded-[inherit] border border-white/60"
+                    style={{ background: cards[0].kind === 'team' ? TEAM_COLOR[cards[0].team] : KIND_STYLE[cards[0].kind].frame, transform: `translateY(${-(copies - layer - 1) * layerStep}px)` }} />
+                ))}
+                <CardFace card={cards[0]} size={size} detail={size >= 72} className={cn('relative', can && 'boss-card-playable')} />
+                {cards.length > 4 && <span className="absolute bottom-1 right-1 rounded bg-[#241b4b] px-1 text-[10px] font-black text-white">{cards.length}</span>}
               </button>
             )
           })}
