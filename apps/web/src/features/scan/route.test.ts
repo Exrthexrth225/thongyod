@@ -10,6 +10,11 @@ describe('scanTarget: one scanner, every QR goes where it belongs', () => {
     expect(go('http://localhost:5173/add/abcd1234')).toEqual({ kind: 'friend', to: '/add/abcd1234' })
   })
 
+  it('a Board Screen link opens the board, not the room as a player', () => {
+    expect(go('https://thongyod.onrender.com/games/rooms/123456/board')).toEqual({ kind: 'room', to: '/games/rooms/123456/board' })
+    expect(go('https://earth.github.io/thongyod/#/games/rooms/123456/board')).toEqual({ kind: 'room', to: '/games/rooms/123456/board' })
+  })
+
   it('room links and bare 6-digit codes → the room', () => {
     expect(go('https://earth.github.io/thongyod/#/games/rooms/482913')).toEqual({ kind: 'room', to: '/games/rooms/482913' })
     expect(go(' 305117 ')).toEqual({ kind: 'room', to: '/games/rooms/305117' })

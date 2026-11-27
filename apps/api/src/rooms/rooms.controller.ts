@@ -50,7 +50,8 @@ export class RoomsController {
   async requestBoard(@Req() req: IncomingMessage, @Res({ passthrough: true }) res: ServerResponse, @Param('code') code: string) {
     assertMutationOrigin(req)
     if (!this.boardRequests.allow(clientAddress(req))) throw tooMany()
-    const { session, cookie } = await this.rooms.requestBoard(req, code)
+    const who = await this.guests.actor(req).then((a) => a.playerId, () => null)
+    const { session, cookie } = await this.rooms.requestBoard(req, code, who)
     if (cookie) res.setHeader('Set-Cookie', cookie)
     return session
   }
@@ -64,9 +65,9 @@ export class RoomsController {
 
   @Post(':code/:action') @HttpCode(200) @Header('Cache-Control', 'no-store')
   async action(@Req() req: IncomingMessage, @Param('code') code: string, @Param('action') action: string, @Body() body: unknown) {
-    const withBody = ['vote', 'boardApprove', 'boardReject', 'boardRevoke', 'boss', 'bossSkip', 'bossKick'].includes(action)
+    const withBody = ['vote', 'boardApprove', 'boardReject', 'boardRevoke', 'boss', 'bossSkip', 'bossKick', 'makeBoard'].includes(action)
     const viewer = await this.actor(req, withBody)
-    if (!['join', 'leave', 'start', 'reveal', 'lobby', 'vote', 'claimHost', 'boardApprove', 'boardReject', 'boardRevoke', 'boss', 'bossSkip', 'bossKick'].includes(action)) throw new BadRequestException({ error: { code: 'INVALID_REQUEST' } })
+    if (!['join', 'leave', 'start', 'reveal', 'lobby', 'vote', 'claimHost', 'boardApprove', 'boardReject', 'boardRevoke', 'boss', 'bossSkip', 'bossKick', 'makeBoard', 'closeRoom'].includes(action)) throw new BadRequestException({ error: { code: 'INVALID_REQUEST' } })
     return this.rooms.action(viewer, code, action, body)
   }
 }

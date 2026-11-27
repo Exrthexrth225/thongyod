@@ -249,7 +249,7 @@ test('room sockets: private views, ordering, retries, control, boards, deadlines
 
       const turnId = placed.turnPlayerId
       const victimId = turnId === hostId ? a.id : turnId
-      assert.equal((await command(h, room.code, 'bossSkip', { targetId: victimId })).code, 'PLAYER_ONLINE')
+      assert.equal((await command(h, room.code, 'bossSkip', { targetId: victimId })).code, 'PLAYER_ONLINE', 'skip only when away')
       assert.equal((await command(x, room.code, 'bossSkip', { targetId: b.id })).code, 'HOST_ONLY')
       ids[victimId].socket.disconnect()
       await until(() => !latest(h).online.includes(victimId) && latest(h), 'victim offline')

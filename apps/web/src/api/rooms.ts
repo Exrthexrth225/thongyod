@@ -81,6 +81,10 @@ export function useCreateRoom() {
 
 export const useJoinRoom = (code: string) => useRoomAction(code, 'join')
 export const useLeaveRoom = (code: string) => useRoomAction(code, 'leave')
+/** Owner: this player's device becomes the Board Screen (lobby only). */
+export const useMakeBoard = (code: string) => useRoomAction<string>(code, 'makeBoard', (targetId) => ({ targetId }), { url: `/rooms/${code}/makeBoard` })
+/** Owner: close the room for everyone. */
+export const useCloseRoom = (code: string) => useRoomAction(code, 'closeRoom')
 export const useStartRound = (code: string) => useRoomAction(code, 'start')
 export const useRevealRound = (code: string) => useRoomAction(code, 'reveal')
 export const useBackToLobby = (code: string) => useRoomAction(code, 'lobby')

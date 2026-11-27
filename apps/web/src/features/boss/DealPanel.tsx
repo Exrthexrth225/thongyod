@@ -118,3 +118,60 @@ export function DealPanel({ view, players, meId, big }: Props) {
     </div>
   )
 }
+
+/** The deal as a small contract on the phone's table: who is in, empty seats, the split bar and the value. */
+export function ContractCard({ view, players }: { view: BossView; players: RoomPlayer[] }) {
+  const { t } = useTranslation()
+  const deal = view.deal
+  if (!deal) return null
+  const space = view.spaces[deal.spaceIndex]
+  const accepted = new Set([deal.bossId, ...deal.acceptedIds])
+  const given = Object.values(deal.allocation).reduce((a, b) => a + b, 0)
+  return (
+    <div className="boss-contract w-full max-w-[25rem] rounded-2xl bg-[#f6efdc] p-2.5 text-[#241b4b] shadow-[0_10px_30px_rgba(0,0,0,0.45)] ring-1 ring-[#d9cfb2]">
+      <div className="flex items-center gap-2">
+        <span className="flex size-6 items-center justify-center rounded-md bg-[#241b4b] text-sm font-black text-white">{space.teamCount}</span>
+        <span className="min-w-0 flex-1 truncate text-sm font-black">{t('boss.deal.contract', { n: space.index + 1 })} · $×{space.dividends}</span>
+        <Money amount={deal.totalValue} className="text-xl text-[#9a6b00]" />
+      </div>
+      <div className="mt-2 flex items-stretch justify-center gap-2">
+        {space.groups.map((g, i) => {
+          const inTeams = g.teams.filter((team) => deal.agreedTeams.includes(team))
+          const offered = g.teams.filter((team) => !inTeams.includes(team) && (deal.providers[team]?.length ?? 0) > 0 && !deal.blockedTeams.includes(team))
+          const empty = Math.max(0, g.pick - inTeams.length)
+          return (
+            <div key={i} className={cn('flex min-w-0 flex-col items-center gap-1', i > 0 && 'border-l border-[#d9cfb2] pl-2')}>
+              <div className="flex flex-wrap items-center justify-center gap-1">
+                {inTeams.map((team) => {
+                  const who = (deal.providers[team] ?? []).find((id) => accepted.has(id))
+                  return (
+                    <span key={team} className="relative" title={nameOf(players, who)}>
+                      <Face team={team} className="size-10 rounded-full ring-2 ring-emerald-500" />
+                      <TeamBadge team={team} className="absolute -bottom-1 -right-1 size-4" />
+                    </span>
+                  )
+                })}
+                {Array.from({ length: empty }, (_, k) => <span key={`e${k}`} className="size-10 rounded-full border-2 border-dashed border-[#c9bfa0]" />)}
+                {offered.map((team) => <TeamBadge key={team} team={team} className="size-5 opacity-80" />)}
+              </div>
+              <span className={cn('text-[11px] font-bold', inTeams.length >= g.pick ? 'text-emerald-700' : 'opacity-70')}>
+                {g.pick === g.teams.length ? t('boss.deal.needs') : t('boss.deal.pick', { count: g.pick })} {Math.min(inTeams.length, g.pick)}/{g.pick}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+      {deal.offered && (
+        <div className="mt-2 flex h-2 overflow-hidden rounded-full bg-black/10" aria-hidden="true">
+          {Object.entries(deal.allocation).map(([id, amount]) => <i key={id} className="h-full transition-[width] duration-500" style={{ width: `${(amount / Math.max(deal.totalValue, given)) * 100}%`, background: TEAM_COLOR[seatTeam(view, id)] }} />)}
+        </div>
+      )}
+      <p className={cn('mt-1.5 text-center text-[11px] font-bold', deal.canClose ? 'text-emerald-700' : 'opacity-70')}>
+        {(() => {
+          const missing = space.groups.reduce((n, g) => n + Math.max(0, g.pick - g.teams.filter((team) => deal.agreedTeams.includes(team)).length), 0)
+          return deal.canClose ? t('boss.deal.ready') : !deal.offered ? t('boss.deal.noOffer') : missing > 0 ? t('boss.deal.missingTeams', { count: missing }) : t('boss.deal.waitAccept')
+        })()}
+      </p>
+    </div>
+  )
+}

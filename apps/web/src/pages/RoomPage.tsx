@@ -1,5 +1,5 @@
 import { RoomAccess } from '@/features/rooms/RoomAccess'
-import { useNavigate, useParams } from 'react-router'
+import { Navigate, useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { DoorOpen, Users } from 'lucide-react'
 import { ApiError } from '@/api/client'
@@ -49,6 +49,9 @@ function RoomPageContent() {
       ) : (
         <ErrorState onRetry={() => void room.refetch()} />
       )
+  } else if (room.data?.boardInvite) {
+    // The owner made this device the Board Screen.
+    body = <Navigate to={`/games/rooms/${code}/board`} replace />
   } else if (room.data && !room.data.joined) {
     const r = room.data
     const host = r.players.find((p) => p.isHost)

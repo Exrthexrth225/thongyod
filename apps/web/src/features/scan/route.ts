@@ -31,6 +31,10 @@ export function scanTarget(raw: string, ourOrigin: string, base = '/'): ScanTarg
   const friend = parseFriendLink(text)
   if (friend) return { kind: 'friend', to: `/add/${encodeURIComponent(friend)}` }
 
+  // A room's Board Screen link must stay a board link (it used to open the room as a player).
+  const board = /\/games\/rooms\/(\d{6})\/board(?:[?#]|$)/.exec(text)
+  if (board) return { kind: 'room', to: `/games/rooms/${board[1]}/board` }
+
   const room = roomCodeFrom(text)
   if (room) return { kind: 'room', to: `/games/rooms/${room}` }
 

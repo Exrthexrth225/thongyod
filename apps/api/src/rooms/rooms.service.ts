@@ -29,6 +29,8 @@ type Internal = {
   fingers: Record<string, number> | null
   /** Changes when the host goes back to the room: commands for an earlier match are rejected. Older rows have none. */
   matchId?: string
+  /** Players the owner turned into the Board Screen: their next board request is approved at once. */
+  boardInvites?: string[]
   /** I'm the Boss! state (engine-owned). */
   boss?: BossInternalState | null
 }
@@ -179,6 +181,7 @@ export class RoomsService {
       online: r.playerIds.filter((id) => this.presence.isOnline(r.code, id)),
       boards: playerId === r.hostId ? boards : [],
       canClaimHost: joined && playerId !== r.hostId && this.presence.awayFor(r.code, r.hostId) >= HOST_AWAY_MS,
+      boardInvite: !!playerId && !joined && (r.boardInvites ?? []).includes(playerId),
     }
     if (r.game === 'boss') {
       return {
@@ -289,11 +292,21 @@ export class RoomsService {
     }
     if (r.hostId !== viewer) throw new ForbiddenException({ error: { code: 'HOST_ONLY' } })
     if (type === 'boardApprove' || type === 'boardReject' || type === 'boardRevoke') { await this.decideBoard(c, r, type, body); return }
+    if (type === 'makeBoard') {
+      const b = object(body), target = b.targetId
+      if (Object.keys(b).length !== 1 || typeof target !== 'string' || !r.playerIds.includes(target) || target === viewer) throw invalid()
+      if (r.state !== 'lobby') throw conflict('ROOM_STARTED')
+      this.leave(r, target)
+      r.boardInvites = [...(r.boardInvites ?? []).filter((id) => id !== target), target]
+      return
+    }
+    if (type === 'closeRoom') { r.playerIds = []; return }
     if (type === 'bossSkip' || type === 'bossKick') {
       if (r.game !== 'boss' || !r.boss || r.state !== 'playing') throw conflict('NO_ROUND')
       const b = object(body), target = b.targetId
       if (Object.keys(b).length !== 1 || typeof target !== 'string' || !r.playerIds.includes(target) || target === viewer) throw invalid()
-      if (this.presence.isOnline(r.code, target)) throw conflict('PLAYER_ONLINE')
+      // Skipping is only for someone who is away; the owner may remove anyone.
+      if (type === 'bossSkip' && this.presence.isOnline(r.code, target)) throw conflict('PLAYER_ONLINE')
       if (type === 'bossSkip') r.boss = bossResult(skipBossPlayer(r.boss, target, randomInt, Date.now()))
       else this.leave(r, target)
       bossSettle(r)
@@ -498,20 +511,26 @@ export class RoomsService {
   // ── Board Screens ───────────────────────────────────────────────────────
 
   /** A device asks to become this room's Board Screen. Anyone with the code may ask; only the owner can approve. */
-  async requestBoard(request: IncomingMessage, code: string): Promise<{ session: RoomBoardSession; cookie?: string }> {
+  async requestBoard(request: IncomingMessage, code: string, who: string | null = null): Promise<{ session: RoomBoardSession; cookie?: string }> {
     const current = await this.boardFromCookie(request)
     if (current && current.roomCode === code && ['pending', 'approved'].includes(current.status)) return { session: await this.boardSession(current) }
     const token = randomBytes(32).toString('base64url'), id = randomUUID()
     const label = Array.from({ length: 4 }, () => LABEL_LETTERS[randomInt(LABEL_LETTERS.length)]).join('')
     const board = await this.change(async (c) => {
-      const room = (await c.query<{ expires_at: Date }>('SELECT expires_at FROM game_rooms WHERE code=$1 AND expires_at>clock_timestamp() FOR UPDATE', [code])).rows[0]
+      const room = (await c.query<{ expires_at: Date; data: Internal }>('SELECT expires_at,data FROM game_rooms WHERE code=$1 AND expires_at>clock_timestamp() FOR UPDATE', [code])).rows[0]
       if (!room) throw notFound()
+      // The owner picked this person's device as the Board Screen: approve it straight away.
+      const invited = !!who && (room.data.boardInvites ?? []).includes(who)
       const open = Number((await c.query<{ n: string }>(`SELECT count(*) AS n FROM game_room_boards WHERE room_code=$1 AND expires_at>clock_timestamp()
         AND (status='approved' OR (status='pending' AND created_at>clock_timestamp()-make_interval(secs=>$2)))`, [code, BOARD_PENDING_MS / 1000])).rows[0].n)
       if (open >= 5) throw conflict('BOARD_LIMIT')
-      await c.query("INSERT INTO game_room_boards(id,room_code,token_hash,label,status,expires_at) VALUES($1,$2,$3,$4,'pending',$5)", [id, code, sessionHash(token), label, room.expires_at])
-      await c.query('UPDATE game_rooms SET revision=revision+1 WHERE code=$1', [code])
-      return { result: { id, roomCode: code, label, status: 'pending' as RoomBoardStatus }, changed: code }
+      const status: RoomBoardStatus = invited ? 'approved' : 'pending'
+      await c.query('INSERT INTO game_room_boards(id,room_code,token_hash,label,status,expires_at) VALUES($1,$2,$3,$4,$5,$6)', [id, code, sessionHash(token), label, status, room.expires_at])
+      if (invited) {
+        room.data.boardInvites = room.data.boardInvites!.filter((x) => x !== who)
+        await c.query('UPDATE game_rooms SET data=$2,revision=revision+1 WHERE code=$1', [code, JSON.stringify(room.data)])
+      } else await c.query('UPDATE game_rooms SET revision=revision+1 WHERE code=$1', [code])
+      return { result: { id, roomCode: code, label, status }, changed: code }
     })
     return { session: await this.boardSession(board), cookie: boardCookie(token) }
   }

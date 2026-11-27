@@ -1,8 +1,12 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Crown, Hourglass, LogOut, Play } from 'lucide-react'
+import { Crown, Hourglass, LogOut, MonitorSmartphone, Play, XCircle } from 'lucide-react'
 import type { Room } from '@/api/types'
+import { useCloseRoom, useMakeBoard } from '@/api/rooms'
 import { Avatar } from '@/components/common/Avatar'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
+import { showErrorToast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { RoomShare } from './RoomShare'
@@ -49,6 +53,13 @@ export function RoomLobby({ room, isHost, minPlayers, starting, onStart, onLeave
   const { t } = useTranslation()
   const host = room.players.find((p) => p.userId === room.hostId)?.displayName ?? '?'
   const enough = room.players.length >= minPlayers
+  const navigate = useNavigate()
+  const makeBoard = useMakeBoard(room.code)
+  const close = useCloseRoom(room.code)
+  const [boardFor, setBoardFor] = useState<string | null>(null)
+  const [closing, setClosing] = useState(false)
+  const onError = () => showErrorToast(t('common.saveError'))
+  const nameOf = (id: string | null) => room.players.find((p) => p.userId === id)?.displayName ?? '?'
   return (
     <div className="flex flex-col gap-4 px-4 pb-8">
       <RoomShare code={room.code} exclude={room.players.map((p) => p.userId)} />
@@ -57,7 +68,14 @@ export function RoomLobby({ room, isHost, minPlayers, starting, onStart, onLeave
           {t('rooms.players', { count: room.players.length })}
           <span className="text-xs text-muted-foreground">{t('rooms.max', { count: room.maxPlayers })}</span>
         </h2>
-        <PlayerList room={room} />
+        <PlayerList
+          room={room}
+          extra={isHost ? (id) => id !== room.hostId && (
+            <Button size="icon" variant="ghost" className="size-8 shrink-0 rounded-full" aria-label={`${t('rooms.makeBoard')} · ${nameOf(id)}`} onClick={() => setBoardFor(id)}>
+              <MonitorSmartphone className="size-4" />
+            </Button>
+          ) : undefined}
+        />
       </section>
       {isHost && <BoardSection room={room} />}
       {isHost ? (
@@ -78,6 +96,14 @@ export function RoomLobby({ room, isHost, minPlayers, starting, onStart, onLeave
         <LogOut data-icon="inline-start" />
         {t('rooms.leave')}
       </Button>
+      {isHost && (
+        <Button variant="ghost" className="text-destructive" onClick={() => setClosing(true)}>
+          <XCircle data-icon="inline-start" />
+          {t('rooms.closeRoom')}
+        </Button>
+      )}
+      <ConfirmDialog open={boardFor !== null} onOpenChange={(v) => { if (!v) setBoardFor(null) }} title={t('rooms.makeBoard')} description={t('rooms.makeBoardConfirm', { name: nameOf(boardFor) })} confirmLabel={t('rooms.makeBoard')} onConfirm={() => { if (boardFor) makeBoard.mutate(boardFor, { onError }); setBoardFor(null) }} />
+      <ConfirmDialog open={closing} onOpenChange={setClosing} title={t('rooms.closeRoom')} description={t('rooms.closeRoomConfirm')} confirmLabel={t('rooms.closeRoom')} destructive onConfirm={() => close.mutate(undefined, { onSuccess: () => void navigate('/games/rooms', { replace: true }), onError })} />
     </div>
   )
 }

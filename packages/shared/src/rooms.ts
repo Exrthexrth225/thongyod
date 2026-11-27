@@ -66,6 +66,8 @@ type RoomBase = {
   boards: RoomBoard[]
   /** True when the owner has been away long enough that this player may take over (claimHost). */
   canClaimHost: boolean
+  /** The owner made this device the Board Screen: open /games/rooms/:code/board. */
+  boardInvite?: boolean
   /** True on a paired Board Screen's view (public data only). */
   isBoard: boolean
   state: RoomState
@@ -110,6 +112,8 @@ export type RoomCommandType =
   | 'claimHost' | 'boardApprove' | 'boardReject' | 'boardRevoke'
   /** I'm the Boss! move (payload: BossCommandPayload). Host only: bossSkip / bossKick an offline player who holds the game up. */
   | 'boss' | 'bossSkip' | 'bossKick'
+  /** Owner: turn a player's device into the Board Screen (lobby only) / close the room for everyone. */
+  | 'makeBoard' | 'closeRoom'
 
 export type BossCommandPayload = { action: BossActionPayload }
 export type BossHostPayload = { targetId: string }

@@ -4,23 +4,46 @@ import type { BossActionPayload, BossHandCard, BossView, InvestorTeam, RoomPlaye
 import { Button } from '@/components/ui/button'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { cn } from '@/lib/utils'
-import { cardArt, cardKey, nameOf, TEAM_COLOR, TEAMS } from './meta'
+import { cardArt, cardKey, cardName, faceArt, nameOf, TEAM_COLOR, TEAMS } from './meta'
 import { TeamBadge } from './parts'
 
-/** One influence card face. */
-export function CardFace({ card, className, count }: { card: BossHandCard; className?: string; count?: number }) {
+/** Card look: coloured frame, light art panel, name (+ team) underneath — like a real card. */
+const KIND_STYLE = {
+  travel: { frame: '#2f9fb3', art: '#dff6f9', ink: '#fff' },
+  boss: { frame: '#e9b949', art: '#fff6dc', ink: '#241b4b' },
+  stop: { frame: '#c43a3a', art: '#ffe4e1', ink: '#fff' },
+  recruit: { frame: '#6b6fb8', art: '#ecebff', ink: '#fff' },
+} as const
+
+
+/** One influence card face. `size` = width in px; the card is 5:7. */
+export function CardFace({ card, size = 84, className, count, glow }: { card: BossHandCard; size?: number; className?: string; count?: number; glow?: boolean }) {
   const { t } = useTranslation()
-  const label = card.kind === 'team' ? t('boss.cards.team', { team: t(`boss.teamShort.${card.team}`) }) : card.kind === 'travel' ? (card.team === 'any' ? t('boss.cards.travelAny') : t('boss.cards.travel')) : t(`boss.cards.${card.kind}`)
-  const tint = card.kind === 'team' ? TEAM_COLOR[card.team] : card.kind === 'travel' && card.team !== 'any' ? TEAM_COLOR[card.team] : card.kind === 'stop' ? '#d2443c' : card.kind === 'boss' ? '#e6b21f' : card.kind === 'recruit' ? '#3d6fd6' : '#8a8a8a'
+  const style = card.kind === 'team' ? { frame: TEAM_COLOR[card.team], art: '#ffffffd9', ink: '#fff' } : KIND_STYLE[card.kind]
+  const sub = card.kind === 'travel' ? (card.team === 'any' ? t('boss.cards.anyTeam') : t('boss.cards.team', { team: t(`boss.teamShort.${card.team}`) })) : null
   return (
-    <span className={cn('boss-card relative flex aspect-[5/7] w-16 shrink-0 flex-col items-center justify-between overflow-hidden rounded-xl border-2 border-[#5a3420] bg-[#fff4dc] p-1 text-[#3a2416] shadow-[0_3px_0_#5a3420]', className)}>
-      <span className="absolute inset-x-0 top-0 h-1/3" style={{ background: `linear-gradient(${tint}, transparent)` }} />
-      <span className="relative flex flex-1 items-center justify-center">
-        {card.kind === 'team' ? <TeamBadge team={card.team} className="size-11" /> : <img src={cardArt(card.kind)} alt="" className="size-11" draggable={false} />}
-        {card.kind === 'travel' && card.team !== 'any' && <TeamBadge team={card.team} className="absolute -bottom-1 -right-2 size-5" />}
+    <span
+      className={cn('boss-card relative flex shrink-0 flex-col rounded-[12%/8.6%] p-[6%] shadow-[0_8px_18px_rgba(0,0,0,0.45)]', glow && 'boss-card-glow', className)}
+      style={{ width: size, height: size * 1.42, background: style.frame }}
+    >
+      <span className="relative flex h-[56%] items-center justify-center overflow-hidden rounded-[10%/14%]" style={{ background: style.art }}>
+        {card.kind === 'team' ? (
+          <>
+            <img src={faceArt(card.team)} alt="" className="h-[96%] object-contain object-bottom" draggable={false} />
+            <TeamBadge team={card.team} className="absolute bottom-[4%] right-[4%] size-[34%]" />
+          </>
+        ) : (
+          <>
+            <img src={cardArt(card.kind)} alt="" className="h-[86%] object-contain" draggable={false} />
+            {card.kind === 'travel' && card.team !== 'any' && <TeamBadge team={card.team} className="absolute bottom-[4%] right-[4%] size-[34%]" />}
+          </>
+        )}
       </span>
-      <span className="relative w-full truncate text-center text-[9px] font-black leading-tight">{label}</span>
-      {count !== undefined && count > 1 && <span className="absolute right-0.5 top-0.5 rounded-full bg-[#3a2416] px-1.5 text-[10px] font-black text-white">×{count}</span>}
+      <span className="mt-[6%] flex flex-1 flex-col items-center justify-center text-center leading-[1.1]" style={{ color: style.ink }}>
+        <span className="font-black" style={{ fontSize: size * 0.15 }}>{cardName(card, t)}</span>
+        {sub && <span className="font-bold opacity-85" style={{ fontSize: size * 0.11 }}>{sub}</span>}
+      </span>
+      {count !== undefined && count > 1 && <span className="absolute -right-1.5 -top-1.5 flex size-6 items-center justify-center rounded-full bg-[#241b4b] text-xs font-black text-white ring-2 ring-white">×{count}</span>}
     </span>
   )
 }
@@ -37,12 +60,24 @@ export function HandBar({ view, players, meId, busy, act }: { view: BossView; pl
   const sorted = [...stacks.entries()].sort(([a], [b]) => order.indexOf(a) - order.indexOf(b))
   return (
     <>
-      <div className="boss-hand flex items-end gap-1.5 overflow-x-auto px-2 pb-1 pt-3 [scrollbar-width:none]" role="list" aria-label={t('boss.cards.hand', { count: view.myHand.length })}>
-        {sorted.map(([key, cards], i) => (
-          <button key={key} type="button" role="listitem" className="boss-hand-card shrink-0 transition-transform hover:-translate-y-2 focus-visible:-translate-y-2 active:scale-95" style={{ animationDelay: `${i * 40}ms` }} onClick={() => setOpen(cards[0])}>
-            <CardFace card={cards[0]} count={cards.length} />
-          </button>
-        ))}
+      <div className="boss-hand relative flex h-full items-end justify-center" role="list" aria-label={t('boss.cards.hand', { count: view.myHand.length })}>
+        {sorted.map(([key, cards], i) => {
+          const mid = (sorted.length - 1) / 2, off = i - mid
+          const glow = cards[0].kind === 'stop' && view.phase === 'interrupt'
+          return (
+            <button
+              key={key}
+              type="button"
+              role="listitem"
+              aria-label={cardName(cards[0], t)}
+              className="boss-hand-card -mx-2 shrink-0 origin-bottom transition-transform duration-200 hover:z-10 hover:-translate-y-5 focus-visible:z-10 focus-visible:-translate-y-5 active:scale-95"
+              style={{ transform: `translateY(${16 + Math.abs(off) * 4}%) rotate(${off * 6}deg)`, animationDelay: `${i * 50}ms` }}
+              onClick={() => setOpen(cards[0])}
+            >
+              <CardFace card={cards[0]} count={cards.length} glow={glow} />
+            </button>
+          )
+        })}
       </div>
       <CardSheet card={open} onClose={() => setOpen(null)} view={view} players={players} meId={meId} busy={busy} act={(a) => { act(a); setOpen(null) }} />
     </>
@@ -103,7 +138,7 @@ function CardSheet({ card, onClose, view, players, meId, busy, act }: { card: Bo
     }
   }
   return (
-    <BottomSheet full open={card !== null} onOpenChange={(v) => { if (!v) onClose() }} title={card ? <span className="flex items-center gap-2"><CardFace card={card} className="w-10" />{card.kind === 'team' ? t('boss.cards.team', { team: t(`boss.teamShort.${card.team}`) }) : t(card.kind === 'travel' && card.team === 'any' ? 'boss.cards.travelAny' : `boss.cards.${card.kind}`)}</span> : ''}>
+    <BottomSheet full open={card !== null} onOpenChange={(v) => { if (!v) onClose() }} title={card ? <span className="flex items-center gap-3"><CardFace card={card} size={44} />{cardName(card, t)}</span> : ''}>
       <div className="flex flex-col gap-3 px-4 pb-6">{body}</div>
     </BottomSheet>
   )
@@ -122,7 +157,7 @@ export function DiscardSheet({ view, busy, act }: { view: BossView; busy: boolea
           const on = picked.includes(c.id)
           return (
             <button key={c.id} type="button" aria-pressed={on} className={cn('rounded-xl p-1 transition', on && 'bg-red-100 ring-2 ring-red-500')} onClick={() => setPicked((p) => (on ? p.filter((x) => x !== c.id) : p.length < need ? [...p, c.id] : p))}>
-              <CardFace card={c} className={cn('w-full', on && 'opacity-60')} />
+              <CardFace card={c} size={64} className={cn(on && 'opacity-60')} />
             </button>
           )
         })}

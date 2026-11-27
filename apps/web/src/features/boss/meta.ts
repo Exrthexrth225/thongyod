@@ -1,4 +1,5 @@
 // I'm the Boss! art and small helpers. Art: Earth's sheets image/imboss_1–8 (cut 2026-11-27).
+import type { TFunction } from 'i18next'
 import type { BossHandCard, BossView, InvestorTeam, RoomPlayer } from '@/api/types'
 
 const FACES = import.meta.glob<string>('@/assets/boss/faces/*.webp', { eager: true, import: 'default' })
@@ -64,3 +65,9 @@ const RING: [number, number][] = [
   [5, 5], [4, 5], [3, 5], [2, 5], [1, 5], [1, 4], [1, 3], [1, 2],
 ]
 export const ringCell = (index: number) => ({ gridColumn: RING[index][0], gridRow: RING[index][1] })
+
+/** A card's name as printed on it. */
+export function cardName(card: BossHandCard, t: TFunction) {
+  if (card.kind === 'team') return t('boss.cards.team', { team: t(`boss.teamShort.${card.team}`) })
+  return t(`boss.cards.${card.kind}`)
+}
