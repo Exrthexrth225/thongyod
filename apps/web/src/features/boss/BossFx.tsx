@@ -95,7 +95,7 @@ export function InterruptOverlay({ view, players, canStop, onStop, stopping }: {
               <circle cx="60" cy="60" r="56" fill="none" stroke="#ffffff26" strokeWidth="5" />
               {!stopped && <circle cx="60" cy="60" r="56" fill="none" stroke="#ffd54a" strokeWidth="5" strokeLinecap="round" pathLength={100} strokeDasharray="100" className="boss-ring" style={{ animationDuration: '5s' }} />}
             </svg>
-            <CardFace card={card} size={96} className={cn('boss-card-slam', stopped && 'opacity-60 saturate-[0.3]')} />
+            <CardFace card={card} size={96} className="boss-card-slam" />
             <img src={fxArt(PLAY_FX[intr.kind])} alt="" className={cn('pointer-events-none absolute size-20 drop-shadow-xl', `boss-fx-${intr.kind}`)} />
             {stopped && <img src={fxArt('stop')} alt="" className="boss-fx-stopslam pointer-events-none absolute inset-0 m-auto size-28 drop-shadow-2xl" />}
           </div>
@@ -133,32 +133,66 @@ export function ClosingRing({ deadline, className }: { deadline: string | null; 
   )
 }
 
-const PIPS: Record<number, number[]> = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] }
-// Cube face order: front 1, back 6, right 3, left 4, top 2, bottom 5. Rotation that brings each value to the front.
-const SHOW: Record<number, string> = { 1: 'rotateX(0deg) rotateY(0deg)', 6: 'rotateY(180deg)', 3: 'rotateY(-90deg)', 4: 'rotateY(90deg)', 2: 'rotateX(-90deg)', 5: 'rotateX(90deg)' }
-const FACES: [number, string][] = [[1, 'translateZ(var(--h))'], [6, 'rotateY(180deg) translateZ(var(--h))'], [3, 'rotateY(90deg) translateZ(var(--h))'], [4, 'rotateY(-90deg) translateZ(var(--h))'], [2, 'rotateX(90deg) translateZ(var(--h))'], [5, 'rotateX(-90deg) translateZ(var(--h))']]
+// Each sheet contains 48 views of one rounded solid, lit from the same point above the table.
+const dieSheets = import.meta.glob<string>('../../assets/boss/die/roll-*.webp', { eager: true, import: 'default' })
+const columns = 8, rows = 6, frameCount = rows * columns
+const spritePose = (frame: number) => `translate(${-(frame % columns) * 100 / columns}%, ${-Math.floor(frame / columns) * 100 / rows}%)`
+const spinFrames = Array.from({ length: frameCount }, (_, frame) => ({
+  transform: spritePose(frame), offset: frame / (frameCount - 1), easing: 'steps(1, end)',
+}))
 
-/** A 3D die that tumbles and lands on `value`. Re-mount (key) to roll again. */
-export function Die({ value, size = 64, rolling = true, className }: { value: number; size?: number; rolling?: boolean; className?: string }) {
-  const ref = useRef<HTMLDivElement>(null)
+// Heights are fractions of a die. Gravity accelerates the fall; each impact loses energy.
+function throwPose(t: number) {
+  const x = -84 * (1 - t) ** 2
+  let height: number
+  if (t < .37) height = (1 - (t / .37) ** 2) * .55
+  else if (t < .67) {
+    const phase = (t - .37) / .30
+    height = 4 * .26 * phase * (1 - phase)
+  } else if (t < .84) {
+    const phase = (t - .67) / .17
+    height = 4 * .075 * phase * (1 - phase)
+  } else height = 0
+  return { x, height }
+}
+
+export function Die({ value, size = 64, rolling = true, startedAt, className }: { value: number; size?: number; rolling?: boolean; startedAt?: number; className?: string }) {
+  const result = useRef<HTMLSpanElement>(null)
+  const sprite = useRef<HTMLImageElement>(null)
+  const body = useRef<HTMLSpanElement>(null)
+  const shadow = useRef<HTMLSpanElement>(null)
+  const src = dieSheets[`../../assets/boss/die/roll-${value}.webp`]
   useLayoutEffect(() => {
-    const el = ref.current
-    if (!el || !rolling || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    el.animate(
-      [{ transform: 'translateY(-60%) rotateX(720deg) rotateY(540deg) rotateZ(90deg)' }, { transform: `translateY(8%) ${SHOW[value]}`, offset: 0.75 }, { transform: SHOW[value] }],
-      { duration: ROLL.tumble, easing: 'cubic-bezier(.2,.7,.3,1)' },
-    )
-  }, [value, rolling])
+    if (!result.current || !sprite.current || !body.current || !shadow.current || !rolling) return
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
+    if (motion.matches) return
+    const poses = spinFrames.map(({ offset }) => throwPose(offset))
+    const options = { duration: ROLL.tumble, easing: 'linear' }
+    const animations = [
+      sprite.current.animate(spinFrames, options),
+      result.current.animate([{ opacity: 0, transform: 'scale(.8)' }, { opacity: 1, transform: 'scale(1)' }],
+        { delay: ROLL.tumble, duration: 140, fill: 'backwards' }),
+      body.current.animate(poses.map(({ x, height }) => ({ transform: `translate(${x}%, ${-height * 100}%)` })), options),
+      shadow.current.animate(poses.map(({ x, height }) => ({
+        transform: `translateX(${x / .7}%) scale(${1 - height * .6})`, opacity: .4 - height * .5,
+      })), options),
+    ]
+    const elapsed = startedAt ? Math.max(0, Date.now() - startedAt) : 0
+    for (const animation of animations) animation.currentTime = elapsed
+    const stop = () => animations.forEach((animation) => animation.cancel())
+    motion.addEventListener('change', stop)
+    return () => { stop(); motion.removeEventListener('change', stop) }
+  }, [value, rolling, startedAt])
   return (
-    <div className={cn('[perspective:600px]', className)} style={{ width: size, height: size }}>
-      <div ref={ref} className="relative size-full [transform-style:preserve-3d]" style={{ transform: SHOW[value], ['--h' as string]: `${size / 2}px` }}>
-        {FACES.map(([n, tf]) => (
-          <div key={n} className="absolute inset-0 grid grid-cols-3 grid-rows-3 rounded-[22%] border-2 border-[#5a3420] bg-[#fffaf0] p-[14%] shadow-inner" style={{ transform: tf }}>
-            {Array.from({ length: 9 }, (_, i) => <span key={i} className={cn('m-auto size-[70%] rounded-full', PIPS[n].includes(i) && (n === 1 ? 'bg-red-600' : 'bg-[#3a2416]'))} />)}
-          </div>
-        ))}
-      </div>
-    </div>
+    <span className={cn('boss-die relative inline-block shrink-0', className)} style={{ width: size, height: size }} role="img" aria-label={String(value)}>
+      <span ref={shadow} aria-hidden="true" className="boss-die-shadow" />
+      <span ref={body} className="absolute inset-0 overflow-hidden">
+        <img ref={sprite} src={src} alt="" draggable={false} className="absolute left-0 top-0 max-w-none"
+          style={{ width: `${columns * 100}%`, height: `${rows * 100}%`, transform: spritePose(frameCount - 1) }} />
+      </span>
+      <span ref={result} aria-hidden="true" className="absolute right-0 bottom-0 rounded-full bg-[#241b4b] px-1 font-black leading-tight text-[#ffda75]"
+        style={{ fontSize: Math.max(11, size * .22) }}>{value}</span>
+    </span>
   )
 }
 

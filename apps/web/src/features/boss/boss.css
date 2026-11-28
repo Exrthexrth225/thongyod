@@ -104,7 +104,7 @@
 @keyframes boss-face-pop { from { transform: scale(0.6) translateY(12%); } }
 
 .boss-hand-card { animation: boss-hand-enter 420ms cubic-bezier(.2,.8,.3,1.15) backwards; }
-@keyframes boss-hand-enter { from { transform: translateY(30%); opacity: 0; } }
+@keyframes boss-hand-enter { from { transform: translateY(30%); } }
 @keyframes boss-deal-in { from { transform: translateY(70%) rotate(-8deg); opacity: 0; } }
 
 .boss-slam { animation: boss-slam 2.6s cubic-bezier(.2,.9,.3,1.25) both; }
@@ -218,6 +218,16 @@
 @keyframes boss-how { from { transform: translateY(12px) scale(.9); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
   .boss-fx-travel, .boss-fx-boss, .boss-fx-recruit, .boss-fx-pulled, .boss-fx-shake, .boss-fx-crowned, .boss-fx-stopslam, .boss-fx-plane-done, .boss-fx-crown-done, .boss-fx-magnet-done, .boss-fx-stop-done, .boss-toast, .boss-how { animation: none; }
+}
+.boss-die-shadow {
+  position: absolute;
+  left: 15%;
+  bottom: 6%;
+  width: 70%;
+  height: 18%;
+  border-radius: 50%;
+  opacity: .4;
+  background: radial-gradient(ellipse, #140e18 0%, transparent 72%);
 }
 .boss-marker-ring { box-shadow: 0 0 0 0.6cqmin #ffd54a, 0 0 3cqmin 1cqmin rgb(255 213 74 / .75); background: radial-gradient(circle, rgb(255 213 74 / .35), transparent 70%); animation: boss-marker-ring 1.4s ease-out infinite; }
 @keyframes boss-marker-ring { 0% { transform: scale(.85); opacity: 1; } 100% { transform: scale(1.35); opacity: 0; } }

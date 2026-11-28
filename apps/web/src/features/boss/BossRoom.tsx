@@ -77,7 +77,7 @@ export function BossRoom({ room, meId, onLeave }: { room: BossRoomData; meId: st
 export function BossTableScreen({ room }: { room: BossRoomData }) {
   const view = room.boss!
   const stage = useRef<HTMLDivElement>(null)
-  const { latest, moods, rolling } = useBossTimeline(view)
+  const { latest, moods, rolling, startedAt } = useBossTimeline(view)
   const [expanded, setExpanded] = useState(false)
   const lastRoll = latest?.kind === 'dice_rolled' ? latest : null
   const settled = latest?.kind === 'deal_settled' && view.lastSettlement?.dealNumber === latest.dealNumber ? latest : null
@@ -89,14 +89,14 @@ export function BossTableScreen({ room }: { room: BossRoomData }) {
   return (
     <div ref={stage} className="boss-table fixed inset-0 z-[41] gap-3 overflow-hidden bg-[radial-gradient(ellipse_at_30%_20%,#2c2360,#17142b_60%,#120d2b)] p-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] text-white">
       <div className="boss-table-board relative flex min-h-0 min-w-0 items-center justify-center">
-        <BossBoard view={view} roll={lastRoll} hold={rolling && lastRoll ? lastRoll.fromSpace ?? null : null} piles settledSpace={settled?.spaceIndex ?? null} className="h-full">
+        <BossBoard view={view} roll={lastRoll} startedAt={startedAt} hold={rolling && lastRoll ? lastRoll.fromSpace ?? null : null} piles settledSpace={settled?.spaceIndex ?? null} className="h-full">
           <div className="flex size-full flex-col items-center justify-center gap-2 overflow-hidden">
             {view.phase === 'game_over'
               ? plaque(view.winnerIds.length > 1 ? t('boss.over.jointWin', { names: view.winnerIds.map((id) => shortName(nameOf(room.players, id))).join(' & '), amount: t('boss.money', { m: (view.seats.find((s) => s.userId === view.winnerIds[0])?.exactCash ?? 0) / M }) }) : t('boss.fx.winner', { name: shortName(nameOf(room.players, view.winnerIds[0])) }), 'text-[clamp(22px,4vmin,44px)]')
               : plaque(say)}
             {deal && <PriceTag key={`p${deal.id}`} amount={deal.totalValue} share={view.currentShareValue} dividends={view.spaces[deal.spaceIndex].dividends} size={40} className="boss-price-pop" />}
             {view.phase === 'closing' && deal && <ClosingRing deadline={deal.closingDeadlineAt} className="text-lg" />}
-            {lastRoll && <Die key={lastRoll.id} value={lastRoll.roll ?? 1} size={88} />}
+            {lastRoll && <Die key={lastRoll.id} value={lastRoll.roll ?? 1} size={88} startedAt={startedAt} />}
           </div>
         </BossBoard>
         {/* expanded deal: over the board, still no scrolling */}

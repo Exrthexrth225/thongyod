@@ -7,8 +7,8 @@ const FX_KINDS = new Set(['deal_opened', 'team_played', 'travel_played', 'boss_p
 const MUST_PLAY = new Set(['deal_settled', 'end_roll', 'game_ended', 'dice_rolled'])
 const STALE_MS = 6000
 
-/** Dice: tumble ~1.5 s, hold the face, hop space by space, then light up the destination. */
-export const ROLL = { tumble: 1500, hold: 600, step: 360, off: 420, land: 500 }
+/** Dice: tumble, bounce and settle, hold the face, hop space by space, then light up the destination. */
+export const ROLL = { tumble: 1780, hold: 420, step: 360, off: 420, land: 500 }
 const reduced = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 /** How long one effect holds the screen before the next one starts. */

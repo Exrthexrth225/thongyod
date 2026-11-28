@@ -19,7 +19,7 @@ const KIND_STYLE = {
 
 
 /** One influence card face. `size` = width in px; the card is 5:7. */
-export function CardFace({ card, size = 88, className, count, glow, dim, detail = true }: { card: BossHandCard; size?: number; className?: string; count?: number; glow?: boolean; dim?: boolean; detail?: boolean }) {
+export function CardFace({ card, size = 88, className, count, glow, detail = true }: { card: BossHandCard; size?: number; className?: string; count?: number; glow?: boolean; detail?: boolean }) {
   const { t } = useTranslation()
   const style = card.kind === 'team' ? { frame: TEAM_COLOR[card.team], art: '#ffffffd9', ink: '#fff' } : KIND_STYLE[card.kind]
   const team = 'team' in card && card.team !== 'any' ? t(`boss.teamShort.${card.team}`) : ''
@@ -28,7 +28,7 @@ export function CardFace({ card, size = 88, className, count, glow, dim, detail 
     : card.kind === 'boss' ? t('boss.cards.descBoss') : card.kind === 'stop' ? t('boss.cards.descStop') : t('boss.cards.descRecruit')
   return (
     <span
-      className={cn('boss-card relative flex shrink-0 flex-col rounded-[12%/8.6%] p-[6%] shadow-[0_8px_18px_rgba(0,0,0,0.45)] transition-opacity duration-300 motion-reduce:transition-none', glow && 'boss-card-glow', dim && 'opacity-60 saturate-[0.35]', className)}
+      className={cn('boss-card relative flex shrink-0 flex-col rounded-[12%/8.6%] p-[6%] shadow-[0_8px_18px_rgba(0,0,0,0.45)]', glow && 'boss-card-glow', className)}
       style={{ width: size, height: size * 1.42, background: style.frame }}
     >
       <span className={cn('relative flex items-center justify-center overflow-hidden rounded-[10%/14%]', detail ? 'h-[50%]' : 'h-[58%]')} style={{ background: style.art }}>
@@ -256,8 +256,9 @@ export function DiscardSheet({ view, busy, act }: { view: BossView; busy: boolea
         {view.myHand.map((c) => {
           const on = picked.includes(c.id)
           return (
-            <button key={c.id} type="button" aria-pressed={on} className={cn('rounded-xl p-1 transition', on && 'bg-red-100 ring-2 ring-red-500')} onClick={() => setPicked((p) => (on ? p.filter((x) => x !== c.id) : p.length < need ? [...p, c.id] : p))}>
-              <CardFace card={c} size={64} className={cn(on && 'opacity-60')} />
+            <button key={c.id} type="button" aria-pressed={on} className={cn('relative rounded-xl p-1', on && 'bg-red-100 ring-2 ring-red-500')} onClick={() => setPicked((p) => (on ? p.filter((x) => x !== c.id) : p.length < need ? [...p, c.id] : p))}>
+              <CardFace card={c} size={64} />
+              {on && <span aria-hidden="true" className="absolute right-0 top-0 rounded-full bg-red-700 px-1 text-xs font-bold text-white">✓</span>}
             </button>
           )
         })}

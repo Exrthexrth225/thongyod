@@ -73,7 +73,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   const [confirm, setConfirm] = useState<'leave' | 'close' | 'fail' | 'restart' | null>(null)
   const [tutorial, setTutorial] = useState(() => !tutorialSeen())
   const [ownScreen, setOwnScreen] = useState(() => readMode(room.code))
-  const { latest, moods, rolling } = useBossTimeline(view)
+  const { latest, moods, rolling, startedAt } = useBossTimeline(view)
 
   const act = (action: BossActionPayload, after?: () => void) =>
     move.mutate(action, {
@@ -114,6 +114,8 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   const myTurn = !deal && view.turnPlayerId === meId
   const myStop = view.myHand.find((c) => c.kind === 'stop')
   const lastRoll = view.events.findLast((e) => e.kind === 'dice_rolled')
+  const activeRoll = latest?.kind === 'dice_rolled' ? latest : null
+  const rollProps = { roll: activeRoll, startedAt, hold: activeRoll?.fromSpace ?? (rolling ? lastRoll?.fromSpace : null) }
   const settled = latest?.kind === 'deal_settled' && view.lastSettlement?.dealNumber === latest.dealNumber ? latest : null
   const space = view.markerSpace !== null ? view.spaces[view.markerSpace] : null
   const me = view.seats.find((s) => s.userId === meId)
@@ -229,13 +231,12 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
         </header>
 
         <aside className="boss-seats">
-          {tableMode ? <BossBoard view={view} className="boss-pocket-board" roll={latest?.kind === 'dice_rolled' ? latest : null}
-            hold={rolling ? lastRoll?.fromSpace : null}
+          {tableMode ? <BossBoard view={view} className="boss-pocket-board" {...rollProps}
             onPick={view.phase === 'pick_start' && view.markerChooserId === meId ? (spaceIndex) => act({ type: 'pick_start', spaceIndex }) : undefined}
             dealSlotButton={deal && <button type="button" onClick={() => setDetail('deal')} aria-label={t('boss.status.deal', { n: deal.dealNumber })}>
               {deal.slots.map((slot, i) => slot.source ? <img key={i} src={faceArt(slot.source.team)} alt={nameOf(players, slot.source.ownerId)} /> : <i key={i} />)}
             </button>}>
-            {rolling || view.phase === 'rolled_choice' ? <Die value={lastRoll?.roll ?? 1} size={32} rolling={rolling} /> : null}
+            {activeRoll || (!rolling && view.phase === 'rolled_choice') ? <Die key={lastRoll?.id} value={activeRoll?.roll ?? lastRoll?.roll ?? 1} size={36} rolling={!!activeRoll} startedAt={startedAt} /> : null}
             {!rolling && space && <PriceTag amount={space.dividends * view.currentShareValue} size={18} />}
             <strong className="boss-board-say">{say}</strong>
           </BossBoard> : <>{myCard}
@@ -307,7 +308,9 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
 
       {boardOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center gap-2 bg-black/85 p-2" role="dialog" aria-label={t('boss.table.fullBoard')}>
-          <BossBoard view={view} piles settledSpace={settled?.spaceIndex ?? null} className="h-full" />
+          <BossBoard view={view} {...rollProps} piles settledSpace={settled?.spaceIndex ?? null} className="h-full">
+            {activeRoll && <Die key={activeRoll.id} value={activeRoll.roll ?? 1} size={64} startedAt={startedAt} />}
+          </BossBoard>
           <Button variant="ghost" size="icon" className="absolute right-2 top-2 size-9 rounded-full bg-white/15 text-white" aria-label={t('common.cancel')} onClick={() => setBoardOpen(false)}><XCircle className="size-5" /></Button>
         </div>
       )}
