@@ -383,3 +383,38 @@
 .boss-game[data-own-screen=true][data-focus=field] { grid-template-rows: 44px fit-content(calc(100dvh - 44px - 84px - env(safe-area-inset-top) - env(safe-area-inset-bottom))) minmax(84px,1fr); }
 .boss-game[data-own-screen=true] .boss-field-in { align-items: stretch; }
 .boss-game[data-own-screen=true] .boss-field-in > * { width: 100%; max-width: none; max-height: 100%; margin-block: auto; }
+
+/* ── polish round (Earth's review): one spacing scale, one frame style, nothing glued or overlapping ── */
+.boss-game { --gap: 8px; --frame: 2px solid #c9a54e; --radius: 18px; }
+.boss-seats, .boss-side { border: var(--frame); border-radius: var(--radius); padding: 10px; gap: var(--gap); }
+.boss-game .boss-editor { border: var(--frame); border-radius: var(--radius); padding: 8px; gap: var(--gap); height: auto; max-height: 100%; justify-content: flex-start; }
+.boss-game:not([data-own-screen=true])[data-focus=field] { grid-template-rows: 3rem fit-content(calc(100dvh - 3rem - 92px - env(safe-area-inset-top) - env(safe-area-inset-bottom))) minmax(92px, 1fr); row-gap: var(--gap); }
+.boss-hand-row { padding-block: 6px; }
+/* deal columns: same header height in every column, slots start on one line */
+.boss-group-head { display: flex; flex-direction: column; gap: 4px; min-width: 0; margin-bottom: 4px; }
+.boss-group-colors { display: flex; flex-wrap: nowrap; gap: 4px; min-width: 0; overflow: hidden; padding: 2px; }
+.boss-slot-groups { align-items: start; margin-top: 2px; }
+/* left panel: me, my colours, turn order, numbers — each its own block, never on top of each other */
+.boss-me, .boss-owned, .boss-order, .boss-wallet-footer { flex-shrink: 0; }
+.boss-me-heading { width: 100%; }
+.boss-me-faces { margin-inline: auto; }
+.boss-game:not([data-own-screen=true]) .boss-owned { display: grid; grid-template-columns: repeat(auto-fill, minmax(4.75rem, 1fr)); gap: 4px; }
+.boss-game:not([data-own-screen=true]) .boss-owned-color { min-height: 2rem; padding: 2px 8px 2px 2px; border-radius: 999px; background: #ffffff12; }
+.boss-seats > .boss-order { margin-block: auto; padding-top: var(--gap); border-top: 1px solid #ffffff20; row-gap: 0; }
+.boss-wallet-footer { margin-top: 0; gap: 2px; font-size: .75rem; }
+.boss-wallet-footer > span { display: flex; justify-content: space-between; gap: .25rem; }
+/* right panel: what is still missing; secondary actions small; disabled clearly disabled */
+.boss-missing { font-size: 11px; font-weight: 800; line-height: 1.25; color: #ffcd9f; }
+.boss-side .boss-fail { min-height: 40px; background: transparent; text-decoration: underline; font-size: .75rem; color: #ffffffb0; }
+.boss-actions button:disabled { opacity: .45; filter: grayscale(.7); box-shadow: none; }
+/* the editor's columns: label and colour icons on one line (names only where there is room) */
+.boss-editor .boss-group-head { flex-direction: row; align-items: center; flex-wrap: nowrap; }
+.boss-editor .boss-group-color-label { display: none; }
+.boss-editor .boss-group-colors > span { padding-right: 2px; }
+.boss-group-colors:has(> :nth-child(3)) .truncate { display: none; }
+.boss-group-colors:has(> :nth-child(3)) > span { padding-right: 2px; }
+/* the right panel already says what is missing on the phone */
+.boss-game .boss-editor-missing { display: none; }
+.boss-game .boss-editor > header, .boss-game .boss-editor > header > button { min-height: 32px; height: 32px; }
+.boss-game:is([data-players='5'],[data-players='6']):not([data-own-screen=true]) .boss-me-faces { height: 3rem; }
+.boss-game:is([data-players='5'],[data-players='6']):not([data-own-screen=true]) .boss-wallet { font-size: 1.75rem; }

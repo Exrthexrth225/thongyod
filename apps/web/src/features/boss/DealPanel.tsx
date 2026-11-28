@@ -65,20 +65,20 @@ export function DealBoard({ view, players, meId, big, compact }: Props & { big?:
           <p className="text-[11px] font-semibold opacity-70">{t('boss.deal.people', { count: space.teamCount })} · $×{space.dividends}</p>
         </div>
         {/* fixed room for the price so it never sits on the slots */}
-        <PriceTag key={deal.totalValue} amount={deal.totalValue} share={view.currentShareValue} dividends={space.dividends} size={big ? 30 : 20} className="boss-price-pop shrink-0" />
+        <PriceTag key={deal.totalValue} amount={deal.totalValue} share={view.currentShareValue} dividends={space.dividends} size={big ? 30 : 20} className="boss-price-pop mr-1 mt-2 shrink-0 self-start" />
       </header>
 
       <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${space.groups.length}, minmax(0, 1fr))` }}>
         {space.groups.map((g, gi) => (
           <section key={gi} className={cn('flex min-w-0 flex-col gap-1', gi > 0 && 'border-l-2 border-dashed border-[#d9cfb2] pl-1.5')}>
             {/* what this part of the deal needs: loud enough to read from across the table */}
-            <h4 className={cn('flex flex-wrap items-center gap-1 font-black', big ? 'text-base' : compact ? 'text-[11px]' : 'text-sm')}>
-              <span className={cn('rounded-md bg-[#241b4b] text-white', compact ? 'px-1.5' : 'px-2 py-0.5')}>{g.pick === g.teams.length ? t('boss.deal.needs') : t('boss.deal.pick', { count: g.pick })}</span>
-              {g.teams.map((team) => (
-                <span key={team} className={cn('flex items-center gap-1 rounded-full bg-white pr-2 ring-2', compact ? 'pl-0' : 'py-0.5 pl-0.5', deal.blockedTeams.includes(team) && 'line-through opacity-45')} style={{ ['--tw-ring-color' as string]: TEAM_COLOR[team] }}>
-                  <TeamBadge team={team} className={big ? 'size-7' : compact ? 'size-4' : 'size-6'} />{t(`boss.teamShort.${team}`)}
+            <h4 className={cn('boss-group-head font-black', big ? 'text-base' : compact ? 'text-[11px]' : 'text-sm')}>
+              <span className={cn('self-start rounded-md bg-[#241b4b] text-white', compact ? 'px-1.5' : 'px-2 py-0.5')}>{g.pick === g.teams.length ? t('boss.deal.needs') : t('boss.deal.pick', { count: g.pick })}</span>
+              <span className="boss-group-colors">{g.teams.map((team) => (
+                <span key={team} className={cn('flex min-w-0 items-center gap-1 rounded-full bg-white pr-2 ring-2', compact ? 'pl-0' : 'py-0.5 pl-0.5', deal.blockedTeams.includes(team) && 'line-through opacity-45')} style={{ ['--tw-ring-color' as string]: TEAM_COLOR[team] }}>
+                  <TeamBadge team={team} className={cn('shrink-0', big ? 'size-7' : compact ? 'size-4' : 'size-6')} /><span className="truncate">{t(`boss.teamShort.${team}`)}</span>
                 </span>
-              ))}
+              ))}</span>
             </h4>
             <ul className={cn('grid gap-1', big && g.pick > 2 && 'grid-cols-2')}>
               {deal.slots.map((s, i) => (s.group === gi ? <SlotChip key={i} slot={s} deal={deal} players={players} big={big} /> : null))}
@@ -101,10 +101,8 @@ export function DealBoard({ view, players, meId, big, compact }: Props & { big?:
         </div>
       )}
 
-      <section className="flex flex-col gap-0.5 rounded-xl bg-white/70 p-1.5">
-        {!deal.offered ? (
-          <p className="text-center text-xs font-bold opacity-60">{t('boss.deal.noOffer')}</p>
-        ) : (
+      {deal.offered && <section className="flex flex-col gap-0.5 rounded-xl bg-white/70 p-1.5">
+        {(
           <ul className={cn('flex flex-col', big ? 'gap-1 text-sm' : 'gap-0.5 text-xs', compact && people.length > 3 && 'grid grid-cols-2 gap-x-2 text-[11px]')}>
             {people.map((p) => (
               <li key={p.id} className={cn('flex items-center gap-1.5 rounded-lg px-1', p.id === meId && 'bg-amber-100')}>
@@ -121,9 +119,9 @@ export function DealBoard({ view, players, meId, big, compact }: Props & { big?:
             ))}
           </ul>
         )}
-      </section>
+      </section>}
       {!compact && <p className={cn('text-center text-[11px] font-black', deal.canClose ? 'text-emerald-700' : 'text-[#7a5a1a]')}>
-        {deal.canClose ? t('boss.deal.ready') : deal.slots.some((s) => !s.source) ? missingText(view, deal, t) : waiting.length ? t('boss.table.waitingFor', { names: waiting.join(', ') }) : ''}
+        {deal.canClose ? t('boss.deal.ready') : deal.slots.some((s) => !s.source) ? missingText(view, deal, t) : waiting.length ? t('boss.table.waitingFor', { names: waiting.join(', ') }) : !deal.offered ? t('boss.deal.noOffer') : ''}
       </p>}
     </div>
   )
@@ -191,13 +189,13 @@ export function BossEditor({ view, players, meId, busy, act }: Props & { meId: s
           <div inert={openSlot !== null} className="boss-slot-groups grid gap-1.5" style={{ gridTemplateColumns: `repeat(${space.groups.length}, minmax(0, 1fr))` }}>
             {space.groups.map((g, gi) => (
               <section key={gi} className={cn('flex min-w-0 flex-col gap-1', gi > 0 && 'border-l-2 border-dashed border-[#d9cfb2] pl-1.5')}>
-                <h4 className="flex flex-wrap items-center gap-1 text-[11px] font-black">
-                  <span className="rounded-md bg-[#241b4b] px-1.5 text-white">{g.pick === g.teams.length ? t('boss.deal.needs') : t('boss.deal.pick', { count: g.pick })}</span>
-                  {g.teams.map((team) => (
-                    <span key={team} className={cn('flex items-center gap-0.5 rounded-full bg-white pr-1.5 ring-2', deal.blockedTeams.includes(team) && 'line-through opacity-45')} style={{ ['--tw-ring-color' as string]: TEAM_COLOR[team] }}>
-                      <TeamBadge team={team} className="size-4" /><span className="boss-group-color-label">{t(`boss.teamShort.${team}`)}</span>
+                <h4 className="boss-group-head text-[11px] font-black">
+                  <span className="self-start rounded-md bg-[#241b4b] px-1.5 text-white">{g.pick === g.teams.length ? t('boss.deal.needs') : t('boss.deal.pick', { count: g.pick })}</span>
+                  <span className="boss-group-colors">{g.teams.map((team) => (
+                    <span key={team} className={cn('flex min-w-0 items-center gap-0.5 rounded-full bg-white pr-1.5 ring-2', deal.blockedTeams.includes(team) && 'line-through opacity-45')} style={{ ['--tw-ring-color' as string]: TEAM_COLOR[team] }}>
+                      <TeamBadge team={team} className="size-4 shrink-0" /><span className="boss-group-color-label truncate">{t(`boss.teamShort.${team}`)}</span>
                     </span>
-                  ))}
+                  ))}</span>
                 </h4>
                 {deal.slots.map((s, i) => s.group !== gi ? null : (
                   <button key={i} type="button" onClick={() => { setOpenSlot(i); setOptionPage(0) }}
@@ -252,7 +250,7 @@ export function BossEditor({ view, players, meId, busy, act }: Props & { meId: s
               </footer>
             </div>
           )}
-          <p className="text-center text-[11px] font-black text-[#7a5a1a]">{missingText(view, deal, t)}</p>
+          <p className="boss-editor-missing text-center text-[11px] font-black text-[#7a5a1a]">{missingText(view, deal, t)}</p>
         </>
       ) : (
         <>

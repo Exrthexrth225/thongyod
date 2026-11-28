@@ -17,7 +17,7 @@ import { Dialog, DialogClose, DialogContent } from '@/components/ui/dialog'
 import { BossBoard } from './BossBoard'
 import { ClosingRing, Die, EndRoll, FxBanner, InterruptOverlay, MoneyFly } from './BossFx'
 import { BossEditor, DealBoard, OfferCard } from './DealPanel'
-import { instruction } from './dealInfo'
+import { instruction, missingText } from './dealInfo'
 import { DiscardSheet, HandBar } from './Hand'
 import { Word } from './Word'
 import { faceArt, fxArt, M, nameOf, shortName, TEAM_COLOR, tutorialSeen } from './meta'
@@ -209,7 +209,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   const iconBtn = 'flex size-11 shrink-0 items-center justify-center rounded-full bg-white/10'
   return (
     <div ref={stage} className="boss-stage fixed inset-0 z-40 overflow-hidden bg-[radial-gradient(ellipse_at_50%_35%,#2c2360,#17142b_65%,#120d2b)] text-white">
-      <div data-focus={focus} data-own-screen={tableMode} data-players={view.seats.length} data-phase={view.phase} className="boss-game relative size-full pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]">
+      <div data-focus={focus} data-own-screen={tableMode} data-players={view.seats.length} data-phase={view.phase} className="boss-game relative size-full pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
         <header className="boss-top relative z-40 flex items-center justify-between px-2">
           <button type="button" className={iconBtn} aria-label={t('boss.menu.title')} onClick={() => setMenuOpen(true)}><Menu className="size-5" /></button>
           {tableMode ? <><Money amount={me?.exactCash ?? 0} className="text-lg text-amber-300" />{turnOrder}</> : <div className="boss-instruction">
@@ -244,8 +244,8 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
 
           <div className="boss-wallet-footer">
             <span>{t('boss.phone.lastPayout')} <strong>{view.lastSettlement ? <Money amount={view.lastSettlement.payouts[meId] ?? 0} /> : '—'}</strong></span>
-            <span>{t('boss.phone.closed', { count: view.dealsDone })}</span>
-            <span>{t('boss.status.deck', { count: view.deckCount })}</span>
+            <span>{t('boss.phone.closedLabel')} <strong>{view.dealsDone}</strong></span>
+            <span>{t('boss.phone.deckLabel')} <strong>{t('boss.phone.cardsN', { count: view.deckCount })}</strong></span>
           </div>
           </>}
         </aside>
@@ -361,6 +361,7 @@ function InfoStrip({ view, players }: { view: BossView; players: RoomPlayer[] })
   const deal = view.deal
   const space = deal ? view.spaces[deal.spaceIndex] : view.markerSpace !== null ? view.spaces[view.markerSpace] : null
   const waiting = deal ? deal.requiredIds.filter((id) => !deal.acceptedIds.includes(id)) : []
+  const missing = deal && deal.slots.some((s) => !s.source) ? missingText(view, deal, t) : ''
   return (
     <div className="boss-table-info">
       <p className="text-[11px] font-bold text-white/75">{t('boss.status.dealOf', { n: Math.min(view.dealsDone + 1, view.dealsTotal), total: view.dealsTotal })}</p>
@@ -378,6 +379,7 @@ function InfoStrip({ view, players }: { view: BossView; players: RoomPlayer[] })
         <img src={fxArt('crown')} alt="" className="size-5" />
         <span className="truncate">{t('boss.status.boss')} {shortName(nameOf(players, deal.bossId))}</span>
       </p>}
+      {missing && <p className="boss-missing">{missing}</p>}
       {waiting.length > 0 && <p className="boss-waiting text-[11px] leading-tight text-white/85">{t('boss.table.waitingFor', { names: waiting.map((id) => shortName(nameOf(players, id))).join(', ') })}</p>}
       {view.currentEndRollFaces.length > 0 && view.phase !== 'game_over' && <p className="text-[11px] font-bold text-[#ffcd9f]">{t('boss.status.endFaces', { faces: view.currentEndRollFaces.join(' ') })}</p>}
     </div>

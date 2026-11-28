@@ -141,7 +141,7 @@ export function BossBoard({ view, roll, startedAt, hold = null, onPick, children
               <DeckPile count={view.deckCount} className="absolute bottom-[6%] right-[7%] aspect-[2/3] w-[16%]" />
             </>
           )}
-          <div className="relative flex size-full flex-col items-center justify-center p-[1.2vmin]">{children}</div>
+          <div className={cn('relative flex size-full flex-col items-center justify-center p-[1.2vmin]', piles && 'px-[6%] pb-[30%]')}>{children}</div>
         </div>
       </div>
     </div>

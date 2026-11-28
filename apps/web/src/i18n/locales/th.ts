@@ -429,7 +429,7 @@ export const th = {
       endRoll: 'ลุ้นจบเกม ออก {{roll}}',
       skipped: 'ข้าม {{name}}',
     },
-    phone: { closed: 'ปิดดีลแล้ว {{count}}', play: 'ใช้ไพ่', free: 'ยังไม่มีเจ้าของ', previous: 'ก่อนหน้า', next: 'ถัดไป', giveLess: 'ให้ {{name}} น้อยลง $1M', giveMore: 'ให้ {{name}} เพิ่ม $1M', toBoard: 'จอกลาง', toOwn: 'จอฉัน', lastPayout: 'ดีลล่าสุด', turnOf: 'ตาของ {{name}}', space: 'ช่อง {{n}}', cardPile: '{{name}} {{count}} ใบ' },
+    phone: { closedLabel: 'ปิดดีลแล้ว', deckLabel: 'กองไพ่', cardsN: '{{count}} ใบ', closed: 'ปิดดีลแล้ว {{count}}', play: 'ใช้ไพ่', free: 'ยังไม่มีเจ้าของ', previous: 'ก่อนหน้า', next: 'ถัดไป', giveLess: 'ให้ {{name}} น้อยลง $1M', giveMore: 'ให้ {{name}} เพิ่ม $1M', toBoard: 'จอกลาง', toOwn: 'จอฉัน', lastPayout: 'ดีลล่าสุด', turnOf: 'ตาของ {{name}}', space: 'ช่อง {{n}}', cardPile: '{{name}} {{count}} ใบ' },
     mode: { toBoard: 'ดูจอกลาง', toOwn: 'เล่นจอตัวเอง' },
     addBoard: {
       title: 'เพิ่มจอกลาง',

@@ -85,7 +85,10 @@ export function BossTableScreen({ room }: { room: BossRoomData }) {
   const navigate = useNavigate()
   const say = instruction(view, room.players, null, t, rolling)
   const deal = view.deal
-  const plaque = (text: string, size = 'text-[clamp(15px,2.2vmin,26px)]') => <p key={text} className="boss-plaque boss-banner max-w-[94%] px-6 py-2.5"><Word text={text} className={size} /></p>
+  const plaque = (text: string, size = 'text-[clamp(15px,2.2vmin,26px)]') => <p key={text} className="boss-plaque boss-banner max-w-[94%] px-6 py-2.5">
+    {/* Thai has no spaces inside phrases: wrap only between the space-separated phrases */}
+    <span className="inline-flex flex-wrap justify-center gap-x-[0.3em]">{text.split(' ').map((w, i) => <Word key={i} text={w} className={cn(size, 'whitespace-nowrap')} />)}</span>
+  </p>
   return (
     <div ref={stage} className="boss-table fixed inset-0 z-[41] gap-3 overflow-hidden bg-[radial-gradient(ellipse_at_30%_20%,#2c2360,#17142b_60%,#120d2b)] p-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] text-white">
       <div className="boss-table-board relative flex min-h-0 min-w-0 items-center justify-center">
@@ -117,7 +120,7 @@ export function BossTableScreen({ room }: { room: BossRoomData }) {
           )}
           <button type="button" className="flex size-9 items-center justify-center rounded-full bg-white/10" aria-label={t('rooms.board.fullscreen')} onClick={() => void (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.().catch(() => {}))}><Maximize className="size-5" /></button>
         </div>
-        <div className="grid shrink-0 grid-cols-2 gap-1.5">
+        <div className={cn('grid shrink-0 gap-1.5', view.seats.length <= 3 ? 'grid-cols-1' : 'grid-cols-2')}>
           {view.seats.map((s) => <SeatCard key={s.userId} view={view} seat={s} players={room.players} online={room.online.includes(s.userId)} mood={moods[s.userId] ?? 'calm'} dark compact={view.seats.length > 4} />)}
         </div>
         {deal && !expanded && <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none]"><DealBoard view={view} players={room.players} /></div>}

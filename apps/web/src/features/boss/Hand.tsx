@@ -99,12 +99,15 @@ export function HandBar({ view, players, meId, busy, act, big = false }: { view:
   const padding = big ? 9 : 3
   const lift = big ? 6 : 3
   const layers = Math.min(4, Math.max(1, ...sorted.map(([, cards]) => cards.length)))
-  const layerStep = big ? 4 : 2
-  const pileHeight = (layers - 1) * layerStep
+  // each extra copy of a card peeks out ~11% of the card height above the one in front
+  const stepRatio = 0.11
+  const stack = 1 + stepRatio * (layers - 1)
   const width = Math.max(0, box.w - padding * 2)
-  const height = Math.max(0, box.h - padding * 2 - lift - pileHeight)
+  const height = Math.max(0, box.h - padding * 2 - lift)
   // At most 12% overlap. Height always wins, including a short decision-hand row.
-  const size = Math.max(0, Math.min(big ? 150 : 100, height / 1.42, width / (1 + Math.max(0, n - 1) * 0.88)))
+  const size = Math.max(0, Math.min(big ? 150 : 100, height / (1.42 * stack), width / (1 + Math.max(0, n - 1) * 0.88)))
+  const layerStep = size * 1.42 * stepRatio
+  const pileHeight = (layers - 1) * layerStep
   const step = n > 1 ? Math.min(size + 8, (width - size) / (n - 1)) : 0
   const rowWidth = size + step * Math.max(0, n - 1)
   return (
@@ -117,7 +120,7 @@ export function HandBar({ view, players, meId, busy, act, big = false }: { view:
             <span className="max-w-[14rem] text-sm font-bold leading-snug">{t('boss.cards.emptyHand')}</span>
           </div>
         )}
-        <div className="boss-hand-track absolute left-1/2 top-1/2" style={{ width: rowWidth, height: size * 1.42, transform: 'translate(-50%, -50%)' }}>
+        <div className="boss-hand-track absolute left-1/2 top-1/2" style={{ width: rowWidth, height: size * 1.42, transform: `translate(-50%, calc(-50% + ${pileHeight / 2}px))` }}>
           {size > 0 && sorted.map(([key, cards], i) => {
             const can = playable(view, meId, cards[0])
             const selected = open && cardKey(open) === key
@@ -140,10 +143,10 @@ export function HandBar({ view, players, meId, busy, act, big = false }: { view:
               >
                 {Array.from({ length: copies - 1 }, (_, layer) => (
                   <span key={layer} aria-hidden="true" className="boss-pile-copy absolute inset-0 rounded-[inherit] border border-white/60"
-                    style={{ background: cards[0].kind === 'team' ? TEAM_COLOR[cards[0].team] : KIND_STYLE[cards[0].kind].frame, transform: `translateY(${-(copies - layer - 1) * layerStep}px)` }} />
+                    style={{ background: cards[0].kind === 'team' ? TEAM_COLOR[cards[0].team] : KIND_STYLE[cards[0].kind].frame, transform: `translateY(${-(copies - layer - 1) * layerStep}px)`, filter: `brightness(${0.72 + layer * 0.1})` }} />
                 ))}
                 <CardFace card={cards[0]} size={size} detail={size >= 72} className={cn('relative', can && 'boss-card-playable')} />
-                {cards.length > 1 && <span className="absolute -top-0.5 left-0 rounded bg-[#241b4b] px-1 text-[10px] font-black text-white">×{cards.length}</span>}
+                {cards.length > 1 && <span className="absolute right-1 z-10 rounded-full bg-[#241b4b] px-1.5 text-xs font-black leading-5 text-white ring-2 ring-white" style={{ top: -(copies - 1) * layerStep - 8 }}>×{cards.length}</span>}
               </button>
             )
           })}
