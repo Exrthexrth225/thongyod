@@ -139,6 +139,7 @@ export function BossEditor({ view, players, meId, busy, act }: Props & { meId: s
   const space = view.spaces[deal.spaceIndex]
   const [tab, setTab] = useState<1 | 2>(1)
   const [openSlot, setOpenSlot] = useState<number | null>(null)
+  const [payoutPage, setPayoutPage] = useState(0)
   const [optionPage, setOptionPage] = useState(0)
   // amounts being typed, in millions, for this deal and this boss
   const key = `${deal.id}:${deal.bossId}`
@@ -146,6 +147,8 @@ export function BossEditor({ view, players, meId, busy, act }: Props & { meId: s
   const others = view.seats.filter((s) => s.userId !== meId).map((s) => s.userId)
   const suppliers = new Set(deal.slots.flatMap((s) => (s.source && s.source.ownerId !== meId ? [s.source.ownerId] : [])))
   const order = [...others.filter((id) => suppliers.has(id)), ...others.filter((id) => !suppliers.has(id))]
+  const lastPage = Math.max(0, Math.ceil(order.length / 3) - 1)
+  const payoutIndex = Math.min(payoutPage, lastPage)
   const amounts = draft?.key === key ? draft.amounts : Object.fromEntries(others.map((id) => [id, Math.round((deal.allocation[id] ?? 0) / M)]))
   const total = deal.totalValue / M
   const given = Object.values(amounts).reduce((a, b) => a + b, 0)
@@ -174,11 +177,13 @@ export function BossEditor({ view, players, meId, busy, act }: Props & { meId: s
     <div className="boss-editor relative flex w-full min-w-0 flex-col gap-1.5 rounded-2xl bg-[#f6efdc] p-2 text-[#241b4b] shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
       <header inert={openSlot !== null} className="flex items-center gap-1.5">
         {([1, 2] as const).map((n) => (
-          <button key={n} type="button" onClick={() => setTab(n)} className={cn('h-8 flex-1 rounded-xl text-xs font-black transition', tab === n ? 'bg-[#241b4b] text-white' : 'bg-white/70 text-[#241b4b]')}>
+          <button key={n} type="button" aria-pressed={tab === n} onClick={() => setTab(n)} className={cn('h-8 flex-1 rounded-xl text-xs font-black transition', tab === n ? 'bg-[#241b4b] text-white' : 'bg-white/70 text-[#241b4b]')}>
             {t(n === 1 ? 'boss.table.step1' : 'boss.table.step2')}
           </button>
         ))}
-        <PriceTag amount={deal.totalValue} share={view.currentShareValue} dividends={space.dividends} size={18} className="shrink-0" />
+        {tab === 2 && lastPage > 0 && <button type="button" className="boss-page" onClick={() => setPayoutPage(payoutIndex === lastPage ? 0 : payoutIndex + 1)}>
+          {t(payoutIndex === lastPage ? 'boss.phone.previous' : 'boss.phone.next')} {payoutIndex + 1}/{lastPage + 1}
+        </button>}
       </header>
 
       {tab === 1 ? (
@@ -252,7 +257,7 @@ export function BossEditor({ view, players, meId, busy, act }: Props & { meId: s
       ) : (
         <>
           <ul className="boss-payouts flex flex-col gap-1">
-            {order.map((id) => {
+            {order.slice(payoutIndex * 3, payoutIndex * 3 + 3).map((id) => {
               const teams = deal.slots.flatMap((s) => (s.source?.ownerId === id ? [s.source.team] : []))
               const st = deal.acceptedIds.includes(id) ? 'ok' : deal.declinedIds.includes(id) ? 'no' : null
               return (
@@ -262,9 +267,9 @@ export function BossEditor({ view, players, meId, busy, act }: Props & { meId: s
                     <span className="flex items-center gap-1 truncate text-xs font-black">{shortName(nameOf(players, id))}{st === 'ok' && <Check className="size-3 text-emerald-600" />}{st === 'no' && <X className="size-3 text-red-600" />}</span>
                     <span className="flex items-center gap-0.5">{teams.length ? teams.map((team) => <TeamBadge key={team} team={team} className="size-3.5" />) : <span className="text-[10px] font-bold text-[#7a6a46]">{t('boss.table.bribe')}</span>}</span>
                   </span>
-                  <button type="button" aria-label={t('boss.phone.giveLess', { name: nameOf(players, id) })} className="flex size-8 items-center justify-center rounded-lg bg-[#241b4b]/10" onClick={() => set(id, (amounts[id] ?? 0) - 1)}><Minus className="size-4" /></button>
+                  <button type="button" aria-label={t('boss.phone.giveLess', { name: nameOf(players, id) })} disabled={(amounts[id] ?? 0) <= 0} className="boss-payout-step" onClick={() => set(id, (amounts[id] ?? 0) - 1)}><Minus className="size-4" /></button>
                   <Money amount={(amounts[id] ?? 0) * M} className="boss-payout-money w-12 text-center text-sm" />
-                  <button type="button" aria-label={t('boss.phone.giveMore', { name: nameOf(players, id) })} className="flex size-8 items-center justify-center rounded-lg bg-[#241b4b]/10" onClick={() => set(id, (amounts[id] ?? 0) + 1)}><Plus className="size-4" /></button>
+                  <button type="button" aria-label={t('boss.phone.giveMore', { name: nameOf(players, id) })} disabled={(amounts[id] ?? 0) >= total} className="boss-payout-step" onClick={() => set(id, (amounts[id] ?? 0) + 1)}><Plus className="size-4" /></button>
                 </li>
               )
             })}

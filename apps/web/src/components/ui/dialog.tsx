@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 export const Dialog = DialogPrimitive.Root
 export const DialogClose = DialogPrimitive.Close
 
-type DialogContentProps = ComponentProps<typeof DialogPrimitive.Popup> & {
+type DialogContentProps = Omit<ComponentProps<typeof DialogPrimitive.Popup>, 'title'> & {
   title: ReactNode
   description?: ReactNode
 }

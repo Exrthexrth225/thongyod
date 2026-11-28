@@ -2,6 +2,8 @@ import { Fragment, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { BossActionPayload, BossHandCard, BossView, InvestorTeam, RoomPlayer } from '@/api/types'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogClose, DialogContent } from '@/components/ui/dialog'
+import { Word } from './Word'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { cn } from '@/lib/utils'
 import { cardArt, cardKey, cardName, faceArt, fxArt, moneyArt, nameOf, shortName, TEAM_COLOR, TEAMS } from './meta'
@@ -43,7 +45,7 @@ export function CardFace({ card, size = 88, className, count, glow, dim, detail 
         )}
       </span>
       <span className="mt-[5%] flex flex-1 flex-col items-center justify-start gap-[3%] text-center leading-[1.15]" style={{ color: style.ink }}>
-        <span className="font-black" style={{ fontSize: size * 0.14 }}>{cardName(card, t)}</span>
+        <span className="font-black" style={{ fontSize: Math.max(9, size * 0.14) }}>{cardName(card, t)}</span>
         {/* Thai has no spaces between words: each space-separated chunk stays whole, lines break only between chunks */}
         {detail && <span className="font-semibold opacity-90" style={{ fontSize: Math.max(8, size * 0.1) }}>{desc.split(' ').map((w, i) => <Fragment key={i}>{i > 0 && ' '}<span className="inline-block whitespace-nowrap">{w}</span></Fragment>)}</span>}
       </span>
@@ -94,15 +96,15 @@ export function HandBar({ view, players, meId, busy, act, big = false }: { view:
   const order = ['boss', 'stop', 'recruit', ...TEAMS.map((x) => `team:${x}`), 'travel:any', ...TEAMS.map((x) => `travel:${x}`)]
   const sorted = [...stacks.entries()].sort(([a], [b]) => order.indexOf(a) - order.indexOf(b))
   const n = sorted.length
-  const padding = 12
-  const lift = 6
+  const padding = big ? 9 : 3
+  const lift = big ? 6 : 3
   const layers = Math.min(4, Math.max(1, ...sorted.map(([, cards]) => cards.length)))
   const layerStep = big ? 4 : 2
   const pileHeight = (layers - 1) * layerStep
   const width = Math.max(0, box.w - padding * 2)
   const height = Math.max(0, box.h - padding * 2 - lift - pileHeight)
   // At most 12% overlap. Height always wins, including a short decision-hand row.
-  const size = Math.max(0, Math.min(big ? 160 : 88, height / 1.42, width / (1 + Math.max(0, n - 1) * 0.88)))
+  const size = Math.max(0, Math.min(big ? 150 : 100, height / 1.42, width / (1 + Math.max(0, n - 1) * 0.88)))
   const step = n > 1 ? Math.min(size + 8, (width - size) / (n - 1)) : 0
   const rowWidth = size + step * Math.max(0, n - 1)
   return (
@@ -134,13 +136,13 @@ export function HandBar({ view, players, meId, busy, act, big = false }: { view:
                     style={{ background: cards[0].kind === 'team' ? TEAM_COLOR[cards[0].team] : KIND_STYLE[cards[0].kind].frame, transform: `translateY(${-(copies - layer - 1) * layerStep}px)` }} />
                 ))}
                 <CardFace card={cards[0]} size={size} detail={size >= 72} className={cn('relative', can && 'boss-card-playable')} />
-                {cards.length > 4 && <span className="absolute bottom-1 right-1 rounded bg-[#241b4b] px-1 text-[10px] font-black text-white">{cards.length}</span>}
+                {cards.length > 1 && <span className="absolute -top-0.5 left-0 rounded bg-[#241b4b] px-1 text-[10px] font-black text-white">×{cards.length}</span>}
               </button>
             )
           })}
         </div>
       </div>
-      <CardSheet card={open} onClose={() => setOpen(null)} view={view} players={players} meId={meId} busy={busy} act={(a) => { act(a); setOpen(null) }} />
+      <CardSheet key={open?.id} card={open} onClose={() => setOpen(null)} view={view} players={players} meId={meId} busy={busy} act={(a) => { act(a); setOpen(null) }} />
     </>
   )
 }
@@ -151,66 +153,64 @@ function CardSheet({ card, onClose, view, players, meId, busy, act }: { card: Bo
   const talking = !!deal && (view.phase === 'negotiating' || view.phase === 'closing')
   const space = deal ? view.spaces[deal.spaceIndex] : null
   const inDeal = (team: InvestorTeam) => !!space && space.groups.some((g) => g.teams.includes(team))
-  let body: React.ReactNode = null
-  if (card) {
-    const reason = (text: string) => <p className="rounded-2xl bg-muted p-3 text-center text-sm">{text}</p>
-    if (card.kind === 'stop') body = reason(t('boss.cards.stopOnly'))
-    else if (!talking) body = reason(t('boss.cards.notNow'))
-    else if (card.kind === 'team') {
-      body = inDeal(card.team)
-        ? (
-          <>
-            <p className="rounded-2xl bg-amber-100 p-2.5 text-center text-sm font-bold text-amber-900">⚠️ {t('boss.table.teamWarn')}</p>
-            <Button size="lg" className="h-14 text-lg" disabled={busy} onClick={() => act({ type: 'play_team', cardId: card.id })}>{t('boss.cards.playTeam', { team: t(`boss.teamShort.${card.team}`) })}</Button>
-          </>
-        )
-        : reason(t('boss.cards.notInDeal'))
-    } else if (card.kind === 'boss') {
-      body = deal!.bossId === meId ? reason(t('boss.cards.notNow')) : <Button size="lg" className="h-14 text-lg" disabled={busy} onClick={() => act({ type: 'play_boss', cardId: card.id })}>{t('boss.cards.playBoss')}</Button>
-    } else if (card.kind === 'travel') {
-      const teams = (card.team === 'any' ? TEAMS : [card.team]).filter(inDeal)
-      const targets: { key: string; team: InvestorTeam; label: string; cardId?: string }[] = []
-      for (const team of teams) {
-        const owner = view.seats.find((s) => s.investors.includes(team))
-        if (owner && owner.userId !== meId && !deal!.blockedTeams.includes(team)) targets.push({ key: `p:${team}`, team, label: t('boss.deal.investor', { name: shortName(nameOf(players, owner.userId)) }) })
-        for (const tc of deal!.tableCards.filter((c) => c.team === team && c.ownerId !== meId)) targets.push({ key: tc.id, team, label: t('boss.deal.byCard', { name: shortName(nameOf(players, tc.ownerId)) }), cardId: tc.id })
-      }
-      body = targets.length ? (
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-bold">{t('boss.cards.travelWho')}</p>
-          <div className="grid grid-cols-3 gap-2">
-            {targets.map((x) => (
-              <button key={x.key} type="button" disabled={busy} onClick={() => act({ type: 'play_travel', cardId: card.id, targetTeam: x.team, ...(x.cardId ? { targetCardId: x.cardId } : {}) })}
-                className="flex flex-col items-center gap-1 rounded-2xl border-2 p-2 transition active:scale-95 disabled:opacity-50" style={{ borderColor: TEAM_COLOR[x.team] }}>
-                <img src={faceArt(x.team, 'upset')} alt="" className="size-14 object-contain" />
-                <span className="text-center text-xs font-bold leading-tight">{x.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : reason(t('boss.cards.notInDeal'))
-    } else if (card.kind === 'recruit') {
-      const recruits = view.myHand.filter((c) => c.kind === 'recruit')
-      const pool: InvestorTeam[] = view.availableInvestors.length ? view.availableInvestors : view.seats.filter((s) => s.userId !== meId).flatMap((s) => s.investors)
-      body = recruits.length < 3 ? reason(t('boss.cards.recruitNeed', { count: recruits.length })) : (
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-bold">{t('boss.cards.recruitWho')}</p>
-          {view.availableInvestors.length > 0 && <p className="text-xs text-muted-foreground">{t('boss.cards.recruitFirst')}</p>}
-          <div className="grid grid-cols-3 gap-2">
-            {pool.map((team) => (
-              <Button key={team} variant="secondary" className="h-auto flex-col gap-0.5 rounded-2xl border-2 py-2" style={{ borderColor: TEAM_COLOR[team] }} disabled={busy} onClick={() => act({ type: 'play_recruit', cardIds: [recruits[0].id, recruits[1].id, recruits[2].id], targetTeam: team })}>
-                <img src={faceArt(team, 'happy')} alt="" className="size-12 object-contain" /><span className="text-xs">{t(`boss.teamShort.${team}`)}</span>
-              </Button>
-            ))}
-          </div>
-        </div>
-      )
+  const [chosen, choose] = useState('')
+  const [page, setPage] = useState(0)
+  if (!card) return null
+  const targets: { id: string; team: InvestorTeam; owner: string; why?: string; action: BossActionPayload }[] = []
+  let action: BossActionPayload | undefined
+  let reason = ''
+  if (card.kind === 'stop') reason = t('boss.cards.stopOnly')
+  else if (!talking || !deal) reason = t('boss.cards.notNow')
+  else if (card.kind === 'team') {
+    if (inDeal(card.team)) action = { type: 'play_team', cardId: card.id }
+    else reason = t('boss.cards.notInDeal')
+  } else if (card.kind === 'boss') {
+    if (deal.bossId !== meId) action = { type: 'play_boss', cardId: card.id }
+    else reason = t('boss.cards.notNow')
+  } else if (card.kind === 'travel') {
+    for (const team of (card.team === 'any' ? TEAMS : [card.team]).filter(inDeal)) {
+      const owner = view.seats.find((s) => s.investors.includes(team))
+      if (owner) targets.push({ id: team, team, owner: t('boss.deal.investor', { name: shortName(nameOf(players, owner.userId)) }),
+        why: owner.userId === meId ? t('boss.errors.OWN_TEAM') : deal.blockedTeams.includes(team) ? t('boss.table.sentAway') : undefined,
+        action: { type: 'play_travel', cardId: card.id, targetTeam: team } })
+      for (const c of deal.tableCards.filter((c) => c.team === team)) targets.push({ id: c.id, team,
+        owner: t('boss.deal.byCard', { name: shortName(nameOf(players, c.ownerId)) }), why: c.ownerId === meId ? t('boss.errors.OWN_TEAM') : undefined,
+        action: { type: 'play_travel', cardId: card.id, targetTeam: team, targetCardId: c.id } })
+    }
+    if (!targets.length) reason = t('boss.cards.notInDeal')
+  } else {
+    const recruits = view.myHand.filter((c) => c.kind === 'recruit')
+    if (recruits.length < 3) reason = t('boss.cards.recruitNeed', { count: recruits.length })
+    else for (const team of TEAMS) {
+      const owner = view.seats.find((s) => s.investors.includes(team))
+      targets.push({ id: team, team, owner: owner ? shortName(nameOf(players, owner.userId)) : t('boss.phone.free'),
+        why: view.availableInvestors.length && owner ? t('boss.cards.recruitFirst') : owner?.userId === meId ? t('boss.cards.notNow') : undefined,
+        action: { type: 'play_recruit', cardIds: recruits.slice(0, 3).map((c) => c.id) as [string, string, string], targetTeam: team } })
     }
   }
+  const active = action ?? targets.find((x) => x.id === chosen && !x.why)?.action
+  const pages = Math.ceil(targets.length / 3)
+  const current = Math.min(page, Math.max(0, pages - 1))
   return (
-    <BottomSheet full open={card !== null} onOpenChange={(v) => { if (!v) onClose() }} title={card ? cardName(card, t) : ''}>
-      <div className="flex flex-col gap-3 px-4 pb-6">{card && <CardHow card={card} />}{body}</div>
-    </BottomSheet>
+    <Dialog open onOpenChange={(v) => { if (!v) onClose() }}>
+      <DialogContent className="boss-card-dialog" title={<Word text={cardName(card, t)} />}>
+        <DialogClose aria-label={t('common.back')} className="boss-detail-close">×</DialogClose>
+        <div className="boss-detail-face"><CardFace card={card} size={110} /></div>
+        <CardHow card={card} />
+        {targets.length > 0 && <div className="boss-targets">
+          {targets.slice(current * 3, current * 3 + 3).map((x) => <button key={x.id} type="button" disabled={busy || !!x.why}
+            aria-pressed={x.id === chosen} onClick={() => choose(x.id)}>
+            <img src={faceArt(x.team)} alt="" style={{ borderColor: TEAM_COLOR[x.team] }} />
+            <b>{t(`boss.teamShort.${x.team}`)}</b><small>{x.why || x.owner}</small>
+          </button>)}
+        </div>}
+        <div className="boss-detail-actions">
+          {pages > 1 && <button type="button" onClick={() => { setPage((current + 1) % pages); choose('') }}>{t('boss.phone.next')} {current + 1}/{pages}</button>}
+          {reason ? <p>{reason}</p> : <><span>{card.kind === 'team' ? t('boss.table.teamWarn') : targets.length && !active ? t(card.kind === 'recruit' ? 'boss.cards.recruitWho' : 'boss.cards.travelWho') : ''}</span>
+            <Button disabled={busy || !active} onClick={() => active && act(active)}>{t('boss.phone.play')}</Button></>}
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -228,7 +228,7 @@ function CardHow({ card }: { card: BossHandCard }) {
     : [{ img: fxArt('burst'), text: t('boss.cards.stopHow1') }, { img: fxArt('stop'), text: t('boss.cards.stopHow2') }, { img: fxArt('stamp'), text: t('boss.cards.stopHow3') }]
   return (
     <div className="flex items-center gap-3 rounded-3xl bg-[#241b4b] p-3 text-white">
-      <CardFace card={card} size={92} className="boss-card-slam -rotate-3" />
+
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <span className="text-xs font-bold text-[#ffd77a]">{t('boss.cards.howTitle')}</span>
         <ol className="flex items-stretch gap-1">

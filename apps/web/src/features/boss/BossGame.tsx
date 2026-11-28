@@ -13,6 +13,7 @@ import { RoomLiveBar } from '@/features/rooms/RoomLiveBar'
 import { boardUrl } from '@/features/rooms/url'
 import { showErrorToast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
+import { Dialog, DialogClose, DialogContent } from '@/components/ui/dialog'
 import { BossBoard } from './BossBoard'
 import { ClosingRing, Die, EndRoll, FxBanner, InterruptOverlay, MoneyFly } from './BossFx'
 import { BossEditor, DealBoard, OfferCard } from './DealPanel'
@@ -21,7 +22,7 @@ import { DiscardSheet, HandBar } from './Hand'
 import { Word } from './Word'
 import { faceArt, fxArt, M, nameOf, shortName, TEAM_COLOR, tutorialSeen } from './meta'
 import { BossTutorial } from './Tutorial'
-import { Money, PlayerName, PriceTag, SeatColors, SeatFaces, SpaceTile } from './parts'
+import { Money, PlayerName, PriceTag, SeatColors, SeatFaces } from './parts'
 import { useBossTimeline } from './useBossTimeline'
 import './boss.css'
 
@@ -64,6 +65,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   const close = useCloseRoom(room.code)
   const draftRandom = useBossDraftRandom(room.code)
   const restartOpen = useRestartOpen(room.code)
+  const [detail, setDetail] = useState<string | null>(null)
   const [boardOpen, setBoardOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [addBoard, setAddBoard] = useState(false)
@@ -115,7 +117,6 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   const settled = latest?.kind === 'deal_settled' && view.lastSettlement?.dealNumber === latest.dealNumber ? latest : null
   const space = view.markerSpace !== null ? view.spaces[view.markerSpace] : null
   const me = view.seats.find((s) => s.userId === meId)
-  const others = view.seats.filter((s) => s.userId !== meId)
   const mustConfirm = !!deal && deal.terms[meId] !== undefined && view.phase !== 'interrupt'
   const say = instruction(view, players, meId, t, rolling)
 
@@ -126,17 +127,6 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   else if (deal && isBoss) field = <BossEditor view={view} players={players} meId={meId} busy={move.isPending} act={(a) => act(a)} />
   else if (deal && mustConfirm) field = <OfferCard view={view} players={players} meId={meId} busy={move.isPending} act={(a) => act(a)} />
   else if (deal && tableMode) field = <DealBoard view={view} players={players} meId={meId} compact />
-  else if (tableMode && space) {
-    field = (
-      <div className="flex items-center justify-center gap-4">
-        <SpaceTile space={space} big active className="h-32 w-44" />
-        <div className="flex flex-col items-center gap-2">
-          {lastRoll && view.phase === 'rolled_choice' ? <Die key={lastRoll.id} value={lastRoll.roll ?? 1} size={52} rolling={rolling} /> : <Die value={lastRoll?.roll ?? 5} size={52} rolling={false} className="opacity-40" />}
-          <PriceTag amount={space.dividends * view.currentShareValue} share={view.currentShareValue} dividends={space.dividends} size={20} />
-        </div>
-      </div>
-    )
-  }
   const focus = field ? 'field' : 'hand'
 
   // ── big buttons on the right, only when it is up to me ──
@@ -179,28 +169,6 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
   }
   if (view.phase === 'closing' && deal) side = <><ClosingRing deadline={deal.closingDeadlineAt} className="text-sm" />{side}</>
 
-  // ── other players (own screen): public things only ──
-  const row = (s: (typeof view.seats)[number]) => {
-    const id = s.userId
-    const isBossRow = deal?.bossId === id
-    const turn = !deal && view.turnPlayerId === id && view.phase !== 'game_over'
-    const status = deal
-      ? isBossRow ? t('boss.status.boss') : deal.acceptedIds.includes(id) ? t('boss.deal.accepted') : deal.declinedIds.includes(id) ? t('boss.deal.declined') : deal.requiredIds.includes(id) ? t('boss.deal.waiting') : ''
-      : ''
-    return (
-      <div key={id} data-seat={id} className={cn('boss-other flex w-full shrink-0 items-center gap-1.5 rounded-xl bg-white/[0.06] p-1 pr-1.5 ring-1 ring-white/10 transition', (turn || isBossRow) && 'ring-2 ring-[#ffc21a]', !room.online.includes(id) && 'opacity-50')}>
-        <SeatFaces view={view} userId={id} mood={moods[id] ?? 'calm'} round className="size-8" />
-        <span className="flex min-w-0 flex-1 flex-col leading-tight">
-          <span className="flex min-w-0 items-center gap-1 text-[12px] font-bold text-white"><PlayerName name={nameOf(players, id)} />{!room.online.includes(id) && <WifiOff className="size-3 shrink-0" />}</span>
-          <span className="flex items-center gap-1 text-[10px] text-white/60">
-            <SeatColors view={view} userId={id} size="size-3.5" />
-            <span className="ml-auto truncate">{status || t('boss.cards.hand', { count: s.handCount })}</span>
-          </span>
-        </span>
-      </div>
-    )
-  }
-
   // My wallet and investor colours stay private to this phone.
   const myCard = me && (
     <div data-seat={meId} className="boss-me">
@@ -224,17 +192,29 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
     </div>
   )
 
+  const actor = view.draft?.actorId ?? (view.phase === 'pick_start' ? view.markerChooserId : deal?.bossId ?? view.turnPlayerId)
+  const selectedSeat = view.seats.find((s) => s.userId === detail)
+  const turnOrder = (
+    <div className="boss-order">
+      {view.seats.map((s) => (
+        <button key={s.userId} type="button" data-seat={s.userId} data-current={s.userId === actor}
+          aria-label={nameOf(players, s.userId)} onClick={() => setDetail(s.userId)}>
+          <SeatFaces view={view} userId={s.userId} round className="size-6" />
+        </button>
+      ))}
+    </div>
+  )
   const iconBtn = 'flex size-11 shrink-0 items-center justify-center rounded-full bg-white/10'
   return (
     <div ref={stage} className="boss-stage fixed inset-0 z-40 overflow-hidden bg-[radial-gradient(ellipse_at_50%_35%,#2c2360,#17142b_65%,#120d2b)] text-white">
       <div data-focus={focus} data-own-screen={tableMode} data-players={view.seats.length} data-phase={view.phase} className="boss-game relative size-full pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]">
         <header className="boss-top relative z-40 flex items-center justify-between px-2">
           <button type="button" className={iconBtn} aria-label={t('boss.menu.title')} onClick={() => setMenuOpen(true)}><Menu className="size-5" /></button>
-          <div className="boss-instruction">
+          {tableMode ? <><Money amount={me?.exactCash ?? 0} className="text-lg text-amber-300" />{turnOrder}</> : <div className="boss-instruction">
             <span key={say} className="boss-plaque boss-banner block px-3 py-1" title={say}>
               <span className="block truncate text-sm font-black text-[#ffe19a]">{say}</span>
             </span>
-          </div>
+          </div>}
           <div className="flex shrink-0 items-center gap-1">
             {room.boardOnline && (
               <button type="button" className="flex h-11 items-center gap-1 rounded-full bg-white/10 px-2 text-[11px] font-bold"
@@ -249,12 +229,24 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
         </header>
 
         <aside className="boss-seats">
-          {myCard}
-          {tableMode && <div className="boss-other-seats">{others.map(row)}</div>}
+          {tableMode ? <BossBoard view={view} className="boss-pocket-board" roll={latest?.kind === 'dice_rolled' ? latest : null}
+            hold={rolling ? lastRoll?.fromSpace : null}
+            onPick={view.phase === 'pick_start' && view.markerChooserId === meId ? (spaceIndex) => act({ type: 'pick_start', spaceIndex }) : undefined}
+            dealSlotButton={deal && <button type="button" onClick={() => setDetail('deal')} aria-label={t('boss.status.deal', { n: deal.dealNumber })}>
+              {deal.slots.map((slot, i) => slot.source ? <img key={i} src={faceArt(slot.source.team)} alt={nameOf(players, slot.source.ownerId)} /> : <i key={i} />)}
+            </button>}>
+            {rolling || view.phase === 'rolled_choice' ? <Die value={lastRoll?.roll ?? 1} size={32} rolling={rolling} /> : null}
+            {!rolling && space && <PriceTag amount={space.dividends * view.currentShareValue} size={18} />}
+            <strong className="boss-board-say">{say}</strong>
+          </BossBoard> : <>{myCard}
+          {turnOrder}
+
           <div className="boss-wallet-footer">
             <span>{t('boss.phone.lastPayout')} <strong>{view.lastSettlement ? <Money amount={view.lastSettlement.payouts[meId] ?? 0} /> : '—'}</strong></span>
+            <span>{t('boss.phone.closed', { count: view.dealsDone })}</span>
             <span>{t('boss.status.deck', { count: view.deckCount })}</span>
           </div>
+          </>}
         </aside>
 
         <main className="boss-field relative flex min-h-0 min-w-0 items-center justify-center overflow-hidden p-1">
@@ -262,15 +254,15 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
         </main>
 
         <nav className="boss-side">
-          <InfoStrip view={view} players={players} />
+          {!tableMode && <InfoStrip view={view} players={players} />}
           <RoomLiveBar room={room} meId={meId} />
           <div className="boss-actions">
-            {side || (
+            {side || (!field && (
               <div className="boss-turn-owner">
                 <SeatFaces view={view} userId={view.draft?.actorId ?? deal?.bossId ?? view.turnPlayerId} round className="size-11" />
                 <span>{view.phase === 'game_over' ? t('boss.over.title') : t('boss.phone.turnOf', { name: shortName(nameOf(players, view.draft?.actorId ?? deal?.bossId ?? view.turnPlayerId)) })}</span>
               </div>
-            )}
+            ))}
           </div>
         </nav>
 
@@ -279,6 +271,13 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
         </footer>
       </div>
 
+      <Dialog open={detail !== null} onOpenChange={(v) => { if (!v) setDetail(null) }}>
+        <DialogContent className="border-amber-400 bg-[#241b4b] text-white" title={selectedSeat ? nameOf(players, selectedSeat.userId) : t('boss.status.deal', { n: view.currentDealNumber })}>
+          {selectedSeat && <><SeatColors view={view} userId={selectedSeat.userId} /><p>{t('boss.cards.hand', { count: selectedSeat.handCount })}</p></>}
+          {detail === 'deal' && deal?.slots.map((slot, i) => <p key={i}>{slot.source ? t(`boss.teamShort.${slot.source.team}`) + ' · ' + nameOf(players, slot.source.ownerId) : t('boss.table.slotEmpty')}</p>)}
+          <DialogClose className="min-h-11">{t('common.back')}</DialogClose>
+        </DialogContent>
+      </Dialog>
       {/* Phones are played sideways; leaving stays one tap away before turning. */}
       <div className="boss-rotate fixed inset-0 z-[60] hidden flex-col items-center justify-center gap-4 bg-[#17142b] p-8 text-center text-white">
         <RotateCw className="boss-rotate-icon size-16 text-[#ffc21a]" aria-hidden="true" />
@@ -290,7 +289,7 @@ export function BossGame({ room, meId }: { room: BossRoomData; meId: string }) {
         </div>
       </div>
 
-      {view.phase === 'pick_start' && (tableMode || view.markerChooserId === meId) && (
+      {view.phase === 'pick_start' && (!tableMode && view.markerChooserId === meId) && (
         <div className="fixed inset-0 z-30 flex items-center justify-center gap-3 bg-black/75 p-2 pt-12">
           <BossBoard view={view} onPick={view.markerChooserId === meId ? (spaceIndex) => act({ type: 'pick_start', spaceIndex }) : undefined} className="h-full" />
         </div>

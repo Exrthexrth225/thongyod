@@ -427,7 +427,7 @@ export const en: Messages = {
       endRoll: 'End roll: {{roll}}',
       skipped: 'Skipped {{name}}',
     },
-    phone: { previous: 'Previous', next: 'Next', giveLess: 'Give {{name}} $1M less', giveMore: 'Give {{name}} $1M more', toBoard: 'Board', toOwn: 'My screen', lastPayout: 'Last deal', turnOf: "{{name}}’s turn", space: 'Space {{n}}', cardPile: '{{name}}, {{count}} cards' },
+    phone: { closed: '{{count}} deals closed', play: 'Play card', free: 'Unclaimed', previous: 'Previous', next: 'Next', giveLess: 'Give {{name}} $1M less', giveMore: 'Give {{name}} $1M more', toBoard: 'Board', toOwn: 'My screen', lastPayout: 'Last deal', turnOf: "{{name}}’s turn", space: 'Space {{n}}', cardPile: '{{name}}, {{count}} cards' },
     mode: { toBoard: 'Watch board', toOwn: 'My screen' },
     addBoard: {
       title: 'Add a board screen',

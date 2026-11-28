@@ -18,12 +18,13 @@ type Props = {
   /** A space whose deal just closed: it flips over big. */
   settledSpace?: number | null
   /** Show the placard stack and the draw pile in the middle. */
+  dealSlotButton?: ReactNode
   piles?: boolean
   className?: string
 }
 
 /** The board: 16 deal spaces around a felt table, the $ marker, and whatever goes in the middle. */
-export function BossBoard({ view, roll, hold = null, onPick, children, piles, settledSpace = null, className }: Props) {
+export function BossBoard({ view, roll, hold = null, onPick, children, piles, dealSlotButton, settledSpace = null, className }: Props) {
   const grid = useRef<HTMLDivElement>(null)
   const marker = useRef<HTMLSpanElement>(null)
   const markerSpace = view.markerSpace
@@ -99,6 +100,7 @@ export function BossBoard({ view, roll, hold = null, onPick, children, piles, se
           return (
             <div key={space.index} data-space={space.index} style={ringCell(space.index)} className={cn('relative min-h-0 min-w-0 transition-[opacity,filter] duration-500', dim && 'opacity-75 saturate-[0.6]', here && 'z-10', celebrate && 'boss-celebrate z-30')}>
               <SpaceTile space={space} shape={ringShape(space.index)} active={lit === space.index} onPick={onPick ? () => onPick(space.index) : undefined} className="size-full" />
+              {view.deal?.spaceIndex === space.index && dealSlotButton && <div className="boss-tile-slots">{dealSlotButton}</div>}
               {markerSpace === space.index && (
                 <span ref={marker} className="boss-marker pointer-events-none absolute z-20 size-[11cqmin] -translate-x-1/2 -translate-y-1/2" style={markerSpot(space.index)}>
                   <span className="boss-marker-ring absolute inset-0 rounded-full" aria-hidden="true" />
