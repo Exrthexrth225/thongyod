@@ -376,3 +376,10 @@
   .boss-game .boss-editor:has(.boss-payouts) > header, .boss-game .boss-editor:has(.boss-payouts) > header button { min-height: 28px; height: 28px; }
   .boss-game .boss-payouts { gap: 0; }
 }
+
+/* own screen: the decision fills the space right of the board instead of floating small in the middle,
+   and the hand gets a proper row under it */
+/* the decision takes the height it needs (never more than leaves 84px for cards); the cards get the rest, so no hole */
+.boss-game[data-own-screen=true][data-focus=field] { grid-template-rows: 44px fit-content(calc(100dvh - 44px - 84px - env(safe-area-inset-top) - env(safe-area-inset-bottom))) minmax(84px,1fr); }
+.boss-game[data-own-screen=true] .boss-field-in { align-items: stretch; }
+.boss-game[data-own-screen=true] .boss-field-in > * { width: 100%; max-width: none; max-height: 100%; margin-block: auto; }

@@ -685,6 +685,7 @@ export const en: Messages = {
       reduce: 'Take off {{amount}}',
     },
     cards: {
+      emptyHand: 'No cards yet · choose "Draw 3" on your turn to get some',
       howTitle: 'What it does',
       how2: 'Others get 5 s to stop it',
       teamHow1: 'Stands in for {{team}}',

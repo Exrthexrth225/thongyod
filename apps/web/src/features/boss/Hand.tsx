@@ -110,6 +110,13 @@ export function HandBar({ view, players, meId, busy, act, big = false }: { view:
   return (
     <>
       <div ref={ref} className="boss-hand relative h-full w-full" aria-label={t('boss.cards.hand', { count: view.myHand.length })}>
+        {n === 0 && (
+          // no cards yet: an empty card outline says so, instead of a blank hole
+          <div className="absolute inset-0 flex items-center justify-center gap-3 text-white/55">
+            <span className="aspect-[1/1.42] h-[70%] max-h-24 rounded-[12%/8.6%] border-2 border-dashed border-white/25" aria-hidden="true" />
+            <span className="max-w-[14rem] text-sm font-bold leading-snug">{t('boss.cards.emptyHand')}</span>
+          </div>
+        )}
         <div className="boss-hand-track absolute left-1/2 top-1/2" style={{ width: rowWidth, height: size * 1.42, transform: 'translate(-50%, -50%)' }}>
           {size > 0 && sorted.map(([key, cards], i) => {
             const can = playable(view, meId, cards[0])
